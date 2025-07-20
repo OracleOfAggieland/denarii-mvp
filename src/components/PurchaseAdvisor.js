@@ -758,7 +758,7 @@ function PurchaseAdvisor() {
                               rel="noopener noreferrer" 
                               className="view-alternative-btn"
                             >
-                              Search for Alternative
+                              Better Price Alternative
                             </a>
                           </p>
                         </div>

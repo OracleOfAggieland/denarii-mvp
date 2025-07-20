@@ -12,17 +12,13 @@ function ProgressiveFinancialProfile({ onProfileUpdate, onClose }) {
     financialGoal: "",
     riskTolerance: "moderate"
   });
-  
-  // Load existing profile from localStorage
+
   useEffect(() => {
     const savedProfile = localStorage.getItem('quickFinancialProfile');
     if (savedProfile) {
       const parsed = JSON.parse(savedProfile);
       setProfile(parsed);
-      // If we have basic info, start from a later step
-      if (parsed.monthlyIncome && parsed.monthlyExpenses) {
-        setStep(4);
-      }
+      if (parsed.monthlyIncome && parsed.monthlyExpenses) setStep(4);
     }
   }, []);
 
@@ -37,7 +33,7 @@ function ProgressiveFinancialProfile({ onProfileUpdate, onClose }) {
     },
     {
       title: "What are your monthly expenses?",
-      field: "monthlyExpenses", 
+      field: "monthlyExpenses",
       type: "number",
       placeholder: "e.g., 3500",
       prefix: "$",
@@ -85,8 +81,8 @@ function ProgressiveFinancialProfile({ onProfileUpdate, onClose }) {
   ];
 
   const currentQuestion = questions[step];
-  
-  const handleInputChange = (value) => {
+
+  const handleInputChange = value => {
     setProfile(prev => ({
       ...prev,
       [currentQuestion.field]: value
@@ -94,78 +90,70 @@ function ProgressiveFinancialProfile({ onProfileUpdate, onClose }) {
   };
 
   const handleNext = () => {
-    // Save current progress
     const updatedProfile = { ...profile };
     localStorage.setItem('quickFinancialProfile', JSON.stringify(updatedProfile));
-    
+
     if (step < questions.length - 1) {
       setStep(step + 1);
-    } else {
-      // Calculate quick financial health metrics
-      const monthlyNet = (parseFloat(profile.monthlyIncome) || 0) - 
-                        (parseFloat(profile.monthlyExpenses) || 0) - 
-                        (parseFloat(profile.debtPayments) || 0);
-      
-      const savingsRatio = profile.currentSavings ? 
-        parseFloat(profile.currentSavings) / (parseFloat(profile.monthlyExpenses) || 1) : 0;
-      
-      const healthScore = calculateHealthScore(profile);
-      
-      const summary = {
-        monthlyNetIncome: monthlyNet,
-        savingsMonths: savingsRatio,
-        healthScore: healthScore,
-        hasEmergencyFund: profile.hasEmergencyFund === 'yes',
-        primaryGoal: profile.financialGoal
-      };
-      
-      // Save complete profile
-      const completeProfile = {
-        ...profile,
-        summary,
-        lastUpdated: new Date().toISOString()
-      };
-      
-      localStorage.setItem('quickFinancialProfile', JSON.stringify(completeProfile));
-      onProfileUpdate(completeProfile);
-      onClose();
+      return;
     }
+
+    const monthlyNet = (parseFloat(profile.monthlyIncome) || 0) -
+      (parseFloat(profile.monthlyExpenses) || 0) -
+      (parseFloat(profile.debtPayments) || 0);
+
+    const savingsRatio = profile.currentSavings ?
+      parseFloat(profile.currentSavings) / (parseFloat(profile.monthlyExpenses) || 1) : 0;
+
+    const healthScore = calculateHealthScore(profile);
+
+    const summary = {
+      monthlyNetIncome: monthlyNet,
+      savingsMonths: savingsRatio,
+      healthScore,
+      hasEmergencyFund: profile.hasEmergencyFund === 'yes',
+      primaryGoal: profile.financialGoal
+    };
+
+    const completeProfile = {
+      ...profile,
+      summary,
+      lastUpdated: new Date().toISOString()
+    };
+
+    localStorage.setItem('quickFinancialProfile', JSON.stringify(completeProfile));
+    onProfileUpdate(completeProfile);
+    onClose();
   };
 
   const handleSkip = () => {
-    if (currentQuestion.optional) {
-      handleNext();
-    }
+    if (currentQuestion.optional) handleNext();
   };
 
-  const calculateHealthScore = (profile) => {
-    let score = 50; // Base score
-    
+  function calculateHealthScore(profile) {
+    let score = 50;
     const income = parseFloat(profile.monthlyIncome) || 0;
     const expenses = parseFloat(profile.monthlyExpenses) || 0;
     const savings = parseFloat(profile.currentSavings) || 0;
     const debt = parseFloat(profile.debtPayments) || 0;
-    
-    // Income to expense ratio
+
     if (income > expenses * 1.3) score += 20;
     else if (income > expenses * 1.1) score += 10;
     else if (income < expenses) score -= 20;
-    
-    // Emergency fund
+
     if (profile.hasEmergencyFund === 'yes') score += 20;
     else if (profile.hasEmergencyFund === 'some') score += 10;
     else score -= 10;
-    
-    // Debt burden
+
     if (income > 0) {
       const debtRatio = debt / income;
       if (debtRatio === 0) score += 10;
       else if (debtRatio < 0.2) score += 5;
       else if (debtRatio > 0.4) score -= 15;
     }
-    
+
     return Math.max(0, Math.min(100, score));
-  };
+  }
 
   const progress = ((step + 1) / questions.length) * 100;
 
@@ -175,7 +163,7 @@ function ProgressiveFinancialProfile({ onProfileUpdate, onClose }) {
         <button className="pfp-close" onClick={onClose} aria-label="Close">
           ✕
         </button>
-        
+
         <div className="pfp-header">
           <h2 className="pfp-title">Quick Financial Check-in</h2>
           <p className="pfp-subtitle">
@@ -191,21 +179,21 @@ function ProgressiveFinancialProfile({ onProfileUpdate, onClose }) {
           <div className="pfp-question">
             <h3>{currentQuestion.title}</h3>
             <p className="pfp-help">{currentQuestion.help}</p>
-            
+
             {currentQuestion.type === 'number' && (
               <div className="pfp-input-group">
                 <span className="pfp-prefix">{currentQuestion.prefix}</span>
                 <input
                   type="number"
                   value={profile[currentQuestion.field] || ''}
-                  onChange={(e) => handleInputChange(e.target.value)}
+                  onChange={e => handleInputChange(e.target.value)}
                   placeholder={currentQuestion.placeholder}
                   className="pfp-input"
                   autoFocus
                 />
               </div>
             )}
-            
+
             {currentQuestion.type === 'choice' && (
               <div className="pfp-choices">
                 {currentQuestion.choices.map(choice => (
@@ -234,8 +222,8 @@ function ProgressiveFinancialProfile({ onProfileUpdate, onClose }) {
               Skip
             </button>
           )}
-          <button 
-            className="pfp-next" 
+          <button
+            className="pfp-next"
             onClick={handleNext}
             disabled={!profile[currentQuestion.field] && !currentQuestion.optional}
           >
