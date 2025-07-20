@@ -1,3 +1,332 @@
+/*!****************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[11].oneOf[12].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[11].oneOf[12].use[3]!./src/styles/ProgressiveFinancialProfile.css ***!
+  \****************************************************************************************************************************************************************************************************************************************************************************************/
+/* Progressive Financial Profile Styles */
+
+.pfp-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 20px;
+    animation: fadeIn 0.2s ease-out;
+    -webkit-backdrop-filter: blur(5px);
+            backdrop-filter: blur(5px);
+  }
+  
+  .pfp-modal {
+    background: white;
+    border-radius: 20px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  .pfp-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #6b7280;
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 1;
+  }
+  
+  .pfp-close:hover {
+    background-color: #f3f4f6;
+    color: #111827;
+  }
+  
+  .pfp-header {
+    padding: 40px 40px 20px;
+    text-align: center;
+  }
+  
+  .pfp-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 8px 0;
+  }
+  
+  .pfp-subtitle {
+    font-size: 16px;
+    color: #6b7280;
+    margin: 0;
+  }
+  
+  .pfp-progress {
+    height: 4px;
+    background-color: #e5e7eb;
+    margin: 0 40px;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  
+  .pfp-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+    transition: width 0.3s ease;
+    border-radius: 2px;
+  }
+  
+  .pfp-content {
+    padding: 30px 40px;
+  }
+  
+  .pfp-question h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #111827;
+    margin: 0 0 12px 0;
+  }
+  
+  .pfp-help {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 0 0 24px 0;
+  }
+  
+  .pfp-input-group {
+    display: flex;
+    align-items: center;
+    background-color: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 4px;
+    transition: all 0.2s ease;
+  }
+  
+  .pfp-input-group:focus-within {
+    border-color: #6366f1;
+    background-color: white;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  }
+  
+  .pfp-prefix {
+    font-size: 20px;
+    font-weight: 500;
+    color: #6b7280;
+    padding: 0 12px;
+  }
+  
+  .pfp-input {
+    flex: 1;
+    background: none;
+    border: none;
+    font-size: 24px;
+    font-weight: 600;
+    padding: 12px;
+    color: #111827;
+    outline: none;
+  }
+  
+  .pfp-input::-moz-placeholder {
+    color: #d1d5db;
+    font-weight: 400;
+  }
+  
+  .pfp-input::placeholder {
+    color: #d1d5db;
+    font-weight: 400;
+  }
+  
+  .pfp-choices {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  
+  .pfp-choice {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 20px;
+    background-color: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    font-weight: 500;
+    color: #4b5563;
+  }
+  
+  .pfp-choice:hover {
+    background-color: #f3f4f6;
+    border-color: #d1d5db;
+    transform: translateY(-1px);
+  }
+  
+  .pfp-choice.selected {
+    background-color: #eef2ff;
+    border-color: #6366f1;
+    color: #4f46e5;
+  }
+  
+  .pfp-choice-emoji {
+    font-size: 32px;
+  }
+  
+  .pfp-choice-label {
+    text-align: center;
+  }
+  
+  .pfp-actions {
+    display: flex;
+    gap: 12px;
+    padding: 0 40px 40px;
+    justify-content: flex-end;
+  }
+  
+  .pfp-back,
+  .pfp-skip {
+    padding: 12px 24px;
+    background-color: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .pfp-back:hover,
+  .pfp-skip:hover {
+    background-color: #f9fafb;
+    color: #111827;
+    border-color: #d1d5db;
+  }
+  
+  .pfp-next {
+    padding: 12px 32px;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+  }
+  
+  .pfp-next:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35);
+  }
+  
+  .pfp-next:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .pfp-footer {
+    padding: 20px;
+    text-align: center;
+    background-color: #f9fafb;
+    border-top: 1px solid #e5e7eb;
+    border-radius: 0 0 20px 20px;
+  }
+  
+  .pfp-footer p {
+    margin: 0;
+    font-size: 12px;
+    color: #9ca3af;
+  }
+  
+  /* Animations */
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 640px) {
+    .pfp-modal {
+      margin: 10px;
+      max-height: calc(100vh - 20px);
+    }
+    
+    .pfp-header,
+    .pfp-content,
+    .pfp-actions {
+      padding-left: 24px;
+      padding-right: 24px;
+    }
+    
+    .pfp-progress {
+      margin: 0 24px;
+    }
+    
+    .pfp-title {
+      font-size: 20px;
+    }
+    
+    .pfp-subtitle {
+      font-size: 14px;
+    }
+    
+    .pfp-question h3 {
+      font-size: 18px;
+    }
+    
+    .pfp-input {
+      font-size: 20px;
+    }
+    
+    .pfp-choices {
+      grid-template-columns: 1fr;
+    }
+    
+    .pfp-choice {
+      flex-direction: row;
+      justify-content: flex-start;
+      padding: 16px;
+    }
+    
+    .pfp-choice-emoji {
+      font-size: 24px;
+    }
+    
+    .pfp-actions {
+      flex-direction: column;
+    }
+    
+    .pfp-back,
+    .pfp-skip,
+    .pfp-next {
+      width: 100%;
+      text-align: center;
+    }
+  }
 /*!****************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[11].oneOf[12].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[11].oneOf[12].use[3]!./src/styles/App.css ***!
   \****************************************************************************************************************************************************************************************************************************************************************/
@@ -1097,6 +1426,470 @@ ding States */
   
   .print-break-after {
     page-break-after: always;
+  }
+}
+
+/* ===== PROGRESSIVE FINANCIAL PROFILE INTEGRATION ===== */
+
+/* Profile Prompt Banner */
+.profile-prompt {
+  max-width: 800px;
+  width: calc(100% - 40px);
+  margin: -30px auto 20px;
+  position: relative;
+  z-index: 5;
+  animation: slideDown 0.6s ease-out;
+}
+
+.prompt-content {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid #fbbf24;
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
+  flex-wrap: wrap;
+  justify-content: center;
+  text-align: center;
+}
+
+.prompt-icon {
+  font-size: 32px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.prompt-content p {
+  flex: 1;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #78350f;
+  min-width: 200px;
+}
+
+.setup-profile-btn {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-all);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+  white-space: nowrap;
+}
+
+.setup-profile-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
+}
+
+/* Enhanced Mini Profile */
+.mini-profile.enhanced {
+  position: relative;
+}
+
+.mini-profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.update-profile-btn {
+  background-color: rgba(99, 102, 241, 0.1);
+  color: var(--primary-color);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  padding: 6px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.update-profile-btn:hover {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
+}
+
+/* Mini Profile Stats Enhancement */
+.mini-profile {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #bae6fd;
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin: -30px auto 20px;
+  max-width: 800px;
+  width: calc(100% - 40px);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.1);
+  position: relative;
+  z-index: 5;
+  animation: slideDown 0.6s ease-out;
+}
+
+.mini-profile-header h3 {
+  font-size: 18px;
+  color: #075985;
+  margin: 0;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-icon {
+  font-size: 24px;
+}
+
+.mini-profile-stats {
+  display: flex;
+  gap: 24px;
+  justify-content: space-around;
+  flex-wrap: wrap;
+}
+
+.mini-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 100px;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: #0c4a6e;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.stat-value.positive {
+  color: #059669;
+}
+
+.stat-value.warning {
+  color: #d97706;
+}
+
+.stat-value.negative {
+  color: #dc2626;
+}
+
+/* Responsive Design for Profile Elements */
+@media (max-width: 768px) {
+  .profile-prompt,
+  .mini-profile {
+    width: calc(100% - 30px);
+    margin-top: -20px;
+  }
+  
+  .prompt-content {
+    padding: 16px;
+    gap: 12px;
+  }
+  
+  .prompt-icon {
+    font-size: 28px;
+  }
+  
+  .prompt-content p {
+    font-size: 14px;
+  }
+  
+  .setup-profile-btn {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+  
+  .mini-profile-stats {
+    gap: 16px;
+  }
+  
+  .mini-stat {
+    min-width: 80px;
+  }
+  
+  .stat-label {
+    font-size: 12px;
+  }
+  
+  .stat-value {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-prompt,
+  .mini-profile {
+    width: calc(100% - 20px);
+  }
+  
+  .prompt-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .prompt-content p {
+    width: 100%;
+  }
+  
+  .setup-profile-btn {
+    width: 100%;
+    max-width: 200px;
+  }
+  
+  .mini-profile-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
+  .update-profile-btn {
+    width: 100%;
+  }
+}
+
+/* ===== PROGRESSIVE FINANCIAL PROFILE INTEGRATION ===== */
+
+/* Profile Prompt Banner */
+.profile-prompt {
+  max-width: 800px;
+  width: calc(100% - 40px);
+  margin: -30px auto 20px;
+  position: relative;
+  z-index: 5;
+  animation: slideDown 0.6s ease-out;
+}
+
+.prompt-content {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid #fbbf24;
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
+  flex-wrap: wrap;
+  justify-content: center;
+  text-align: center;
+}
+
+.prompt-icon {
+  font-size: 32px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.prompt-content p {
+  flex: 1;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #78350f;
+  min-width: 200px;
+}
+
+.setup-profile-btn {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-all);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+  white-space: nowrap;
+}
+
+.setup-profile-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
+}
+
+/* Enhanced Mini Profile */
+.mini-profile.enhanced {
+  position: relative;
+}
+
+.mini-profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.update-profile-btn {
+  background-color: rgba(99, 102, 241, 0.1);
+  color: var(--primary-color);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  padding: 6px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.update-profile-btn:hover {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
+}
+
+/* Mini Profile Stats Enhancement */
+.mini-profile {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #bae6fd;
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin: -30px auto 20px;
+  max-width: 800px;
+  width: calc(100% - 40px);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.1);
+  position: relative;
+  z-index: 5;
+  animation: slideDown 0.6s ease-out;
+}
+
+.mini-profile-header h3 {
+  font-size: 18px;
+  color: #075985;
+  margin: 0;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-icon {
+  font-size: 24px;
+}
+
+.mini-profile-stats {
+  display: flex;
+  gap: 24px;
+  justify-content: space-around;
+  flex-wrap: wrap;
+}
+
+.mini-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 100px;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: #0c4a6e;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.stat-value.positive {
+  color: #059669;
+}
+
+.stat-value.warning {
+  color: #d97706;
+}
+
+.stat-value.negative {
+  color: #dc2626;
+}
+
+/* Responsive Design for Profile Elements */
+@media (max-width: 768px) {
+  .profile-prompt,
+  .mini-profile {
+    width: calc(100% - 30px);
+    margin-top: -20px;
+  }
+  
+  .prompt-content {
+    padding: 16px;
+    gap: 12px;
+  }
+  
+  .prompt-icon {
+    font-size: 28px;
+  }
+  
+  .prompt-content p {
+    font-size: 14px;
+  }
+  
+  .setup-profile-btn {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+  
+  .mini-profile-stats {
+    gap: 16px;
+  }
+  
+  .mini-stat {
+    min-width: 80px;
+  }
+  
+  .stat-label {
+    font-size: 12px;
+  }
+  
+  .stat-value {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-prompt,
+  .mini-profile {
+    width: calc(100% - 20px);
+  }
+  
+  .prompt-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .prompt-content p {
+    width: 100%;
+  }
+  
+  .setup-profile-btn {
+    width: 100%;
+    max-width: 200px;
+  }
+  
+  .mini-profile-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
+  .update-profile-btn {
+    width: 100%;
   }
 }
 /*!*****************************************************************************************************************************************************************************************************************************************************************************!*\

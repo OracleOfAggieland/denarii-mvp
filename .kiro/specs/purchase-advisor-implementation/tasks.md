@@ -73,6 +73,9 @@
 
 
 
+
+
+
   - Create FinancialProfile.js with collapsible section architecture
   - Implement all financial input sections (income, expenses, debt, credit, savings, investments, goals, timing, risk)
   - Add form validation and input handling for all financial fields

@@ -1092,3 +1092,467 @@ ding States */
     page-break-after: always;
   }
 }
+
+/* ===== PROGRESSIVE FINANCIAL PROFILE INTEGRATION ===== */
+
+/* Profile Prompt Banner */
+.profile-prompt {
+  max-width: 800px;
+  width: calc(100% - 40px);
+  margin: -30px auto 20px;
+  position: relative;
+  z-index: 5;
+  animation: slideDown 0.6s ease-out;
+}
+
+.prompt-content {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid #fbbf24;
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
+  flex-wrap: wrap;
+  justify-content: center;
+  text-align: center;
+}
+
+.prompt-icon {
+  font-size: 32px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.prompt-content p {
+  flex: 1;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #78350f;
+  min-width: 200px;
+}
+
+.setup-profile-btn {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-all);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+  white-space: nowrap;
+}
+
+.setup-profile-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
+}
+
+/* Enhanced Mini Profile */
+.mini-profile.enhanced {
+  position: relative;
+}
+
+.mini-profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.update-profile-btn {
+  background-color: rgba(99, 102, 241, 0.1);
+  color: var(--primary-color);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  padding: 6px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.update-profile-btn:hover {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
+}
+
+/* Mini Profile Stats Enhancement */
+.mini-profile {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #bae6fd;
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin: -30px auto 20px;
+  max-width: 800px;
+  width: calc(100% - 40px);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.1);
+  position: relative;
+  z-index: 5;
+  animation: slideDown 0.6s ease-out;
+}
+
+.mini-profile-header h3 {
+  font-size: 18px;
+  color: #075985;
+  margin: 0;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-icon {
+  font-size: 24px;
+}
+
+.mini-profile-stats {
+  display: flex;
+  gap: 24px;
+  justify-content: space-around;
+  flex-wrap: wrap;
+}
+
+.mini-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 100px;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: #0c4a6e;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.stat-value.positive {
+  color: #059669;
+}
+
+.stat-value.warning {
+  color: #d97706;
+}
+
+.stat-value.negative {
+  color: #dc2626;
+}
+
+/* Responsive Design for Profile Elements */
+@media (max-width: 768px) {
+  .profile-prompt,
+  .mini-profile {
+    width: calc(100% - 30px);
+    margin-top: -20px;
+  }
+  
+  .prompt-content {
+    padding: 16px;
+    gap: 12px;
+  }
+  
+  .prompt-icon {
+    font-size: 28px;
+  }
+  
+  .prompt-content p {
+    font-size: 14px;
+  }
+  
+  .setup-profile-btn {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+  
+  .mini-profile-stats {
+    gap: 16px;
+  }
+  
+  .mini-stat {
+    min-width: 80px;
+  }
+  
+  .stat-label {
+    font-size: 12px;
+  }
+  
+  .stat-value {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-prompt,
+  .mini-profile {
+    width: calc(100% - 20px);
+  }
+  
+  .prompt-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .prompt-content p {
+    width: 100%;
+  }
+  
+  .setup-profile-btn {
+    width: 100%;
+    max-width: 200px;
+  }
+  
+  .mini-profile-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
+  .update-profile-btn {
+    width: 100%;
+  }
+}
+
+/* ===== PROGRESSIVE FINANCIAL PROFILE INTEGRATION ===== */
+
+/* Profile Prompt Banner */
+.profile-prompt {
+  max-width: 800px;
+  width: calc(100% - 40px);
+  margin: -30px auto 20px;
+  position: relative;
+  z-index: 5;
+  animation: slideDown 0.6s ease-out;
+}
+
+.prompt-content {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid #fbbf24;
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
+  flex-wrap: wrap;
+  justify-content: center;
+  text-align: center;
+}
+
+.prompt-icon {
+  font-size: 32px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.prompt-content p {
+  flex: 1;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #78350f;
+  min-width: 200px;
+}
+
+.setup-profile-btn {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-all);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+  white-space: nowrap;
+}
+
+.setup-profile-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
+}
+
+/* Enhanced Mini Profile */
+.mini-profile.enhanced {
+  position: relative;
+}
+
+.mini-profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.update-profile-btn {
+  background-color: rgba(99, 102, 241, 0.1);
+  color: var(--primary-color);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  padding: 6px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.update-profile-btn:hover {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
+}
+
+/* Mini Profile Stats Enhancement */
+.mini-profile {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #bae6fd;
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin: -30px auto 20px;
+  max-width: 800px;
+  width: calc(100% - 40px);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.1);
+  position: relative;
+  z-index: 5;
+  animation: slideDown 0.6s ease-out;
+}
+
+.mini-profile-header h3 {
+  font-size: 18px;
+  color: #075985;
+  margin: 0;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-icon {
+  font-size: 24px;
+}
+
+.mini-profile-stats {
+  display: flex;
+  gap: 24px;
+  justify-content: space-around;
+  flex-wrap: wrap;
+}
+
+.mini-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 100px;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: #0c4a6e;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.stat-value.positive {
+  color: #059669;
+}
+
+.stat-value.warning {
+  color: #d97706;
+}
+
+.stat-value.negative {
+  color: #dc2626;
+}
+
+/* Responsive Design for Profile Elements */
+@media (max-width: 768px) {
+  .profile-prompt,
+  .mini-profile {
+    width: calc(100% - 30px);
+    margin-top: -20px;
+  }
+  
+  .prompt-content {
+    padding: 16px;
+    gap: 12px;
+  }
+  
+  .prompt-icon {
+    font-size: 28px;
+  }
+  
+  .prompt-content p {
+    font-size: 14px;
+  }
+  
+  .setup-profile-btn {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+  
+  .mini-profile-stats {
+    gap: 16px;
+  }
+  
+  .mini-stat {
+    min-width: 80px;
+  }
+  
+  .stat-label {
+    font-size: 12px;
+  }
+  
+  .stat-value {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-prompt,
+  .mini-profile {
+    width: calc(100% - 20px);
+  }
+  
+  .prompt-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .prompt-content p {
+    width: 100%;
+  }
+  
+  .setup-profile-btn {
+    width: 100%;
+    max-width: 200px;
+  }
+  
+  .mini-profile-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
+  .update-profile-btn {
+    width: 100%;
+  }
+}

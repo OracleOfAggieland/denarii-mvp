@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { analyzeImageWithOpenAI, getPurchaseRecommendation, findCheaperAlternative } from "../lib/openaiAPI";
+import ProgressiveFinancialProfile from "./ProgressiveFinancialProfile";
 import "../styles/App.css";
 
 function PurchaseAdvisor() {
@@ -16,6 +17,8 @@ function PurchaseAdvisor() {
   const [financialProfile, setFinancialProfile] = useState(null);
   const [searchForAlternative, setSearchForAlternative] = useState(true);
   const [dragOver, setDragOver] = useState(false);
+  const [showFinancialProfile, setShowFinancialProfile] = useState(false);
+  const [hasSeenProfilePrompt, setHasSeenProfilePrompt] = useState(false);
   const fileInputRef = useRef(null);
   const resultsRef = useRef(null);
   const videoRef = useRef(null);
@@ -31,10 +34,41 @@ function PurchaseAdvisor() {
 
   // Load financial profile from localStorage if available
   useEffect(() => {
-    const savedProfile = localStorage.getItem('financialProfile');
-    if (savedProfile) {
-      setFinancialProfile(JSON.parse(savedProfile));
+    // First check for quick profile
+    const quickProfile = localStorage.getItem('quickFinancialProfile');
+    if (quickProfile) {
+      const parsed = JSON.parse(quickProfile);
+      // Convert quick profile to format expected by the app
+      const convertedProfile = {
+        monthlyIncome: parsed.monthlyIncome,
+        monthlyExpenses: parsed.monthlyExpenses,
+        currentSavings: parsed.currentSavings,
+        debtPayments: parsed.debtPayments || "0",
+        summary: parsed.summary || {
+          monthlyNetIncome: (parseFloat(parsed.monthlyIncome) || 0) - 
+                           (parseFloat(parsed.monthlyExpenses) || 0) - 
+                           (parseFloat(parsed.debtPayments) || 0),
+          debtToIncomeRatio: parsed.debtPayments ? 
+            ((parseFloat(parsed.debtPayments) / parseFloat(parsed.monthlyIncome)) * 100) : 0,
+          emergencyFundMonths: parsed.currentSavings && parsed.monthlyExpenses ?
+            (parseFloat(parsed.currentSavings) / parseFloat(parsed.monthlyExpenses)) : 0,
+          healthScore: parsed.summary?.healthScore || 50
+        },
+        riskTolerance: parsed.riskTolerance || "moderate",
+        financialGoal: parsed.financialGoal || "balance"
+      };
+      setFinancialProfile(convertedProfile);
+    } else {
+      // Fall back to full profile if it exists
+      const savedProfile = localStorage.getItem('financialProfile');
+      if (savedProfile) {
+        setFinancialProfile(JSON.parse(savedProfile));
+      }
     }
+    
+    // Check if user has seen the profile prompt
+    const seenPrompt = localStorage.getItem('hasSeenProfilePrompt');
+    setHasSeenProfilePrompt(!!seenPrompt);
   }, []);
 
   // Auto-scroll function
@@ -59,6 +93,12 @@ function PurchaseAdvisor() {
       }
     };
   }, []);
+
+  // Handle financial profile update
+  const handleFinancialProfileUpdate = (profile) => {
+    setFinancialProfile(profile);
+    setShowFinancialProfile(false);
+  };
 
   // Start camera capture
   const startCamera = async () => {
@@ -214,6 +254,24 @@ function PurchaseAdvisor() {
     if (!imageFile && !itemName.trim()) {
       alert("Please either capture an image or enter the item name");
       return;
+    }
+
+    // Check if user has financial profile, if not and they haven't seen prompt, show it
+    if (!financialProfile && !hasSeenProfilePrompt) {
+      const shouldSetupProfile = window.confirm(
+        "🎯 Get personalized advice!\n\n" +
+        "Add your financial info for recommendations tailored to your situation. " +
+        "It only takes 2 minutes and helps us give you better advice.\n\n" +
+        "Would you like to set it up now?"
+      );
+      
+      localStorage.setItem('hasSeenProfilePrompt', 'true');
+      setHasSeenProfilePrompt(true);
+      
+      if (shouldSetupProfile) {
+        setShowFinancialProfile(true);
+        return;
+      }
     }
 
     // Reset previous messages when starting a new analysis
@@ -396,6 +454,18 @@ function PurchaseAdvisor() {
     }
   };
 
+  const getHealthScoreColor = (score) => {
+    if (score >= 70) return '#10b981';
+    if (score >= 40) return '#f59e0b';
+    return '#ef4444';
+  };
+
+  const getHealthScoreLabel = (score) => {
+    if (score >= 70) return 'Good';
+    if (score >= 40) return 'Fair';
+    return 'Needs Attention';
+  };
+
   return (
     <div className="App">
       {/* Hero Section */}
@@ -406,34 +476,57 @@ function PurchaseAdvisor() {
         </p>
       </div>
 
-      {/* Financial Profile Summary (if available) */}
-      {financialProfile && financialProfile.summary && (
-        <div className="mini-profile">
+      {/* Financial Profile Summary (enhanced) */}
+      {financialProfile && financialProfile.summary ? (
+        <div className="mini-profile enhanced">
           <div className="mini-profile-header">
             <h3>
               <span className="profile-icon">👤</span>
               Your Financial Snapshot
             </h3>
+            <button 
+              className="update-profile-btn"
+              onClick={() => setShowFinancialProfile(true)}
+              title="Update financial info"
+            >
+              Update
+            </button>
           </div>
           <div className="mini-profile-stats">
             <div className="mini-stat">
               <span className="stat-label">Monthly Net:</span>
               <span className={`stat-value ${financialProfile.summary.monthlyNetIncome >= 0 ? 'positive' : 'negative'}`}>
-                ${financialProfile.summary.monthlyNetIncome.toFixed(0)}
+                ${Math.abs(financialProfile.summary.monthlyNetIncome).toFixed(0)}
               </span>
             </div>
             <div className="mini-stat">
-              <span className="stat-label">DTI Ratio:</span>
-              <span className={`stat-value ${financialProfile.summary.debtToIncomeRatio < 36 ? 'positive' : financialProfile.summary.debtToIncomeRatio < 43 ? 'warning' : 'negative'}`}>
-                {financialProfile.summary.debtToIncomeRatio.toFixed(0)}%
+              <span className="stat-label">Health Score:</span>
+              <span 
+                className="stat-value"
+                style={{ color: getHealthScoreColor(financialProfile.summary.healthScore || 50) }}
+              >
+                {getHealthScoreLabel(financialProfile.summary.healthScore || 50)}
               </span>
             </div>
             <div className="mini-stat">
               <span className="stat-label">Emergency:</span>
-              <span className={`stat-value ${financialProfile.summary.emergencyFundMonths >= 3 ? 'positive' : financialProfile.summary.emergencyFundMonths >= 1 ? 'warning' : 'negative'}`}>
-                {financialProfile.summary.emergencyFundMonths.toFixed(1)}mo
+              <span className={`stat-value ${(financialProfile.summary.emergencyFundMonths || 0) >= 3 ? 'positive' : (financialProfile.summary.emergencyFundMonths || 0) >= 1 ? 'warning' : 'negative'}`}>
+                {(financialProfile.summary.emergencyFundMonths || 0).toFixed(1)}mo
               </span>
             </div>
+          </div>
+        </div>
+      ) : (
+        <div className="profile-prompt">
+          <div className="prompt-content">
+            <span className="prompt-icon">🎯</span>
+            <p>Get personalized advice based on your financial situation</p>
+            <button 
+              className="setup-profile-btn"
+              onClick={() => setShowFinancialProfile(true)}
+            >
+              Quick Setup (2 min)
+            </button>
           </div>
         </div>
       )}
@@ -701,6 +794,14 @@ function PurchaseAdvisor() {
             </div>
           )}
         </div>
+      )}
+
+      {/* Progressive Financial Profile Modal */}
+      {showFinancialProfile && (
+        <ProgressiveFinancialProfile
+          onProfileUpdate={handleFinancialProfileUpdate}
+          onClose={() => setShowFinancialProfile(false)}
+        />
       )}
     </div>
   );
