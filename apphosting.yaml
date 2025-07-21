@@ -5,8 +5,9 @@
 runConfig:
   # Environment variables for your backend service
   env:
-    # OpenAI API Key - replace with your actual key or use Secret Manager reference
-    OPENAI_API_KEY: "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"
+    # OpenAI API Key - securely referenced from Secret Manager
+    OPENAI_API_KEY:
+      secretEnv: "projects/denarii-mvp-f5aea/secrets/openai-api-key/versions/latest"
     
     # Node environment
     NODE_ENV: "production"
