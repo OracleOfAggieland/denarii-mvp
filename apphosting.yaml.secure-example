@@ -1,0 +1,19 @@
+# Firebase App Hosting configuration with Secret Manager integration
+# This is the RECOMMENDED secure approach
+
+runConfig:
+  # Environment variables using Secret Manager references
+  env:
+    # Reference to OpenAI API key stored in Secret Manager
+    # Format: projects/YOUR_PROJECT_ID/secrets/SECRET_NAME/versions/latest
+    OPENAI_API_KEY:
+      secretEnv: "projects/your-project-id/secrets/openai-api-key/versions/latest"
+    
+    NODE_ENV: "production"
+    NEXT_TELEMETRY_DISABLED: "1"
+
+# Optional configurations
+# cpu: 1
+# memory: 1Gi
+# minInstances: 0
+# maxInstances: 10
