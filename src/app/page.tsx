@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import React from 'react';
 
 const App = dynamic(() => import('@/components/App'), {
   ssr: false,
@@ -18,6 +19,6 @@ const App = dynamic(() => import('@/components/App'), {
   )
 });
 
-export default function Home() {
-  return <App />;
-}
+const Home: React.FC = () => <App />;
+
+export default Home;

@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Message } from '@/types/chat';
 
 interface MessageListProps {
   messages: Message[];
 }
 
-export default function MessageList({ messages }: MessageListProps) {
+const MessageList: React.FC<MessageListProps> = ({ messages }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to latest messages
@@ -79,3 +79,4 @@ export default function MessageList({ messages }: MessageListProps) {
     </div>
   );
 }
+export default MessageList;

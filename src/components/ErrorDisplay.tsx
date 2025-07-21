@@ -1,5 +1,7 @@
 'use client';
 
+import React from 'react';
+
 import { ErrorType } from '@/types/chat';
 
 interface ChatError {
@@ -13,7 +15,7 @@ interface ErrorDisplayProps {
   onRetry: () => void;
 }
 
-export default function ErrorDisplay({ error, onClear, onRetry }: ErrorDisplayProps) {
+const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ error, onClear, onRetry }) => {
   if (!error) return null;
 
   const config = getErrorConfig(error.type);
@@ -114,3 +116,4 @@ function CloseIcon({ className }: { className: string }) {
     </svg>
   );
 }
+export default ErrorDisplay;

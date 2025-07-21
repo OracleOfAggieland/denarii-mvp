@@ -1,10 +1,12 @@
 'use client';
 
+import React from 'react';
+
 interface LoadingIndicatorProps {
   isLoading: boolean;
 }
 
-export default function LoadingIndicator({ isLoading }: LoadingIndicatorProps) {
+const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({ isLoading }) => {
   if (!isLoading) return null;
 
   return (
@@ -32,3 +34,4 @@ export default function LoadingIndicator({ isLoading }: LoadingIndicatorProps) {
     </div>
   );
 }
+export default LoadingIndicator;

@@ -3,7 +3,7 @@ import { analyzeImageWithOpenAI, getPurchaseRecommendation, findCheaperAlternati
 import ProgressiveFinancialProfile from "./ProgressiveFinancialProfile";
 import "../styles/App.css";
 
-function PurchaseAdvisor() {
+const PurchaseAdvisor = () => {
   const [messages, setMessages] = useState([]);
   const [itemName, setItemName] = useState("");
   const [itemCost, setItemCost] = useState("");

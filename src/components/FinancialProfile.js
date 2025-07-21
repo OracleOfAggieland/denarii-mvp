@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import "../styles/FinancialProfile.css";
 
-function FinancialProfile() {
+const FinancialProfile = () => {
   // State for all form fields
   const [formData, setFormData] = useState({
     // Income

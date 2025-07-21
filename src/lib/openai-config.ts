@@ -29,17 +29,17 @@ export const DEFAULT_OPENAI_CONFIG: Record<Environment, OpenAIConfig> = {
 /**
  * Gets the current environment
  */
-export function getCurrentEnvironment(): Environment {
+export const getCurrentEnvironment = (): Environment => {
   const env = process.env.NODE_ENV;
   if (env === 'production') return 'production';
   if (env === 'test') return 'test';
   return 'development';
-}
+};
 
 /**
  * Validates that required environment variables are present and properly formatted
  */
-export function validateEnvironment(): { isValid: boolean; error?: string; warnings?: string[] } {
+export const validateEnvironment = (): { isValid: boolean; error?: string; warnings?: string[] } => {
   const warnings: string[] = [];
   
   // Check required environment variables
@@ -102,7 +102,7 @@ export function validateEnvironment(): { isValid: boolean; error?: string; warni
 /**
  * Gets OpenAI configuration from environment variables with environment-specific fallbacks
  */
-export function getOpenAIConfig(): OpenAIConfig {
+export const getOpenAIConfig = (): OpenAIConfig => {
   const currentEnv = getCurrentEnvironment();
   const defaults = DEFAULT_OPENAI_CONFIG[currentEnv];
 
@@ -115,12 +115,12 @@ export function getOpenAIConfig(): OpenAIConfig {
       ? parseInt(process.env.OPENAI_MAX_TOKENS) 
       : defaults.maxTokens,
   };
-}
+};
 
 /**
  * Logs environment configuration (without sensitive data) for debugging
  */
-export function logEnvironmentInfo(): void {
+export const logEnvironmentInfo = (): void => {
   const currentEnv = getCurrentEnvironment();
   const config = getOpenAIConfig();
   
@@ -129,4 +129,4 @@ export function logEnvironmentInfo(): void {
   console.log(`Temperature: ${config.temperature}`);
   console.log(`Max Tokens: ${config.maxTokens}`);
   console.log(`API Key configured: ${process.env.OPENAI_API_KEY ? 'Yes' : 'No'}`);
-}
+};

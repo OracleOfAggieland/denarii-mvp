@@ -7,7 +7,7 @@
  * @param {string} base64Image - Base64 encoded image
  * @returns {Promise<{name: string, cost: number, facts: string}>}
  */
-export async function analyzeImageWithOpenAI(base64Image) {
+export const analyzeImageWithOpenAI = async (base64Image) => {
   try {
     const response = await fetch('/api/chat', {
       method: 'POST',
@@ -115,7 +115,7 @@ export async function analyzeImageWithOpenAI(base64Image) {
       facts: "Failed to analyze image: " + error.message
     };
   }
-}
+};
 
 /**
  * Get purchase recommendation from OpenAI
@@ -127,7 +127,7 @@ export async function analyzeImageWithOpenAI(base64Image) {
  * @param {Object} alternative - Cheaper alternative if found (optional)
  * @returns {Promise<{decision: string, reasoning: string, alternative?: Object}>}
  */
-export async function getPurchaseRecommendation(itemName, cost, purpose, frequency, financialProfile, alternative) {
+export const getPurchaseRecommendation = async (itemName, cost, purpose, frequency, financialProfile, alternative) => {
   try {
     // Build the prompt for Charlie Munger-style advice
     let prompt = `You are Charlie Munger, the legendary investor and Warren Buffett's business partner. 
@@ -289,7 +289,7 @@ export async function getPurchaseRecommendation(itemName, cost, purpose, frequen
  * @param {number} currentPrice - Current price of the item
  * @returns {Promise<{name: string, price: number, retailer: string} | null>}
  */
-export async function findCheaperAlternative(itemName, currentPrice) {
+export const findCheaperAlternative = async (itemName, currentPrice) => {
   try {
     const prompt = `Find a cheaper alternative to "${itemName}" which currently costs $${currentPrice}.
 
@@ -351,4 +351,4 @@ export async function findCheaperAlternative(itemName, currentPrice) {
     console.error('Error finding cheaper alternative:', error);
     return null;
   }
-}
+};

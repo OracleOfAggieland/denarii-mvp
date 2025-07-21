@@ -7,7 +7,7 @@ const GEMINI_PRO_VISION_URL = `https://generativelanguage.googleapis.com/v1beta/
 const GEMINI_SEARCH_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
 
 // Function to analyze image using Gemini API
-async function analyzeImageWithGemini(imageBase64) {
+const analyzeImageWithGemini = async (imageBase64) => {
   try {
     const instructions = `
       You are shown a single consumer item.
@@ -68,7 +68,7 @@ async function analyzeImageWithGemini(imageBase64) {
 }
 
 // Function to find cheaper alternatives using Google Search
-async function findCheaperAlternative(itemName, itemCost) {
+const findCheaperAlternative = async (itemName, itemCost) => {
   try {
     console.log(`Searching for alternatives to ${itemName} (under ${itemCost})`);
     
@@ -158,7 +158,7 @@ async function findCheaperAlternative(itemName, itemCost) {
 }
 
 // Function to get purchase recommendation
-async function getPurchaseRecommendation(itemName, itemCost, purpose, frequency, financialProfile, alternative = null) {
+const getPurchaseRecommendation = async (itemName, itemCost, purpose, frequency, financialProfile, alternative = null) => {
   try {
     // Format the message about the purchase
     let analysisPrompt = `
@@ -278,7 +278,7 @@ async function getPurchaseRecommendation(itemName, itemCost, purpose, frequency,
 }
 
 // Helper function to extract JSON from text response
-function extractJsonFromText(text) {
+const extractJsonFromText = (text) => {
   try {
     // Find JSON within the text
     const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -293,10 +293,10 @@ function extractJsonFromText(text) {
     console.error("Error parsing JSON from text:", error);
     return null;
   }
-}
+};
 
 // Format Munger's response for better display
-function formatMungerResponse(text) {
+const formatMungerResponse = (text) => {
   // Extract decision and reasoning
   const buyMatch = text.match(/^(Buy|Don't Buy|Don't buy)[\s:.,]+(.*)/i);
   
@@ -315,6 +315,6 @@ function formatMungerResponse(text) {
     decision: "Consider carefully",
     reasoning: "Consider the value of this purchase against your financial goals and needs."
   };
-}
+};
 
 export { analyzeImageWithGemini, getPurchaseRecommendation, findCheaperAlternative };
