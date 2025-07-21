@@ -1,5 +1,5 @@
-// API key (same as your original one)
-const API_KEY = "AIzaSyB-RIjhhODp6aPTzqVcwbXD894oebXFCUY";
+// API key from environment variables
+const API_KEY = process.env.GOOGLE_API_KEY;
 
 // Updated API endpoints
 const GEMINI_PRO_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${API_KEY}`;

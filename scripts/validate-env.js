@@ -27,7 +27,7 @@ function getCurrentEnvironment() {
 
 function validateEnvironment() {
   const warnings = [];
-  
+
   // Check required environment variables
   if (!process.env.OPENAI_API_KEY) {
     return {
@@ -73,9 +73,9 @@ function validateEnvironment() {
     }
   }
 
-  return { 
-    isValid: true, 
-    warnings: warnings.length > 0 ? warnings : undefined 
+  return {
+    isValid: true,
+    warnings: warnings.length > 0 ? warnings : undefined
   };
 }
 
@@ -86,17 +86,17 @@ function logEnvironmentInfo() {
     production: { model: 'gpt-3.5-turbo', temperature: 0.5, maxTokens: 200 },
     test: { model: 'gpt-3.5-turbo', temperature: 0.1, maxTokens: 50 },
   };
-  
+
   const config = {
     model: process.env.OPENAI_MODEL || defaults[currentEnv].model,
-    temperature: process.env.OPENAI_TEMPERATURE 
-      ? parseFloat(process.env.OPENAI_TEMPERATURE) 
+    temperature: process.env.OPENAI_TEMPERATURE
+      ? parseFloat(process.env.OPENAI_TEMPERATURE)
       : defaults[currentEnv].temperature,
-    maxTokens: process.env.OPENAI_MAX_TOKENS 
-      ? parseInt(process.env.OPENAI_MAX_TOKENS) 
+    maxTokens: process.env.OPENAI_MAX_TOKENS
+      ? parseInt(process.env.OPENAI_MAX_TOKENS)
       : defaults[currentEnv].maxTokens,
   };
-  
+
   console.log(`Environment: ${currentEnv}`);
   console.log(`OpenAI Model: ${config.model}`);
   console.log(`Temperature: ${config.temperature}`);
@@ -113,24 +113,24 @@ const validation = validateEnvironment();
 
 if (validation.isValid) {
   console.log('✅ Environment validation passed!');
-  
+
   if (validation.warnings && validation.warnings.length > 0) {
     console.log('\n⚠️  Warnings:');
     validation.warnings.forEach(warning => {
       console.log(`   - ${warning}`);
     });
   }
-  
+
   console.log('\n🚀 Your environment is ready for development!');
   process.exit(0);
 } else {
   console.log('❌ Environment validation failed!');
   console.log(`   Error: ${validation.error}`);
-  
+
   console.log('\n📝 To fix this issue:');
   console.log('   1. Copy .env.example to .env.local');
   console.log('   2. Add your OpenAI API key to .env.local');
   console.log('   3. Run this script again to validate');
-  
+
   process.exit(1);
 }

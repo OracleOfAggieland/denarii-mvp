@@ -1,26 +1,6 @@
-# Firebase App Hosting configuration
-# This file configures the backend service for your Next.js app
-
-# Runtime configuration
 runConfig:
-  # Environment variables for your backend service
   env:
-    # OpenAI API Key - securely referenced from Secret Manager
     OPENAI_API_KEY:
       secretEnv: "projects/denarii-mvp-f5aea/secrets/openai-api-key/versions/latest"
-    
-    # Node environment
     NODE_ENV: "production"
-    
-    # Next.js configuration
     NEXT_TELEMETRY_DISABLED: "1"
-
-# Optional: CPU and memory configuration
-# cpu: 1
-# memory: 1Gi
-
-# Optional: Minimum instances to keep warm
-# minInstances: 0
-
-# Optional: Maximum instances for scaling
-# maxInstances: 10
