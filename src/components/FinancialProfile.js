@@ -1082,11 +1082,6 @@ function FinancialProfile() {
           </div>
         </form>
       </div>
-
-      {/* Footer */}
-      <footer className="app-footer">
-        <p>Complete your profile to get personalized purchase recommendations</p>
-      </footer>
     </div>
   );
 }

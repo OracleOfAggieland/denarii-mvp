@@ -13,6 +13,7 @@ function createOpenAIClient(): OpenAI {
 // Request interface for type safety
 interface ChatRequest {
   message: string;
+  image?: string; // Base64 encoded image
   conversationHistory?: Array<{
     role: 'user' | 'assistant';
     content: string;
@@ -108,16 +109,36 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
       }
     }
     
-    // Add current user message
-    messages.push({
-      role: 'user',
-      content: body.message.trim(),
-    });
+    // Add current user message (with image if provided)
+    if (body.image) {
+      // This is a vision request
+      messages.push({
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: body.message.trim(),
+          },
+          {
+            type: 'image_url',
+            image_url: {
+              url: `data:image/jpeg;base64,${body.image}`,
+            },
+          },
+        ],
+      });
+    } else {
+      // Regular text message
+      messages.push({
+        role: 'user',
+        content: body.message.trim(),
+      });
+    }
 
     // Create OpenAI client and make request
     const openai = createOpenAIClient();
     const completion = await openai.chat.completions.create({
-      model: config.model,
+      model: body.image ? 'gpt-4o' : config.model, // Use gpt-4o for image requests (supports vision)
       messages: messages,
       temperature: config.temperature,
       max_tokens: config.maxTokens,

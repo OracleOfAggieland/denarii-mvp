@@ -15,21 +15,21 @@ export async function analyzeImageWithOpenAI(base64Image) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        message: `Please analyze this image and identify the product. Return a JSON response with the following format:
+        message: `Analyze this image and identify the product shown. Look carefully at any text, logos, branding, or distinctive features visible in the image.
+
+        Return ONLY a JSON response in this exact format:
         {
-          "name": "Product name",
-          "cost": estimated_price_in_dollars,
-          "facts": "Brief description or key facts about the product"
+          "name": "Product name (be specific, include brand if visible)",
+          "cost": estimated_price_in_dollars_as_number,
+          "facts": "Brief description of what you see in the image"
         }
+
+        Examples:
+        - If you see a Coca-Cola can: {"name": "Coca-Cola Classic Can", "cost": 1.50, "facts": "Red aluminum can with Coca-Cola branding"}
+        - If you see an iPhone: {"name": "Apple iPhone", "cost": 800, "facts": "Smartphone with Apple branding"}
         
-        If you cannot identify the product clearly, return:
-        {
-          "name": "Error",
-          "cost": 0,
-          "facts": "Could not identify the product from the image"
-        }
-        
-        Image data: data:image/jpeg;base64,${base64Image}`,
+        Image to analyze:`,
+        image: base64Image
       }),
     });
 
@@ -38,22 +38,69 @@ export async function analyzeImageWithOpenAI(base64Image) {
     }
 
     const data = await response.json();
-    
+
     if (data.error) {
       throw new Error(data.error);
     }
 
     // Try to parse the JSON response from OpenAI
     try {
-      const parsedResponse = JSON.parse(data.response);
+      // Clean up the response to handle potential formatting issues
+      const cleanedResponse = data.response
+        .replace(/^```json\s*/, '')
+        .replace(/\s*```$/, '')
+        .trim();
+      
+      // Try to find JSON in the response
+      const jsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
+      const jsonStr = jsonMatch ? jsonMatch[0] : cleanedResponse;
+      
+      const parsedResponse = JSON.parse(jsonStr);
+      
+      // Validate the response has required fields
+      if (!parsedResponse.name || parsedResponse.name === "Error") {
+        return {
+          name: "Error",
+          cost: 0,
+          facts: "Could not identify the product from the image"
+        };
+      }
+      
       return {
-        name: parsedResponse.name || "Error",
-        cost: parsedResponse.cost || 0,
-        facts: parsedResponse.facts || "No additional information available"
+        name: parsedResponse.name || "Unknown Product",
+        cost: parseFloat(parsedResponse.cost) || 0,
+        facts: parsedResponse.facts || "Product identified from image"
       };
     } catch (parseError) {
       // If JSON parsing fails, try to extract information from text response
-      const responseText = data.response;
+      const responseText = data.response.toLowerCase();
+      
+      // Try to identify common products from text
+      let productName = "Unknown Product";
+      let estimatedCost = 0;
+      
+      if (responseText.includes('coca-cola') || responseText.includes('coke')) {
+        productName = "Coca-Cola";
+        estimatedCost = 1.50;
+      } else if (responseText.includes('pepsi')) {
+        productName = "Pepsi";
+        estimatedCost = 1.50;
+      } else if (responseText.includes('iphone')) {
+        productName = "iPhone";
+        estimatedCost = 800;
+      } else if (responseText.includes('samsung')) {
+        productName = "Samsung Phone";
+        estimatedCost = 700;
+      }
+      
+      if (productName !== "Unknown Product") {
+        return {
+          name: productName,
+          cost: estimatedCost,
+          facts: `Identified ${productName} from image analysis`
+        };
+      }
+      
       return {
         name: "Error",
         cost: 0,
@@ -111,11 +158,14 @@ export async function getPurchaseRecommendation(itemName, cost, purpose, frequen
     - Potential savings: $${(cost - alternative.price).toFixed(2)}`;
     }
 
-    prompt += `\n\nProvide your response in the following JSON format:
+    prompt += `\n\nProvide your response in the following JSON format (ensure it's valid JSON):
     {
       "decision": "Buy" or "Don't Buy",
-      "reasoning": "Your detailed reasoning in Charlie Munger's voice, explaining the decision with practical wisdom and mental models. Keep it conversational and include specific advice."
+      "reasoning": "Your detailed reasoning in Charlie Munger's voice, explaining the decision with practical wisdom and mental models. Keep it conversational and include specific advice.",
+      "quote": "A relevant Charlie Munger quote that relates to this purchase decision or financial wisdom in general"
     }
+    
+    IMPORTANT: Return ONLY the JSON object, no additional text before or after.
 
     Remember to think like Charlie Munger - focus on:
     - Value vs. cost
@@ -140,17 +190,30 @@ export async function getPurchaseRecommendation(itemName, cost, purpose, frequen
     }
 
     const data = await response.json();
-    
+
     if (data.error) {
       throw new Error(data.error);
     }
 
     // Try to parse the JSON response from OpenAI
     try {
-      const parsedResponse = JSON.parse(data.response);
+      // First try direct JSON parsing
+      // Clean up the response to handle potential formatting issues
+      const cleanedResponse = data.response
+        .replace(/^```json\s*/, '')
+        .replace(/\s*```$/, '')
+        .trim();
+
+      const parsedResponse = JSON.parse(cleanedResponse);
+
+      // Clean up the reasoning to remove any JSON artifacts
+      let cleanedReasoning = parsedResponse.reasoning || "";
+      cleanedReasoning = cleanedReasoning.replace(/^\s*\{\s*"decision":[^,]*,\s*"reasoning":\s*"|"\s*\}\s*$/g, '');
+
       const result = {
         decision: parsedResponse.decision || "Don't Buy",
-        reasoning: parsedResponse.reasoning || "I couldn't provide a proper analysis at this time."
+        reasoning: cleanedReasoning || "I couldn't provide a proper analysis at this time.",
+        quote: parsedResponse.quote || "The big money is not in the buying and selling, but in the waiting."
       };
 
       // Include alternative if it was provided
@@ -160,17 +223,52 @@ export async function getPurchaseRecommendation(itemName, cost, purpose, frequen
 
       return result;
     } catch (parseError) {
-      // If JSON parsing fails, extract decision from text
+      // If JSON parsing fails, try to extract JSON from text
       const responseText = data.response;
       let decision = "Don't Buy";
-      
-      if (responseText.toLowerCase().includes("buy") && !responseText.toLowerCase().includes("don't buy")) {
-        decision = "Buy";
+      let reasoning = "I couldn't provide a proper analysis at this time.";
+      let quote = "The big money is not in the buying and selling, but in the waiting.";
+
+      // Try to find JSON block in the response
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          const jsonStr = jsonMatch[0];
+          const parsed = JSON.parse(jsonStr);
+          decision = parsed.decision || decision;
+          reasoning = parsed.reasoning || reasoning;
+          quote = parsed.quote || quote;
+        } catch (innerParseError) {
+          // Fall back to regex extraction
+          const decisionMatch = responseText.match(/"decision":\s*"([^"]+)"/i);
+          if (decisionMatch) decision = decisionMatch[1];
+
+          const reasoningMatch = responseText.match(/"reasoning":\s*"([^"]*(?:\\.[^"]*)*)"/i);
+          if (reasoningMatch) reasoning = reasoningMatch[1].replace(/\\"/g, '"');
+
+          const quoteMatch = responseText.match(/"quote":\s*"([^"]*(?:\\.[^"]*)*)"/i);
+          if (quoteMatch) quote = quoteMatch[1].replace(/\\"/g, '"');
+        }
+      } else {
+        // If no JSON found, try simple text extraction
+        if (responseText.toLowerCase().includes("buy") && !responseText.toLowerCase().includes("don't buy")) {
+          decision = "Buy";
+        }
+        // Clean up reasoning by removing JSON artifacts
+        reasoning = responseText
+          .replace(/\{[^}]*\}/g, '')
+          .replace(/["{}]/g, '')
+          .replace(/decision:\s*[^,]*/gi, '')
+          .replace(/reasoning:\s*/gi, '')
+          .replace(/quote:\s*[^,]*/gi, '')
+          .replace(/^\s*\{\s*"decision":[^,]*,\s*"reasoning":\s*"|"\s*\}\s*$/g, '')
+          .trim();
       }
 
       return {
         decision: decision,
-        reasoning: responseText,
+        reasoning: reasoning,
+        quote: quote,
         alternative: alternative
       };
     }
@@ -179,6 +277,7 @@ export async function getPurchaseRecommendation(itemName, cost, purpose, frequen
     return {
       decision: "Error",
       reasoning: "I couldn't analyze this purchase due to a technical error: " + error.message,
+      quote: "The big money is not in the buying and selling, but in the waiting.",
       alternative: alternative
     };
   }
@@ -225,7 +324,7 @@ export async function findCheaperAlternative(itemName, currentPrice) {
     }
 
     const data = await response.json();
-    
+
     if (data.error) {
       throw new Error(data.error);
     }
@@ -233,7 +332,7 @@ export async function findCheaperAlternative(itemName, currentPrice) {
     // Try to parse the JSON response from OpenAI
     try {
       const parsedResponse = JSON.parse(data.response);
-      
+
       // Check if a valid alternative was found
       if (parsedResponse.name && parsedResponse.price && parsedResponse.retailer) {
         return {
@@ -242,7 +341,7 @@ export async function findCheaperAlternative(itemName, currentPrice) {
           retailer: parsedResponse.retailer
         };
       }
-      
+
       return null;
     } catch (parseError) {
       console.error('Error parsing alternative response:', parseError);

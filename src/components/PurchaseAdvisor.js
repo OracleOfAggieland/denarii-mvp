@@ -19,6 +19,7 @@ function PurchaseAdvisor() {
   const [dragOver, setDragOver] = useState(false);
   const [showFinancialProfile, setShowFinancialProfile] = useState(false);
   const [hasSeenProfilePrompt, setHasSeenProfilePrompt] = useState(false);
+  const [showImageOptions, setShowImageOptions] = useState(false);
   const fileInputRef = useRef(null);
   const resultsRef = useRef(null);
   const videoRef = useRef(null);
@@ -34,41 +35,57 @@ function PurchaseAdvisor() {
 
   // Load financial profile from localStorage if available
   useEffect(() => {
-    // First check for quick profile
-    const quickProfile = localStorage.getItem('quickFinancialProfile');
-    if (quickProfile) {
-      const parsed = JSON.parse(quickProfile);
-      // Convert quick profile to format expected by the app
-      const convertedProfile = {
-        monthlyIncome: parsed.monthlyIncome,
-        monthlyExpenses: parsed.monthlyExpenses,
-        currentSavings: parsed.currentSavings,
-        debtPayments: parsed.debtPayments || "0",
-        summary: parsed.summary || {
-          monthlyNetIncome: (parseFloat(parsed.monthlyIncome) || 0) - 
-                           (parseFloat(parsed.monthlyExpenses) || 0) - 
-                           (parseFloat(parsed.debtPayments) || 0),
-          debtToIncomeRatio: parsed.debtPayments ? 
-            ((parseFloat(parsed.debtPayments) / parseFloat(parsed.monthlyIncome)) * 100) : 0,
-          emergencyFundMonths: parsed.currentSavings && parsed.monthlyExpenses ?
-            (parseFloat(parsed.currentSavings) / parseFloat(parsed.monthlyExpenses)) : 0,
-          healthScore: parsed.summary?.healthScore || 50
-        },
-        riskTolerance: parsed.riskTolerance || "moderate",
-        financialGoal: parsed.financialGoal || "balance"
-      };
-      setFinancialProfile(convertedProfile);
-    } else {
-      // Fall back to full profile if it exists
-      const savedProfile = localStorage.getItem('financialProfile');
-      if (savedProfile) {
-        setFinancialProfile(JSON.parse(savedProfile));
+    const loadProfile = () => {
+      // First check for quick profile
+      const quickProfile = localStorage.getItem('quickFinancialProfile');
+      if (quickProfile) {
+        const parsed = JSON.parse(quickProfile);
+        // Convert quick profile to format expected by the app
+        const convertedProfile = {
+          monthlyIncome: parsed.monthlyIncome,
+          monthlyExpenses: parsed.monthlyExpenses,
+          currentSavings: parsed.currentSavings,
+          debtPayments: parsed.debtPayments || "0",
+          summary: {
+            monthlyNetIncome: parsed.summary?.monthlyNetIncome ||
+              ((parseFloat(parsed.monthlyIncome) || 0) -
+                (parseFloat(parsed.monthlyExpenses) || 0) -
+                (parseFloat(parsed.debtPayments) || 0)),
+            debtToIncomeRatio: parsed.debtPayments ?
+              ((parseFloat(parsed.debtPayments) / parseFloat(parsed.monthlyIncome)) * 100) : 0,
+            emergencyFundMonths: parsed.summary?.savingsMonths ||
+              (parsed.currentSavings && parsed.monthlyExpenses ?
+                (parseFloat(parsed.currentSavings) / parseFloat(parsed.monthlyExpenses)) : 0),
+            healthScore: parsed.summary?.healthScore || 50
+          },
+          riskTolerance: parsed.riskTolerance || "moderate",
+          financialGoal: parsed.financialGoal || "balance"
+        };
+        setFinancialProfile(convertedProfile);
+      } else {
+        // Fall back to full profile if it exists
+        const savedProfile = localStorage.getItem('financialProfile');
+        if (savedProfile) {
+          setFinancialProfile(JSON.parse(savedProfile));
+        }
       }
-    }
-    
+    };
+
+    loadProfile();
+
     // Check if user has seen the profile prompt
     const seenPrompt = localStorage.getItem('hasSeenProfilePrompt');
     setHasSeenProfilePrompt(!!seenPrompt);
+
+    // Listen for storage changes to update profile when it's modified
+    const handleStorageChange = (e) => {
+      if (e.key === 'quickFinancialProfile' || e.key === 'financialProfile') {
+        loadProfile();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   // Auto-scroll function
@@ -96,7 +113,15 @@ function PurchaseAdvisor() {
 
   // Handle financial profile update
   const handleFinancialProfileUpdate = (profile) => {
-    setFinancialProfile(profile);
+    // Ensure the profile has the correct emergency fund calculation
+    const updatedProfile = {
+      ...profile,
+      summary: {
+        ...profile.summary,
+        emergencyFundMonths: profile.summary?.savingsMonths || profile.summary?.emergencyFundMonths || 0
+      }
+    };
+    setFinancialProfile(updatedProfile);
     setShowFinancialProfile(false);
   };
 
@@ -104,7 +129,7 @@ function PurchaseAdvisor() {
   const startCamera = async () => {
     try {
       setImageCapturing(true);
-      
+
       const constraints = {
         video: {
           facingMode: "environment",
@@ -112,10 +137,10 @@ function PurchaseAdvisor() {
           height: { ideal: 720 }
         }
       };
-      
+
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
-      
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
@@ -139,26 +164,26 @@ function PurchaseAdvisor() {
   const captureImage = () => {
     if (videoRef.current && canvasRef.current) {
       const context = canvasRef.current.getContext('2d');
-      
+
       // Match canvas dimensions to video
       canvasRef.current.width = videoRef.current.videoWidth;
       canvasRef.current.height = videoRef.current.videoHeight;
-      
+
       // Draw the video frame on the canvas
       context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
-      
+
       // Convert canvas to image file
       canvasRef.current.toBlob((blob) => {
         const file = new File([blob], "captured-image.jpeg", { type: "image/jpeg" });
         setImageFile(file);
-        
+
         // Create image preview
         const imageUrl = URL.createObjectURL(blob);
         setImagePreview(imageUrl);
-        
+
         // Stop the camera
         stopCamera();
-        
+
         // Reset item name since we'll identify from the image
         setItemName("");
       }, 'image/jpeg', 0.95);
@@ -264,10 +289,10 @@ function PurchaseAdvisor() {
         "It only takes 2 minutes and helps us give you better advice.\n\n" +
         "Would you like to set it up now?"
       );
-      
+
       localStorage.setItem('hasSeenProfilePrompt', 'true');
       setHasSeenProfilePrompt(true);
-      
+
       if (shouldSetupProfile) {
         setShowFinancialProfile(true);
         return;
@@ -293,33 +318,33 @@ function PurchaseAdvisor() {
           };
           reader.readAsDataURL(imageFile);
         });
-        
+
         // Call the OpenAI Vision API
         itemDetails = await analyzeImageWithOpenAI(base64Image);
-        
+
         if (itemDetails && itemDetails.name && itemDetails.name !== "Error") {
           recognizedItemName = itemDetails.name;
-          
+
           // Update the displayed item name
           setItemName(recognizedItemName);
-          
+
           // If item cost is not provided by user but is in itemDetails, use that
           if (itemCost === "" && itemDetails.cost > 0) {
             setItemCost(itemDetails.cost.toString());
           }
-          
+
           // Add the recognition message
           setMessages([
-            { 
-              sender: "System", 
-              text: `Identified: ${recognizedItemName}. Estimated cost: ${itemDetails.cost}. ${itemDetails.facts}` 
+            {
+              sender: "System",
+              text: `Identified: ${recognizedItemName}. Estimated cost: ${itemDetails.cost}. ${itemDetails.facts}`
             }
           ]);
         } else {
           setMessages([
-            { 
-              sender: "System", 
-              text: "Couldn't identify the image clearly. Please enter the item name manually." 
+            {
+              sender: "System",
+              text: "Couldn't identify the image clearly. Please enter the item name manually."
             }
           ]);
           if (loading) setLoading(false);
@@ -330,11 +355,10 @@ function PurchaseAdvisor() {
       // Only proceed if we have an item name
       if (recognizedItemName) {
         const costValue = parseFloat(itemCost);
-        
+
         // Format the message about the purchase
-        const purchaseMessage = `Should I buy: ${recognizedItemName} for ${costValue}${
-          purpose ? `, Purpose: ${purpose}` : ""
-        }${frequency ? `, Frequency of use: ${frequency}` : ""}`;
+        const purchaseMessage = `Should I buy: ${recognizedItemName} for ${costValue}${purpose ? `, Purpose: ${purpose}` : ""
+          }${frequency ? `, Frequency of use: ${frequency}` : ""}`;
 
         const newMessages = [
           ...(messages || []),
@@ -350,35 +374,35 @@ function PurchaseAdvisor() {
             // Update messages to show we're searching
             setMessages([
               ...newMessages,
-              { 
-                sender: "System", 
-                text: "Searching for cheaper alternatives..." 
+              {
+                sender: "System",
+                text: "Searching for cheaper alternatives..."
               }
             ]);
-            
+
             alternative = await findCheaperAlternative(recognizedItemName, costValue);
-            
+
             // Update messages with alternative found or not
             if (alternative) {
               const savings = costValue - alternative.price;
               const savingsPercent = (savings / costValue) * 100;
-              
+
               // Create Google search link instead of direct URL
               alternative.searchUrl = createGoogleSearchLink(alternative.name);
-              
+
               setMessages([
                 ...newMessages,
-                { 
-                  sender: "System", 
-                  text: `Found a cheaper alternative: ${alternative.name} for ${alternative.price} at ${alternative.retailer}. You could save ${savings.toFixed(2)} (${savingsPercent.toFixed(1)}%).` 
+                {
+                  sender: "System",
+                  text: `Found a cheaper alternative: ${alternative.name} for ${alternative.price} at ${alternative.retailer}. You could save ${savings.toFixed(2)} (${savingsPercent.toFixed(1)}%).`
                 }
               ]);
             } else {
               setMessages([
                 ...newMessages,
-                { 
-                  sender: "System", 
-                  text: "No cheaper alternatives found for this item." 
+                {
+                  sender: "System",
+                  text: "No cheaper alternatives found for this item."
                 }
               ]);
             }
@@ -386,9 +410,9 @@ function PurchaseAdvisor() {
             console.error("Error finding alternatives:", error);
             setMessages([
               ...newMessages,
-              { 
-                sender: "System", 
-                text: "Couldn't search for alternatives at this time." 
+              {
+                sender: "System",
+                text: "Couldn't search for alternatives at this time."
               }
             ]);
           } finally {
@@ -398,31 +422,32 @@ function PurchaseAdvisor() {
 
         // Get recommendation from OpenAI
         const recommendation = await getPurchaseRecommendation(
-          recognizedItemName, 
-          costValue, 
+          recognizedItemName,
+          costValue,
           purpose,
           frequency,
           financialProfile,
           alternative
         );
-        
+
         // Create the final message with recommendation
         const mungerMessage = {
           sender: "Munger",
           text: recommendation.reasoning,
           formatted: {
             decision: recommendation.decision,
-            reasoning: recommendation.reasoning
+            reasoning: recommendation.reasoning,
+            quote: recommendation.quote
           }
         };
-        
+
         // Add alternative to message if found
         if (recommendation.alternative) {
           // Ensure we're using the Google search URL instead of the direct product URL
           recommendation.alternative.searchUrl = createGoogleSearchLink(recommendation.alternative.name);
           mungerMessage.alternative = recommendation.alternative;
         }
-        
+
         // Add the message to the list
         setMessages(prevMessages => {
           return [...prevMessages, mungerMessage];
@@ -435,7 +460,7 @@ function PurchaseAdvisor() {
         setImageFile(null);
         setImagePreview(null);
       }
-      
+
     } catch (error) {
       console.error("Error:", error);
       setMessages([
@@ -445,7 +470,8 @@ function PurchaseAdvisor() {
           text: "Sorry, I couldn&apos;t analyze this purchase right now. Technical error occurred: " + error.message,
           formatted: {
             decision: "Error",
-            reasoning: "Technical error occurred: " + error.message
+            reasoning: "Technical error occurred: " + error.message,
+            quote: "The big money is not in the buying and selling, but in the waiting."
           }
         }
       ]);
@@ -484,7 +510,7 @@ function PurchaseAdvisor() {
               <span className="profile-icon">👤</span>
               Your Financial Snapshot
             </h3>
-            <button 
+            <button
               className="update-profile-btn"
               onClick={() => setShowFinancialProfile(true)}
               title="Update financial info"
@@ -501,7 +527,7 @@ function PurchaseAdvisor() {
             </div>
             <div className="mini-stat">
               <span className="stat-label">Health Score:</span>
-              <span 
+              <span
                 className="stat-value"
                 style={{ color: getHealthScoreColor(financialProfile.summary.healthScore || 50) }}
               >
@@ -521,7 +547,7 @@ function PurchaseAdvisor() {
           <div className="prompt-content">
             <span className="prompt-icon">🎯</span>
             <p>Get personalized advice based on your financial situation</p>
-            <button 
+            <button
               className="setup-profile-btn"
               onClick={() => setShowFinancialProfile(true)}
             >
@@ -531,204 +557,247 @@ function PurchaseAdvisor() {
         </div>
       )}
 
-      {/* Purchase Analysis Form */}
-      <div className="purchase-form">
-        <h2 className="form-title">Analyze Your Purchase</h2>
-        
-        <div className="form-group">
-          <label htmlFor="itemName">Item Name:</label>
-          <input
-            id="itemName"
-            type="text"
-            value={itemName}
-            onChange={(e) => setItemName(e.target.value)}
-            placeholder={imageFile ? "Identifying..." : "What are you considering buying?"}
-            disabled={loading}
-            className="input-field"
-          />
-        </div>
-        
-        <div className="form-group">
-          <label htmlFor="itemCost">Cost ($):</label>
-          <input
-            id="itemCost"
-            type="number"
-            value={itemCost}
-            onChange={(e) => setItemCost(e.target.value)}
-            placeholder="How much does it cost?"
-            disabled={loading}
-            className="input-field"
-          />
-        </div>
-        
-        <div className="form-group">
-          <label htmlFor="purpose">Purpose (optional):</label>
-          <input
-            id="purpose"
-            type="text"
-            value={purpose}
-            onChange={(e) => setPurpose(e.target.value)}
-            placeholder="What will you use it for?"
-            disabled={loading}
-            className="input-field"
-          />
-        </div>
-        
-        <div className="form-group">
-          <label htmlFor="frequency">Frequency of Use (optional):</label>
-          <select 
-            id="frequency"
-            value={frequency} 
-            onChange={(e) => setFrequency(e.target.value)}
-            disabled={loading}
-            className="select-field"
-          >
-            <option value="">Select frequency...</option>
-            <option value="Daily">Daily</option>
-            <option value="Weekly">Weekly</option>
-            <option value="Monthly">Monthly</option>
-            <option value="Rarely">Rarely</option>
-            <option value="One-time">One-time use</option>
-          </select>
+      {/* Purchase Analysis Card */}
+      <div className="purchase-analysis-card">
+        <div className="card-header">
+          <h2 className="card-title">
+            <span className="card-icon">🛒</span>
+            Analyze Your Purchase
+          </h2>
+          <p className="card-subtitle">Tell us about the item you're considering</p>
         </div>
 
-        {/* Image Capture Section */}
-        <div 
-          className={`image-capture-section ${dragOver ? 'drag-over' : ''}`}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-        >
-          {imageCapturing ? (
-            <div className="camera-container">
-              <video 
-                ref={videoRef} 
-                autoPlay 
-                playsInline 
-                className="camera-preview"
-              />
-              <div className="camera-controls">
-                <button 
-                  type="button" 
-                  onClick={captureImage} 
-                  className="capture-btn"
-                  aria-label="Capture image"
-                >
-                  <span className="capture-icon">📸</span>
-                </button>
-                <button 
-                  type="button" 
-                  onClick={cancelCapture} 
-                  className="cancel-btn"
-                >
-                  Cancel
-                </button>
+        <div className="card-body">
+          {/* Basic Item Information */}
+          <div className="item-info-section">
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="itemName">Item Name:</label>
+                <input
+                  id="itemName"
+                  type="text"
+                  value={itemName}
+                  onChange={(e) => setItemName(e.target.value)}
+                  placeholder={imageFile ? "Identifying..." : "What are you considering buying?"}
+                  disabled={loading}
+                  className="input-field"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="itemCost">Cost ($):</label>
+                <input
+                  id="itemCost"
+                  type="number"
+                  value={itemCost}
+                  onChange={(e) => setItemCost(e.target.value)}
+                  placeholder="How much does it cost?"
+                  disabled={loading}
+                  className="input-field"
+                />
               </div>
             </div>
-          ) : imagePreview ? (
-            <div className="image-preview-container">
-              <img src={imagePreview} alt="Item preview" className="item-preview" />
-              <button 
-                type="button" 
-                onClick={clearImage} 
-                className="clear-btn"
-              >
-                Remove Image
-              </button>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="purpose">Purpose (optional):</label>
+                <input
+                  id="purpose"
+                  type="text"
+                  value={purpose}
+                  onChange={(e) => setPurpose(e.target.value)}
+                  placeholder="What will you use it for?"
+                  disabled={loading}
+                  className="input-field"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="frequency">Frequency of Use (optional):</label>
+                <select
+                  id="frequency"
+                  value={frequency}
+                  onChange={(e) => setFrequency(e.target.value)}
+                  disabled={loading}
+                  className="select-field"
+                >
+                  <option value="">Select frequency...</option>
+                  <option value="Daily">Daily</option>
+                  <option value="Weekly">Weekly</option>
+                  <option value="Monthly">Monthly</option>
+                  <option value="Rarely">Rarely</option>
+                  <option value="One-time">One-time use</option>
+                </select>
+              </div>
             </div>
-          ) : (
-            <div className="image-capture-controls">
-              <div 
-                className={`drag-drop-area ${dragOver ? 'drag-over' : ''}`}
-                onClick={triggerFileInput}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-              >
-                <div className="drag-drop-icon">📁</div>
-                <p>Drag and drop an image here</p>
-                <p className="drag-drop-text">or click to browse files</p>
+          </div>
+
+          {/* Image Upload Section */}
+          <div className="image-section">
+            {imageCapturing ? (
+              <div className="camera-container">
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  className="camera-preview"
+                />
+                <div className="camera-controls">
+                  <button
+                    type="button"
+                    onClick={captureImage}
+                    className="capture-btn"
+                    aria-label="Capture image"
+                  >
+                    <span className="capture-icon">📸</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cancelCapture}
+                    className="cancel-btn"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
-              
-              <div className="image-capture-buttons">
-                <button 
-                  type="button" 
-                  onClick={startCamera} 
-                  className="camera-btn"
-                  aria-label="Start camera to capture image"
+            ) : imagePreview ? (
+              <div className="image-preview-container">
+                <img src={imagePreview} alt="Item preview" className="item-preview" />
+                <button
+                  type="button"
+                  onClick={clearImage}
+                  className="clear-btn"
                 >
-                  <span className="camera-icon">📷</span>
-                  Capture Image of Item
-                </button>
-                <span className="or-divider">or</span>
-                <button 
-                  type="button" 
-                  className="upload-btn" 
-                  onClick={triggerFileInput}
-                  aria-label="Upload image file"
-                >
-                  <span className="upload-icon">📤</span>
-                  Upload Image
+                  Remove Image
                 </button>
               </div>
-              
+            ) : (
+              <div className="image-upload-compact">
+                {!showImageOptions ? (
+                  <button
+                    type="button"
+                    className="add-photo-btn"
+                    onClick={() => setShowImageOptions(true)}
+                  >
+                    <span className="btn-icon">📸</span>
+                    Add Item Photo (Optional)
+                  </button>
+                ) : (
+                  <div
+                    className={`image-upload-expanded ${dragOver ? 'drag-over' : ''}`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                  >
+                    <div className="upload-header">
+                      <h4>Add Item Photo</h4>
+                      <button
+                        type="button"
+                        className="close-btn"
+                        onClick={() => setShowImageOptions(false)}
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    <div className="upload-options">
+                      <div
+                        className={`drag-drop-zone ${dragOver ? 'drag-over' : ''}`}
+                        onClick={triggerFileInput}
+                      >
+                        <div className="drag-drop-icon">📁</div>
+                        <p>Drag & drop or click to browse</p>
+                      </div>
+
+                      <div className="upload-buttons">
+                        <button
+                          type="button"
+                          onClick={startCamera}
+                          className="upload-option-btn"
+                          aria-label="Start camera to capture image"
+                        >
+                          <span className="btn-icon">📷</span>
+                          Camera
+                        </button>
+                        <button
+                          type="button"
+                          className="upload-option-btn"
+                          onClick={triggerFileInput}
+                          aria-label="Upload image file"
+                        >
+                          <span className="btn-icon">📤</span>
+                          Upload
+                        </button>
+                      </div>
+                    </div>
+
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      accept="image/*"
+                      className="file-input"
+                      hidden
+                      aria-label="Select image file"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+            <canvas ref={canvasRef} style={{ display: 'none' }} />
+          </div>
+
+          {/* Options Section */}
+          <div className="options-section">
+            <label className="checkbox-option">
               <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                accept="image/*"
-                className="file-input"
-                hidden
-                aria-label="Select image file"
+                type="checkbox"
+                checked={searchForAlternative}
+                onChange={(e) => setSearchForAlternative(e.target.checked)}
+                disabled={loading}
+                className="checkbox-input"
               />
-            </div>
-          )}
-          <canvas ref={canvasRef} style={{ display: 'none' }} />
+              <span className="checkbox-custom"></span>
+              <span className="checkbox-label">Find cheaper alternatives online</span>
+            </label>
+          </div>
         </div>
 
-        {/* Find Alternatives Option */}
-        <div className="alternatives-option">
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={searchForAlternative}
-              onChange={(e) => setSearchForAlternative(e.target.checked)}
-              disabled={loading}
-              className="checkbox-input"
-            />
-            <span className="checkbox-text">Find cheaper alternatives online</span>
-          </label>
+        {/* Action Button */}
+        <div className="card-footer">
+          <button
+            onClick={analyzePurchase}
+            disabled={loading || findingAlternatives}
+            className="analyze-btn"
+          >
+            {loading ? (
+              <span className="btn-content">
+                <span className="loading-spinner"></span>
+                Analyzing Purchase...
+              </span>
+            ) : findingAlternatives ? (
+              <span className="btn-content">
+                <span className="loading-spinner"></span>
+                Finding Alternatives...
+              </span>
+            ) : (
+              <span className="btn-content">
+                <span className="btn-icon">🤔</span>
+                Should I Buy It?
+              </span>
+            )}
+          </button>
         </div>
-
-        <button 
-          onClick={analyzePurchase} 
-          disabled={loading || findingAlternatives} 
-          className="should-i-buy-btn"
-        >
-          {loading ? (
-            <span className="loading-text">
-              <span className="loading-spinner"></span>
-              Analyzing
-            </span>
-          ) : findingAlternatives ? (
-            <span className="loading-text">
-              <span className="loading-spinner"></span>
-              Finding Alternatives
-            </span>
-          ) : (
-            "Should I Buy It?"
-          )}
-        </button>
       </div>
 
       {/* Results Window */}
       {messages.length > 0 && (
         <div className="results-window" ref={resultsRef}>
           <h2 className="results-title">
-            <span className="results-icon">💡</span> 
+            <span className="results-icon">💡</span>
             Analysis Results
           </h2>
-          
+
           <div className="analysis-container">
             {messages.map((msg, i) => {
               // Display differently based on sender
@@ -738,24 +807,27 @@ function PurchaseAdvisor() {
                   <div key={i} className="decision-card">
                     <div className={`decision-header ${msg.formatted.decision === "Buy" ? "buy" : "dont-buy"}`}>
                       <div className="decision-icon">
-                        {msg.formatted.decision === "Buy" ? "✅" : 
-                         msg.formatted.decision === "Don't Buy" ? "❌" : "⚠️"}
+                        {msg.formatted.decision === "Buy" ? "✅" :
+                          msg.formatted.decision === "Don't Buy" ? "❌" : "⚠️"}
                       </div>
                       <h3 className="decision-title">{msg.formatted.decision}</h3>
                     </div>
                     <div className="decision-body">
-                      <p>{msg.formatted.reasoning}</p>
-                      
+                      <p>{msg.formatted.reasoning
+                        .replace(/^\s*\{\s*"decision":[^,]*,\s*"reasoning":\s*"|"\s*\}\s*$/g, '')
+                        .replace(/^[,\s]+|[,\s]+$/g, '')
+                        .trim()}</p>
+
                       {/* Display alternative product if available */}
                       {msg.alternative && (
                         <div className="alternative-product">
                           <h4>Cheaper Alternative Found:</h4>
                           <p><strong>{msg.alternative.name}</strong> - ${msg.alternative.price} at {msg.alternative.retailer}</p>
                           <p>
-                            <a 
-                              href={msg.alternative.searchUrl || createGoogleSearchLink(msg.alternative.name)} 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
+                            <a
+                              href={msg.alternative.searchUrl || createGoogleSearchLink(msg.alternative.name)}
+                              target="_blank"
+                              rel="noopener noreferrer"
                               className="view-alternative-btn"
                             >
                               Better Price Alternative
@@ -763,11 +835,21 @@ function PurchaseAdvisor() {
                           </p>
                         </div>
                       )}
-                      
-                      <div className="signature">
-                        <span className="signature-icon">👨‍💼</span>
-                        <span className="signature-text">— Charlie Munger</span>
-                      </div>
+
+                      {/* Charlie Munger Quote */}
+                      {msg.formatted.quote && (
+                        <div className="munger-quote">
+                          <div className="quote-icon">💭</div>
+                          <blockquote className="quote-text">
+                            "{msg.formatted.quote}"
+                          </blockquote>
+                          <div className="quote-attribution">
+                            — Financial Wisdom
+                          </div>
+                        </div>
+                      )}
+
+
                     </div>
                   </div>
                 );
@@ -776,8 +858,8 @@ function PurchaseAdvisor() {
                 return (
                   <div key={i} className={`message ${msg.sender.toLowerCase()}`}>
                     <div className="message-header">
-                      {msg.sender === "System" ? "💡" : 
-                       msg.sender === "You" ? "🧑" : ""}
+                      {msg.sender === "System" ? "💡" :
+                        msg.sender === "You" ? "🧑" : ""}
                       <strong>{msg.sender}</strong>
                     </div>
                     <div className="message-body">{msg.text}</div>
@@ -786,7 +868,7 @@ function PurchaseAdvisor() {
               }
             })}
           </div>
-          
+
           {(loading || findingAlternatives) && (
             <div className="loading-message">
               <span className="loading-dots"></span>

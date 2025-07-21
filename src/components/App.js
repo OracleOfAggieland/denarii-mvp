@@ -2,15 +2,21 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react-router-dom";
 import PurchaseAdvisor from "./PurchaseAdvisor";
 import FinancialProfile from "./FinancialProfile";
+import About from "./About";
 import "../styles/App.css";
 
 // Header Component
 function Header() {
   return (
     <header className="top-header">
-      <div className="logo">
-        <span className="logo-icon">💰</span>
-        Denarii
+      <div className="header-content">
+        <Link to="/" className="logo">
+          <span className="logo-icon">💰</span>
+          Denarii
+        </Link>
+        <nav className="header-nav">
+          <Link to="/about" className="nav-link">About</Link>
+        </nav>
       </div>
     </header>
   );
@@ -28,7 +34,7 @@ function Footer() {
 // Navigation Component
 function Navigation() {
   const location = useLocation();
-  
+
   return (
     <div className="nav-container">
       {location.pathname === "/" ? (
@@ -51,14 +57,15 @@ function App() {
     <Router>
       <div className="app-layout">
         <Header />
-        
+
         <main className="main-content">
           <Routes>
             <Route path="/" element={<PurchaseAdvisor />} />
             <Route path="/profile" element={<FinancialProfile />} />
+            <Route path="/about" element={<About />} />
           </Routes>
         </main>
-        
+
         <Footer />
         <Navigation />
       </div>
