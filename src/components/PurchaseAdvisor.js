@@ -344,7 +344,7 @@ const PurchaseAdvisor = () => {
           setMessages([
             {
               sender: "System",
-              text: "Couldn't identify the image clearly. Please enter the item name manually."
+              text: "Couldn&apos;t identify the image clearly. Please enter the item name manually."
             }
           ]);
           if (loading) setLoading(false);
@@ -412,7 +412,7 @@ const PurchaseAdvisor = () => {
               ...newMessages,
               {
                 sender: "System",
-                text: "Couldn't search for alternatives at this time."
+                text: "Couldn&apos;t search for alternatives at this time."
               }
             ]);
           } finally {
@@ -564,7 +564,7 @@ const PurchaseAdvisor = () => {
             <span className="card-icon">🛒</span>
             Analyze Your Purchase
           </h2>
-          <p className="card-subtitle">Tell us about the item you're considering</p>
+          <p className="card-subtitle">Tell us about the item you&apos;re considering</p>
         </div>
 
         <div className="card-body">
@@ -706,7 +706,7 @@ const PurchaseAdvisor = () => {
                         onClick={triggerFileInput}
                       >
                         <div className="drag-drop-icon">📁</div>
-                        <p>Drag & drop or click to browse</p>
+                        <p>Drag &amp; drop or click to browse</p>
                       </div>
 
                       <div className="upload-buttons">
@@ -814,7 +814,7 @@ const PurchaseAdvisor = () => {
                     </div>
                     <div className="decision-body">
                       <p>{msg.formatted.reasoning
-                        .replace(/^\s*\{\s*"decision":[^,]*,\s*"reasoning":\s*"|"\s*\}\s*$/g, '')
+                        .replace(/^\s*\{\s*&quot;decision&quot;:[^,]*,\s*&quot;reasoning&quot;:\s*&quot;|&quot;\s*\}\s*$/g, '')
                         .replace(/^[,\s]+|[,\s]+$/g, '')
                         .trim()}</p>
 
@@ -841,7 +841,7 @@ const PurchaseAdvisor = () => {
                         <div className="munger-quote">
                           <div className="quote-icon">💭</div>
                           <blockquote className="quote-text">
-                            "{msg.formatted.quote}"
+                            &ldquo;{msg.formatted.quote}&rdquo;
                           </blockquote>
                           <div className="quote-attribution">
                             — Financial Wisdom

@@ -31,7 +31,7 @@ const About = () => {
             <div className="about-icon">🤖</div>
             <h2>AI-Driven Intelligence</h2>
             <p>
-              Our groundbreaking AI-driven platform doesn't just set goals—it actively guides and 
+              Our groundbreaking AI-driven platform doesn&apos;t just set goals—it actively guides and 
               advises you every step of the way, turning ordinary choices into extraordinary growth. 
               By seamlessly integrating your financial dreams with daily spending habits, Denarii 
               accelerates your journey toward becoming a millionaire, empowering you to harness the 
@@ -45,7 +45,7 @@ const About = () => {
             <p>
               Imagine each small decision, each dollar spent or saved, compounding into wealth that 
               frees you to live life on your terms. With Denarii, the dream of financial freedom 
-              isn't distant—it's within your grasp, growing closer every day.
+              isn&apos;t distant—it&apos;s within your grasp, growing closer every day.
             </p>
           </div>
 
