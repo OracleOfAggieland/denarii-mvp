@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import React from 'react'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -6,7 +7,7 @@ export const metadata: Metadata = {
   description: 'Get Charlie Munger\'s rational advice on your purchasing decisions',
 }
 
-export default function RootLayout({
+const RootLayout = ({
   children,
 }: {
   children: React.ReactNode
@@ -20,3 +21,5 @@ export default function RootLayout({
     </html>
   )
 }
+
+export default RootLayout

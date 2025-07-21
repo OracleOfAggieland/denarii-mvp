@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Message, ChatState } from '@/types/chat';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
@@ -8,7 +8,7 @@ import ErrorDisplay from './ErrorDisplay';
 import LoadingIndicator from './LoadingIndicator';
 import { useChatApi } from '../hooks/useChatApi';
 
-export default function ChatInterface() {
+const ChatInterface: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const { sendMessage, isLoading, error, clearError, retry } = useChatApi();
 
@@ -78,3 +78,4 @@ export default function ChatInterface() {
     </div>
   );
 }
+export default ChatInterface;

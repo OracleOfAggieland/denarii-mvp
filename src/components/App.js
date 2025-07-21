@@ -6,7 +6,7 @@ import About from "./About";
 import "../styles/App.css";
 
 // Header Component
-function Header() {
+const Header = () => {
   return (
     <header className="top-header">
       <div className="header-content">
@@ -23,7 +23,7 @@ function Header() {
 }
 
 // Footer Component
-function Footer() {
+const Footer = () => {
   return (
     <footer className="app-footer">
       <p>Based on proven investment principles and decision-making framework</p>
@@ -32,7 +32,7 @@ function Footer() {
 }
 
 // Navigation Component
-function Navigation() {
+const Navigation = () => {
   const location = useLocation();
 
   return (
@@ -52,7 +52,7 @@ function Navigation() {
   );
 }
 
-function App() {
+const App = () => {
   return (
     <Router>
       <div className="app-layout">

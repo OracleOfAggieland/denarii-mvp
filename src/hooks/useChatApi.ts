@@ -14,7 +14,7 @@ interface UseChatApiReturn {
   retry: () => Promise<string | null>;
 }
 
-export function useChatApi(): UseChatApiReturn {
+export const useChatApi = (): UseChatApiReturn => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<ChatError | null>(null);
   const [lastRequest, setLastRequest] = useState<{ message: string; history: Message[] } | null>(null);
@@ -78,7 +78,7 @@ export function useChatApi(): UseChatApiReturn {
   }, [lastRequest, sendMessage]);
 
   return { sendMessage, isLoading, error, clearError, retry };
-}
+};
 
 function getErrorTypeFromStatus(status: number): ErrorType {
   if (status === 429) return ErrorType.RATE_LIMIT_ERROR;

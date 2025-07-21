@@ -12,6 +12,8 @@ export interface Message {
   timestamp: Date;
 }
 
+export type ChatMessage = Message;
+
 /**
  * Manages the overall state of the chat conversation
  */

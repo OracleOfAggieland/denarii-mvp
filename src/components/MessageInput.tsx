@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import React, { useState, FormEvent } from 'react';
 
 interface MessageInputProps {
   onSendMessage: (message: string) => void;
   isLoading: boolean;
 }
 
-export default function MessageInput({ onSendMessage, isLoading }: MessageInputProps) {
+const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, isLoading }) => {
   const [message, setMessage] = useState('');
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -78,3 +78,4 @@ export default function MessageInput({ onSendMessage, isLoading }: MessageInputP
     </div>
   );
 }
+export default MessageInput;

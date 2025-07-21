@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../styles/ProgressiveFinancialProfile.css";
 
-function ProgressiveFinancialProfile({ onProfileUpdate, onClose }) {
+const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
   const [step, setStep] = useState(0);
   const [profile, setProfile] = useState({
     monthlyIncome: "",

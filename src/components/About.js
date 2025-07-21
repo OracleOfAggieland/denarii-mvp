@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import "../styles/App.css";
 
-function About() {
+const About = () => {
   return (
     <div className="App">
       {/* Hero Section */}
