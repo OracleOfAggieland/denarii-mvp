@@ -2859,15 +2859,17 @@ ding States */
 /* ... existing styles ... */
 
 .hero-subtitle .million-link {
-  color: #8b5cf6; /* A nice purple to stand out */
-  text-decoration: underline;
+  color: #FFD700; /* Golden color */
+  text-decoration: none; /* Removes the underline */
+  font-weight: 700;
   cursor: pointer;
-  font-weight: 600;
-  transition: color 0.2s;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.7); /* Adds a golden glow */
+  transition: all 0.3s ease;
 }
 
 .hero-subtitle .million-link:hover {
-  color: #7c3aed;
+  color: #FFFFFF; /* Bright white on hover */
+  text-shadow: 0 0 12px rgba(255, 215, 0, 1); /* Intensifies the glow */
 }
 
 /* Styles for the result bubble */
