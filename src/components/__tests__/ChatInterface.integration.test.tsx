@@ -1,6 +1,6 @@
 /**
  * Integration tests for ChatInterface component
- * Tests complete chat flow, error handling conversation context, and loading states
+ * Tests complete chat flo, error handling conversation context, and loading states
  */
 
 import React from 'react';
