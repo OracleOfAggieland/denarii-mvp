@@ -1,321 +1,154 @@
-/* Style refactored */
-/* Progressive Financial Profile Styles */
-
 .pfp-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.75);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10000;
-    padding: 20px;
-    animation: fadeIn 0.2s ease-out;
-    backdrop-filter: blur(5px);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1010;
+  backdrop-filter: blur(5px);
+  padding: 16px;
+}
+
+.pfp-container {
+  background-color: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  width: 100%;
+  max-width: 500px;
+  padding: 32px;
+  position: relative;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.pfp-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: #e5e7eb;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  font-size: 1.1rem;
+  color: #6b7280;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pfp-header h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 8px 0;
+}
+
+.pfp-header p {
+  font-size: 1rem;
+  color: #6b7280;
+  margin: 0 0 24px 0;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background-color: #e5e7eb;
+  border-radius: 4px;
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.progress-bar-inner {
+  height: 100%;
+  background-color: #4f46e5;
+  border-radius: 4px;
+  transition: width 0.4s ease-out;
+}
+
+.pfp-step {
+  animation: slideIn 0.4s ease-out;
+}
+
+.pfp-step label {
+  display: block;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.pfp-step .label-description {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #6b7280;
+  margin-bottom: 12px;
+}
+
+.pfp-input, .pfp-select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  margin-bottom: 16px;
+}
+
+.pfp-navigation {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 24px;
+}
+
+.pfp-btn {
+  padding: 12px 20px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  background-color: #ffffff;
+  color: #374151;
+}
+
+.pfp-btn.primary {
+  background-color: #4f46e5;
+  color: #ffffff;
+  border-color: #4f46e5;
+}
+
+.pfp-footer {
+  text-align: center;
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 24px;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* --- MOBILE RESPONSIVE STYLES --- */
+@media (max-width: 768px) {
+  .pfp-container {
+      padding: 24px;
   }
-  
-  .pfp-modal {
-    background: white;
-    border-radius: 20px;
-    max-width: 500px;
-    width: 100%;
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-    animation: slideUp 0.3s ease-out;
+
+  .pfp-header h2 {
+      font-size: 1.5rem;
   }
-  
-  .pfp-close {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: none;
-    border: none;
-    font-size: 24px;
-    color: #6b7280;
-    cursor: pointer;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-    z-index: 1;
-  }
-  
-  .pfp-close:hover {
-    background-color: #f3f4f6;
-    color: #111827;
-  }
-  
-  .pfp-header {
-    padding: 40px 40px 20px;
-    text-align: center;
-  }
-  
-  .pfp-title {
-    font-size: 24px;
-    font-weight: 700;
-    color: #111827;
-    margin: 0 0 8px 0;
-  }
-  
-  .pfp-subtitle {
-    font-size: 16px;
-    color: #6b7280;
-    margin: 0;
-  }
-  
-  .pfp-progress {
-    height: 4px;
-    background-color: #e5e7eb;
-    margin: 0 40px;
-    border-radius: 2px;
-    overflow: hidden;
-  }
-  
-  .pfp-progress-bar {
-    height: 100%;
-    background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
-    transition: width 0.3s ease;
-    border-radius: 2px;
-  }
-  
-  .pfp-content {
-    padding: 30px 40px;
-  }
-  
-  .pfp-question h3 {
-    font-size: 20px;
-    font-weight: 600;
-    color: #111827;
-    margin: 0 0 12px 0;
-  }
-  
-  .pfp-help {
-    font-size: 14px;
-    color: #6b7280;
-    margin: 0 0 24px 0;
-  }
-  
-  .pfp-input-group {
-    display: flex;
-    align-items: center;
-    background-color: #f9fafb;
-    border: 2px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 4px;
-    transition: all 0.2s ease;
-  }
-  
-  .pfp-input-group:focus-within {
-    border-color: #6366f1;
-    background-color: white;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-  }
-  
-  .pfp-prefix {
-    font-size: 20px;
-    font-weight: 500;
-    color: #6b7280;
-    padding: 0 12px;
-  }
-  
-  .pfp-input {
-    flex: 1;
-    background: none;
-    border: none;
-    font-size: 24px;
-    font-weight: 600;
-    padding: 12px;
-    color: #111827;
-    outline: none;
-  }
-  
-  .pfp-input::placeholder {
-    color: #d1d5db;
-    font-weight: 400;
-  }
-  
-  .pfp-choices {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-  
-  .pfp-choice {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    padding: 20px;
-    background-color: #f9fafb;
-    border: 2px solid #e5e7eb;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 14px;
-    font-weight: 500;
-    color: #4b5563;
-  }
-  
-  .pfp-choice:hover {
-    background-color: #f3f4f6;
-    border-color: #d1d5db;
-    transform: translateY(-1px);
-  }
-  
-  .pfp-choice.selected {
-    background-color: #eef2ff;
-    border-color: #6366f1;
-    color: #4f46e5;
-  }
-  
-  .pfp-choice-emoji {
-    font-size: 32px;
-  }
-  
-  .pfp-choice-label {
-    text-align: center;
-  }
-  
-  .pfp-actions {
-    display: flex;
-    gap: 12px;
-    padding: 0 40px 40px;
-    justify-content: flex-end;
-  }
-  
-  .pfp-back,
-  .pfp-skip {
-    padding: 12px 24px;
-    background-color: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 500;
-    color: #6b7280;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-  
-  .pfp-back:hover,
-  .pfp-skip:hover {
-    background-color: #f9fafb;
-    color: #111827;
-    border-color: #d1d5db;
-  }
-  
-  .pfp-next {
-    padding: 12px 32px;
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 600;
-    color: white;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
-  }
-  
-  .pfp-next:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35);
-  }
-  
-  .pfp-next:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-  
-  .pfp-footer {
-    padding: 20px;
-    text-align: center;
-    background-color: #f9fafb;
-    border-top: 1px solid #e5e7eb;
-    border-radius: 0 0 20px 20px;
-  }
-  
-  .pfp-footer p {
-    margin: 0;
-    font-size: 12px;
-    color: #9ca3af;
-  }
-  
-  /* Animations */
-  @keyframes slideUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  /* Responsive Design */
-  @media (max-width: 640px) {
-    .pfp-modal {
-      margin: 10px;
-      max-height: calc(100vh - 20px);
-    }
-    
-    .pfp-header,
-    .pfp-content,
-    .pfp-actions {
-      padding-left: 24px;
-      padding-right: 24px;
-    }
-    
-    .pfp-progress {
-      margin: 0 24px;
-    }
-    
-    .pfp-title {
-      font-size: 20px;
-    }
-    
-    .pfp-subtitle {
-      font-size: 14px;
-    }
-    
-    .pfp-question h3 {
-      font-size: 18px;
-    }
-    
-    .pfp-input {
-      font-size: 20px;
-    }
-    
-    .pfp-choices {
-      grid-template-columns: 1fr;
-    }
-    
-    .pfp-choice {
-      flex-direction: row;
-      justify-content: flex-start;
-      padding: 16px;
-    }
-    
-    .pfp-choice-emoji {
-      font-size: 24px;
-    }
-    
-    .pfp-actions {
+
+  .pfp-navigation {
       flex-direction: column;
-    }
-    
-    .pfp-back,
-    .pfp-skip,
-    .pfp-next {
-      width: 100%;
-      text-align: center;
-    }
+      gap: 12px;
   }
+
+  .pfp-btn {
+      width: 100%;
+  }
+}

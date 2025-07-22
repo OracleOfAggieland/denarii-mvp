@@ -10,13 +10,14 @@
     align-items: center;
     z-index: 1000;
     backdrop-filter: blur(5px);
+    padding: 16px;
 }
 
 .savings-tracker-container {
     background-color: #f9fafb;
     border-radius: 20px;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    width: 90%;
+    width: 100%;
     max-width: 700px;
     max-height: 90vh;
     overflow-y: auto;
@@ -175,5 +176,36 @@
     to {
         transform: translateY(0);
         opacity: 1;
+    }
+}
+
+/* --- MOBILE RESPONSIVE STYLES --- */
+@media (max-width: 768px) {
+    .savings-tracker-container {
+        padding: 24px 16px;
+    }
+
+    .tracker-header h2 {
+        font-size: 1.5rem;
+    }
+    
+    .tracker-summary {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .summary-card .total-savings-value,
+    .summary-card .projection-value {
+        font-size: 1.75rem;
+    }
+
+    .history-log h3 {
+        font-size: 1.25rem;
+    }
+
+    .history-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
     }
 }
