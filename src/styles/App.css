@@ -1303,82 +1303,58 @@ ding States */
   gap: var(--spacing-sm);
 }
 
-/* Responsive Design */
+/* IMPROVED Mobile Header Styles */
 @media (max-width: 768px) {
-  .purchase-analysis-card {
-    width: calc(100% - 30px);
+  .top-header {
+    padding: 12px 16px; /* Reduced padding for better mobile spacing */
   }
   
-  .card-header {
-    padding: var(--spacing-lg) var(--spacing-md);
+  .header-content {
+    /* Keep horizontal layout but adjust spacing */
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
   }
   
-  .card-title {
-    font-size: var(--font-size-xl);
+  .logo {
+    font-size: 20px; /* Slightly larger for better readability */
+    gap: 8px;
+    flex-shrink: 0; /* Prevent logo from shrinking */
   }
   
-  .card-body {
-    padding: var(--spacing-lg);
+  .logo-icon {
+    font-size: 1.4em; /* Maintain proportional icon size */
   }
   
-  .form-row {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-md);
+  .header-nav {
+    gap: 12px; /* Reduced gap for mobile */
   }
   
-  .options-section {
-    padding: var(--spacing-md);
-  }
-  
-  .add-photo-btn {
-    max-width: none;
-    width: 100%;
-  }
-  
-  .image-upload-expanded {
-    padding: var(--spacing-md);
-  }
-  
-  .drag-drop-zone {
-    padding: var(--spacing-md);
-  }
-  
-  .upload-buttons {
-    gap: var(--spacing-xs);
-  }
-  
-  .upload-option-btn {
-    min-width: 80px;
-    padding: var(--spacing-sm);
-    font-size: var(--font-size-xs);
+  .nav-link {
+    font-size: 16px; /* Maintain readable size */
+    padding: 8px 12px; /* Better touch target */
+    white-space: nowrap; /* Prevent text wrapping */
   }
 }
 
 @media (max-width: 480px) {
-  .purchase-analysis-card {
-    width: calc(100% - 20px);
+  .top-header {
+    padding: 10px 12px; /* Further reduced padding for small screens */
   }
   
-  .card-header {
-    padding: var(--spacing-md);
+  .header-content {
+    gap: 12px;
   }
   
-  .card-title {
-    font-size: var(--font-size-lg);
-    flex-direction: column;
-    gap: var(--spacing-xs);
+  .logo {
+    font-size: 18px;
+    gap: 6px;
   }
   
-  .card-body {
-    padding: var(--spacing-md);
-  }
-  
-  .drag-drop-zone {
-    padding: var(--spacing-lg);
-  }
-  
-  .drag-drop-icon {
-    font-size: 2.5em;
+  .nav-link {
+    font-size: 15px;
+    padding: 6px 10px;
   }
 }
 
@@ -2084,25 +2060,13 @@ ding States */
   font-weight: 500;
   line-height: 1.6;
   position: relative;
+  /* REMOVED: Faded quote decorations */
 }
 
+/* REMOVED: All ::before and ::after pseudo-elements that create faded quotes */
 .quote-text::before,
 .quote-text::after {
-  content: '"';
-  font-size: 1.5em;
-  color: rgba(99, 102, 241, 0.2);
-  position: absolute;
-  line-height: 1;
-}
-
-.quote-text::before {
-  left: -15px;
-  top: -10px;
-}
-
-.quote-text::after {
-  right: -15px;
-  bottom: -10px;
+  display: none; /* Completely hide the faded quote marks */
 }
 
 .quote-attribution {
