@@ -12,5 +12,12 @@
         "destination": "/index.html"
       }
     ]
-  }
+  },
+  "apphosting": [
+    {
+      "target": "denarii-mvp",
+      "source": ".",
+      "nodeVersion": "18"
+    }
+  ]
 }
