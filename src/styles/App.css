@@ -2720,3 +2720,220 @@ ding States */
   padding: 8px 16px;
   cursor: pointer;
 }
+
+/* ... existing styles ... */
+
+.decision-card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+
+/* UPDATED: Made this section about 20% smaller */
+.decision-header {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* Was 16px */
+  padding: 16px 24px; /* Was 20px 24px */
+  border-bottom: 1px solid transparent;
+}
+
+.decision-header.buy {
+  background-color: #e6f7f2;
+  color: #0d6b4c;
+  border-color: #b3e6d9;
+}
+
+.decision-header.dont-buy {
+  background-color: #fff1f2;
+  color: #c51a2e;
+  border-color: #ffdde0;
+}
+
+.decision-icon {
+  font-size: 2rem; /* Was 2.5rem */
+}
+
+.decision-title {
+  font-size: 1.6rem; /* Was 2rem */
+  font-weight: 700;
+  margin: 0;
+}
+
+.decision-body {
+  padding: 24px;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #374151;
+}
+
+.decision-body p {
+  white-space: pre-wrap; /* Preserve line breaks from the API response */
+  margin-top: 0;
+}
+
+/* NEW: Wrapper for the decision matrix */
+.decision-matrix-wrapper {
+    padding: 0 24px 24px;
+    background-color: #ffffff;
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
+}
+
+/* ... rest of the file ... */
+/* ... existing styles ... */
+
+.decision-card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+
+.decision-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  border-bottom: 1px solid transparent;
+}
+
+.decision-header.buy {
+  background-color: #e6f7f2;
+  color: #0d6b4c;
+  border-color: #b3e6d9;
+}
+
+.decision-header.dont-buy {
+  background-color: #fff1f2;
+  color: #c51a2e;
+  border-color: #ffdde0;
+}
+
+.decision-icon {
+  font-size: 2rem;
+}
+
+.decision-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.decision-body {
+  padding: 24px;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #374151;
+}
+
+/* NEW: Style for the concise summary */
+.recommendation-summary {
+    font-size: 1.1rem;
+    font-weight: 500;
+    line-height: 1.6;
+    color: #1f2937;
+    margin: 0 0 24px 0; /* Add some space below it */
+    padding-bottom: 24px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.decision-body p {
+  white-space: pre-wrap; /* Preserve line breaks from the API response */
+  margin-top: 0;
+}
+
+.decision-matrix-wrapper {
+    padding: 0 24px 24px;
+    background-color: #ffffff;
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
+}
+
+/* ... rest of the file ... */
+/* ... existing styles ... */
+
+.hero-subtitle .million-link {
+  color: #8b5cf6; /* A nice purple to stand out */
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.hero-subtitle .million-link:hover {
+  color: #7c3aed;
+}
+
+/* Styles for the result bubble */
+.result-bubble-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.result-bubble-container {
+  background: #f9fafb;
+  border-radius: 20px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.close-bubble-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: #e5e7eb;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  font-size: 1.1rem;
+  color: #6b7280;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.close-bubble-btn:hover {
+  background-color: #d1d5db;
+  transform: rotate(90deg);
+}
+
+.result-bubble-container .analysis-container {
+  padding: 24px;
+}
+
+@keyframes scaleIn {
+  from {
+      transform: scale(0.8);
+      opacity: 0;
+  }
+  to {
+      transform: scale(1);
+      opacity: 1;
+  }
+}
+
+
+/* ... rest of the file ... */

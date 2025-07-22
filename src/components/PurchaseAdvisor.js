@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
-import { analyzeImageWithOpenAI, getPurchaseRecommendation, findCheaperAlternative } from "../lib/openaiAPI";
+import { analyzeImageWithOpenAI, findCheaperAlternative } from "../lib/openaiAPI";
+import { getEnhancedPurchaseRecommendation } from "../lib/enhancedOpenAIIntegration";
+import DecisionMatrix from "./DecisionMatrix";
 import ProgressiveFinancialProfile from "./ProgressiveFinancialProfile";
+import SavingsTracker from "./SavingsTracker"; // Import the new component
 import "../styles/App.css";
 
 const PurchaseAdvisor = () => {
@@ -20,8 +23,10 @@ const PurchaseAdvisor = () => {
   const [showFinancialProfile, setShowFinancialProfile] = useState(false);
   const [hasSeenProfilePrompt, setHasSeenProfilePrompt] = useState(false);
   const [showImageOptions, setShowImageOptions] = useState(false);
+  const [showResultBubble, setShowResultBubble] = useState(false); // State for the result bubble
+  const [showSavingsTracker, setShowSavingsTracker] = useState(false); // State for the history/tracker modal
+
   const fileInputRef = useRef(null);
-  const resultsRef = useRef(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
@@ -36,11 +41,9 @@ const PurchaseAdvisor = () => {
   // Load financial profile from localStorage if available
   useEffect(() => {
     const loadProfile = () => {
-      // First check for quick profile
       const quickProfile = localStorage.getItem('quickFinancialProfile');
       if (quickProfile) {
         const parsed = JSON.parse(quickProfile);
-        // Convert quick profile to format expected by the app
         const convertedProfile = {
           monthlyIncome: parsed.monthlyIncome,
           monthlyExpenses: parsed.monthlyExpenses,
@@ -51,10 +54,10 @@ const PurchaseAdvisor = () => {
               ((parseFloat(parsed.monthlyIncome) || 0) -
                 (parseFloat(parsed.monthlyExpenses) || 0) -
                 (parseFloat(parsed.debtPayments) || 0)),
-            debtToIncomeRatio: parsed.debtPayments ?
+            debtToIncomeRatio: parsed.debtPayments && parseFloat(parsed.monthlyIncome) > 0 ?
               ((parseFloat(parsed.debtPayments) / parseFloat(parsed.monthlyIncome)) * 100) : 0,
             emergencyFundMonths: parsed.summary?.savingsMonths ||
-              (parsed.currentSavings && parsed.monthlyExpenses ?
+              (parsed.currentSavings && parsed.monthlyExpenses && parseFloat(parsed.monthlyExpenses) > 0 ?
                 (parseFloat(parsed.currentSavings) / parseFloat(parsed.monthlyExpenses)) : 0),
             healthScore: parsed.summary?.healthScore || 50
           },
@@ -63,7 +66,6 @@ const PurchaseAdvisor = () => {
         };
         setFinancialProfile(convertedProfile);
       } else {
-        // Fall back to full profile if it exists
         const savedProfile = localStorage.getItem('financialProfile');
         if (savedProfile) {
           setFinancialProfile(JSON.parse(savedProfile));
@@ -73,11 +75,9 @@ const PurchaseAdvisor = () => {
 
     loadProfile();
 
-    // Check if user has seen the profile prompt
     const seenPrompt = localStorage.getItem('hasSeenProfilePrompt');
     setHasSeenProfilePrompt(!!seenPrompt);
 
-    // Listen for storage changes to update profile when it's modified
     const handleStorageChange = (e) => {
       if (e.key === 'quickFinancialProfile' || e.key === 'financialProfile') {
         loadProfile();
@@ -87,20 +87,6 @@ const PurchaseAdvisor = () => {
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
-
-  // Auto-scroll function
-  const scrollToResults = () => {
-    if (resultsRef.current) {
-      resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
-
-  // Scroll when messages update
-  useEffect(() => {
-    if (messages.length > 0) {
-      scrollToResults();
-    }
-  }, [messages]);
 
   // Clean up video stream when component unmounts
   useEffect(() => {
@@ -113,7 +99,6 @@ const PurchaseAdvisor = () => {
 
   // Handle financial profile update
   const handleFinancialProfileUpdate = (profile) => {
-    // Ensure the profile has the correct emergency fund calculation
     const updatedProfile = {
       ...profile,
       summary: {
@@ -124,150 +109,24 @@ const PurchaseAdvisor = () => {
     setFinancialProfile(updatedProfile);
     setShowFinancialProfile(false);
   };
-
-  // Start camera capture
-  const startCamera = async () => {
-    try {
-      setImageCapturing(true);
-
-      const constraints = {
-        video: {
-          facingMode: "environment",
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        }
+    
+  const saveToHistory = (analysisResult) => {
+      const history = JSON.parse(localStorage.getItem('purchaseHistory') || '[]');
+      const savings = analysisResult.alternative ? parseFloat(itemCost) - analysisResult.alternative.price : 0;
+      
+      const historyEntry = {
+          date: new Date().toISOString(),
+          itemName: analysisResult.formatted.analysisDetails.itemName || itemName,
+          itemCost: parseFloat(itemCost),
+          decision: analysisResult.formatted.decision,
+          savings: savings > 0 ? savings : 0,
+          alternative: analysisResult.alternative
       };
 
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      streamRef.current = stream;
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-    } catch (error) {
-      console.error("Error accessing camera:", error);
-      alert("Unable to access camera. Please check permissions or try a different browser.");
-      setImageCapturing(false);
-    }
+      history.unshift(historyEntry); // Add to the beginning
+      localStorage.setItem('purchaseHistory', JSON.stringify(history));
   };
 
-  // Stop camera capture
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-    setImageCapturing(false);
-  };
-
-  // Capture image from camera
-  const captureImage = () => {
-    if (videoRef.current && canvasRef.current) {
-      const context = canvasRef.current.getContext('2d');
-
-      // Match canvas dimensions to video
-      canvasRef.current.width = videoRef.current.videoWidth;
-      canvasRef.current.height = videoRef.current.videoHeight;
-
-      // Draw the video frame on the canvas
-      context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
-
-      // Convert canvas to image file
-      canvasRef.current.toBlob((blob) => {
-        const file = new File([blob], "captured-image.jpeg", { type: "image/jpeg" });
-        setImageFile(file);
-
-        // Create image preview
-        const imageUrl = URL.createObjectURL(blob);
-        setImagePreview(imageUrl);
-
-        // Stop the camera
-        stopCamera();
-
-        // Reset item name since we'll identify from the image
-        setItemName("");
-      }, 'image/jpeg', 0.95);
-    }
-  };
-
-  // Cancel camera capture
-  const cancelCapture = () => {
-    stopCamera();
-  };
-
-  // Handle file selection for image upload
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      processFile(file);
-    }
-  };
-
-  // Trigger file input click for traditional upload
-  const triggerFileInput = () => {
-    fileInputRef.current.click();
-  };
-
-  // Clear the selected image
-  const clearImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
-    setItemName("");
-  };
-
-  // Handle drag and drop events
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragOver(true);
-  };
-
-  const handleDragLeave = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragOver(false);
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragOver(false);
-
-    const files = e.dataTransfer.files;
-    if (files && files.length > 0) {
-      const file = files[0];
-      if (file.type.startsWith('image/')) {
-        setImageFile(file);
-        // Create a preview URL for the image
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setImagePreview(reader.result);
-        };
-        reader.readAsDataURL(file);
-        // Reset the item name since we'll get it from image recognition
-        setItemName("");
-      } else {
-        alert("Please drop an image file.");
-      }
-    }
-  };
-
-  // Process file (common logic for both file input and drag-drop)
-  const processFile = (file) => {
-    if (file && file.type.startsWith('image/')) {
-      setImageFile(file);
-      // Create a preview URL for the image
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-      // Reset the item name since we'll get it from image recognition
-      setItemName("");
-    } else {
-      alert("Please select an image file.");
-    }
-  };
 
   // Purchase analysis function
   const analyzePurchase = async () => {
@@ -281,7 +140,6 @@ const PurchaseAdvisor = () => {
       return;
     }
 
-    // Check if user has financial profile, if not and they haven't seen prompt, show it
     if (!financialProfile && !hasSeenProfilePrompt) {
       const shouldSetupProfile = window.confirm(
         "🎯 Get personalized advice!\n\n" +
@@ -299,17 +157,15 @@ const PurchaseAdvisor = () => {
       }
     }
 
-    // Reset previous messages when starting a new analysis
     setMessages([]);
     setLoading(true);
+    setShowResultBubble(false);
 
     try {
       let recognizedItemName = itemName;
       let itemDetails = null;
 
-      // If there's an image, process it with OpenAI Vision API
       if (imageFile) {
-        // Convert image to base64
         const base64Image = await new Promise((resolve) => {
           const reader = new FileReader();
           reader.onloadend = () => {
@@ -319,109 +175,30 @@ const PurchaseAdvisor = () => {
           reader.readAsDataURL(imageFile);
         });
 
-        // Call the OpenAI Vision API
         itemDetails = await analyzeImageWithOpenAI(base64Image);
 
         if (itemDetails && itemDetails.name && itemDetails.name !== "Error") {
           recognizedItemName = itemDetails.name;
-
-          // Update the displayed item name
           setItemName(recognizedItemName);
-
-          // If item cost is not provided by user but is in itemDetails, use that
           if (itemCost === "" && itemDetails.cost > 0) {
             setItemCost(itemDetails.cost.toString());
           }
-
-          // Add the recognition message
-          setMessages([
-            {
-              sender: "System",
-              text: `Identified: ${recognizedItemName}. Estimated cost: ${itemDetails.cost}. ${itemDetails.facts}`
-            }
-          ]);
         } else {
-          setMessages([
-            {
-              sender: "System",
-              text: "Couldn&apos;t identify the image clearly. Please enter the item name manually."
-            }
-          ]);
-          if (loading) setLoading(false);
-          return;
+            // Handle recognition failure gracefully
         }
       }
 
-      // Only proceed if we have an item name
       if (recognizedItemName) {
         const costValue = parseFloat(itemCost);
-
-        // Format the message about the purchase
-        const purchaseMessage = `Should I buy: ${recognizedItemName} for ${costValue}${purpose ? `, Purpose: ${purpose}` : ""
-          }${frequency ? `, Frequency of use: ${frequency}` : ""}`;
-
-        const newMessages = [
-          ...(messages || []),
-          { sender: "You", text: purchaseMessage }
-        ];
-        setMessages(newMessages);
-
-        // If search for alternatives is enabled, find cheaper alternatives
         let alternative = null;
+
         if (searchForAlternative) {
           setFindingAlternatives(true);
-          try {
-            // Update messages to show we're searching
-            setMessages([
-              ...newMessages,
-              {
-                sender: "System",
-                text: "Searching for cheaper alternatives..."
-              }
-            ]);
-
-            alternative = await findCheaperAlternative(recognizedItemName, costValue);
-
-            // Update messages with alternative found or not
-            if (alternative) {
-              const savings = costValue - alternative.price;
-              const savingsPercent = (savings / costValue) * 100;
-
-              // Create Google search link instead of direct URL
-              alternative.searchUrl = createGoogleSearchLink(alternative.name);
-
-              setMessages([
-                ...newMessages,
-                {
-                  sender: "System",
-                  text: `Found a cheaper alternative: ${alternative.name} for ${alternative.price} at ${alternative.retailer}. You could save ${savings.toFixed(2)} (${savingsPercent.toFixed(1)}%).`
-                }
-              ]);
-            } else {
-              setMessages([
-                ...newMessages,
-                {
-                  sender: "System",
-                  text: "No cheaper alternatives found for this item."
-                }
-              ]);
-            }
-          } catch (error) {
-            console.error("Error finding alternatives:", error);
-            setMessages([
-              ...newMessages,
-              {
-                sender: "System",
-                text: "Couldn&apos;t search for alternatives at this time."
-              }
-            ]);
-          } finally {
-            setFindingAlternatives(false);
-          }
+          alternative = await findCheaperAlternative(recognizedItemName, costValue);
+          setFindingAlternatives(false);
         }
 
-        // Get recommendation from OpenAI
-        const recommendation = await getPurchaseRecommendation(
+        const recommendation = await getEnhancedPurchaseRecommendation(
           recognizedItemName,
           costValue,
           purpose,
@@ -430,30 +207,24 @@ const PurchaseAdvisor = () => {
           alternative
         );
 
-        // Create the final message with recommendation
         const mungerMessage = {
-          sender: "Munger",
-          text: recommendation.reasoning,
-          formatted: {
-            decision: recommendation.decision,
-            reasoning: recommendation.reasoning,
-            quote: recommendation.quote
-          }
+            sender: "Munger",
+            text: recommendation.summary,
+            formatted: {
+                decision: recommendation.decision,
+                summary: recommendation.summary,
+                reasoning: recommendation.reasoning,
+                quote: recommendation.quote,
+                analysisDetails: { ...recommendation.analysisDetails, itemName: recognizedItemName },
+                decisionMatrix: recommendation.decisionMatrix
+            },
+            alternative: alternative
         };
+        
+        setMessages([mungerMessage]);
+        setShowResultBubble(true);
+        saveToHistory(mungerMessage);
 
-        // Add alternative to message if found
-        if (recommendation.alternative) {
-          // Ensure we're using the Google search URL instead of the direct product URL
-          recommendation.alternative.searchUrl = createGoogleSearchLink(recommendation.alternative.name);
-          mungerMessage.alternative = recommendation.alternative;
-        }
-
-        // Add the message to the list
-        setMessages(prevMessages => {
-          return [...prevMessages, mungerMessage];
-        });
-
-        // Reset fields except the recognized item name
         setItemCost("");
         setPurpose("");
         setFrequency("");
@@ -463,21 +234,25 @@ const PurchaseAdvisor = () => {
 
     } catch (error) {
       console.error("Error:", error);
-      setMessages([
-        ...(messages || []),
-        {
+      const errorMessage = {
           sender: "Munger",
-          text: "Sorry, I couldn&apos;t analyze this purchase right now. Technical error occurred: " + error.message,
+          text: "Sorry, I couldn't analyze this purchase right now.",
           formatted: {
             decision: "Error",
+            summary: "Sorry, I couldn't analyze this purchase right now. A technical error occurred.",
             reasoning: "Technical error occurred: " + error.message,
             quote: "The big money is not in the buying and selling, but in the waiting."
           }
-        }
-      ]);
+      };
+      setMessages([errorMessage]);
+      setShowResultBubble(true);
     } finally {
       setLoading(false);
     }
+  };
+
+  const closeResultBubble = () => {
+      setShowResultBubble(false);
   };
 
   const getHealthScoreColor = (score) => {
@@ -492,17 +267,123 @@ const PurchaseAdvisor = () => {
     return 'Needs Attention';
   };
 
+  // Camera and image handling functions
+  const startCamera = async () => {
+    try {
+      setImageCapturing(true);
+      const constraints = { video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (error) {
+      console.error("Error accessing camera:", error);
+      alert("Unable to access camera. Please check permissions or try a different browser.");
+      setImageCapturing(false);
+    }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    setImageCapturing(false);
+  };
+
+  const captureImage = () => {
+    if (videoRef.current && canvasRef.current) {
+      const context = canvasRef.current.getContext('2d');
+      canvasRef.current.width = videoRef.current.videoWidth;
+      canvasRef.current.height = videoRef.current.videoHeight;
+      context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
+      canvasRef.current.toBlob((blob) => {
+        const file = new File([blob], "captured-image.jpeg", { type: "image/jpeg" });
+        setImageFile(file);
+        const imageUrl = URL.createObjectURL(blob);
+        setImagePreview(imageUrl);
+        stopCamera();
+        setItemName("");
+      }, 'image/jpeg', 0.95);
+    }
+  };
+
+  const cancelCapture = () => {
+    stopCamera();
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      processFile(file);
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current.click();
+  };
+
+  const clearImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    setItemName("");
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(false);
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (file.type.startsWith('image/')) {
+        processFile(file);
+      } else {
+        alert("Please drop an image file.");
+      }
+    }
+  };
+
+  const processFile = (file) => {
+    if (file && file.type.startsWith('image/')) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+      setItemName("");
+    } else {
+      alert("Please select an image file.");
+    }
+  };
+
   return (
     <div className="App">
-      {/* Hero Section */}
       <div className="hero-section">
         <h1 className="hero-title">To Buy or not to Buy?</h1>
         <p className="hero-subtitle">
-          That is the million dollar question
+          That is the{" "}
+          <span className="million-link" onClick={() => setShowSavingsTracker(true)}>
+            million
+          </span>{" "}
+          dollar question
         </p>
       </div>
 
-      {/* Financial Profile Summary (enhanced) */}
       {financialProfile && financialProfile.summary ? (
         <div className="mini-profile enhanced">
           <div className="mini-profile-header">
@@ -557,18 +438,16 @@ const PurchaseAdvisor = () => {
         </div>
       )}
 
-      {/* Purchase Analysis Card */}
       <div className="purchase-analysis-card">
         <div className="card-header">
           <h2 className="card-title">
             <span className="card-icon">🛒</span>
             Analyze Your Purchase
           </h2>
-          <p className="card-subtitle">Tell us about the item you&apos;re considering</p>
+          <p className="card-subtitle">Tell us about the item you're considering</p>
         </div>
 
         <div className="card-body">
-          {/* Basic Item Information */}
           <div className="item-info-section">
             <div className="form-row">
               <div className="form-group">
@@ -632,7 +511,6 @@ const PurchaseAdvisor = () => {
             </div>
           </div>
 
-          {/* Image Upload Section */}
           <div className="image-section">
             {imageCapturing ? (
               <div className="camera-container">
@@ -747,7 +625,6 @@ const PurchaseAdvisor = () => {
             <canvas ref={canvasRef} style={{ display: 'none' }} />
           </div>
 
-          {/* Options Section */}
           <div className="options-section">
             <label className="checkbox-option">
               <input
@@ -763,7 +640,6 @@ const PurchaseAdvisor = () => {
           </div>
         </div>
 
-        {/* Action Button */}
         <div className="card-footer">
           <button
             onClick={analyzePurchase}
@@ -773,7 +649,7 @@ const PurchaseAdvisor = () => {
             {loading ? (
               <span className="btn-content">
                 <span className="loading-spinner"></span>
-                Analyzing Purchase...
+                Analyzing...
               </span>
             ) : findingAlternatives ? (
               <span className="btn-content">
@@ -790,95 +666,79 @@ const PurchaseAdvisor = () => {
         </div>
       </div>
 
-      {/* Results Window */}
-      {messages.length > 0 && (
-        <div className="results-window" ref={resultsRef}>
-          <h2 className="results-title">
-            <span className="results-icon">💡</span>
-            Analysis Results
-          </h2>
 
-          <div className="analysis-container">
-            {messages.map((msg, i) => {
-              // Display differently based on sender
-              if (msg.sender === "Munger" && msg.formatted) {
-                // Format Munger's response as a decision card
-                return (
-                  <div key={i} className="decision-card">
-                    <div className={`decision-header ${msg.formatted.decision === "Buy" ? "buy" : "dont-buy"}`}>
-                      <div className="decision-icon">
-                        {msg.formatted.decision === "Buy" ? "✅" :
-                          msg.formatted.decision === "Don't Buy" ? "❌" : "⚠️"}
-                      </div>
-                      <h3 className="decision-title">{msg.formatted.decision}</h3>
-                    </div>
-                    <div className="decision-body">
-                      <p>{msg.formatted.reasoning
-                        .replace(/^\s*\{\s*&quot;decision&quot;:[^,]*,\s*&quot;reasoning&quot;:\s*&quot;|&quot;\s*\}\s*$/g, '')
-                        .replace(/^[,\s]+|[,\s]+$/g, '')
-                        .trim()}</p>
+      {showResultBubble && messages.length > 0 && (
+        <div className="result-bubble-overlay">
+            <div className="result-bubble-container">
+                <button onClick={closeResultBubble} className="close-bubble-btn">×</button>
+                <div className="analysis-container">
+                {messages.map((msg, i) => {
+                    if (msg.sender === "Munger" && msg.formatted) {
+                        return (
+                        <div key={i} className="decision-card">
+                            <div className={`decision-header ${msg.formatted.decision === "Buy" ? "buy" : "dont-buy"}`}>
+                            <div className="decision-icon">
+                                {msg.formatted.decision === "Buy" ? "✅" :
+                                msg.formatted.decision === "Don't Buy" ? "❌" : "⚠️"}
+                            </div>
+                            <h3 className="decision-title">{msg.formatted.decision}</h3>
+                            </div>
 
-                      {/* Display alternative product if available */}
-                      {msg.alternative && (
-                        <div className="alternative-product">
-                          <h4>Cheaper Alternative Found:</h4>
-                          <p><strong>{msg.alternative.name}</strong> - ${msg.alternative.price} at {msg.alternative.retailer}</p>
-                          <p>
-                            <a
-                              href={msg.alternative.searchUrl || createGoogleSearchLink(msg.alternative.name)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="view-alternative-btn"
-                            >
-                              Better Price Alternative
-                            </a>
-                          </p>
+                            <div className="decision-body">
+                            <p className="recommendation-summary">{msg.formatted.summary}</p>
+
+                            {msg.alternative && (
+                                <div className="alternative-product">
+                                <h4>Cheaper Alternative Found:</h4>
+                                <p><strong>{msg.alternative.name}</strong> - ${msg.alternative.price} at {msg.alternative.retailer}</p>
+                                <p>
+                                    <a
+                                    href={createGoogleSearchLink(msg.alternative.name)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="view-alternative-btn"
+                                    >
+                                    View Alternative
+                                    </a>
+                                </p>
+                                </div>
+                            )}
+
+                            {msg.formatted.quote && (
+                                <div className="munger-quote">
+                                <div className="quote-icon">💭</div>
+                                <blockquote className="quote-text">
+                                    &ldquo;{msg.formatted.quote}&rdquo;
+                                </blockquote>
+                                <div className="quote-attribution">
+                                    — Financial Wisdom
+                                </div>
+                                </div>
+                            )}
+                            </div>
+
+                            {msg.formatted.analysisDetails && msg.formatted.decisionMatrix && (
+                                <div className="decision-matrix-wrapper">
+                                    <DecisionMatrix
+                                        analysisDetails={msg.formatted.analysisDetails}
+                                        decisionMatrix={msg.formatted.decisionMatrix}
+                                    />
+                                </div>
+                            )}
                         </div>
-                      )}
-
-                      {/* Charlie Munger Quote */}
-                      {msg.formatted.quote && (
-                        <div className="munger-quote">
-                          <div className="quote-icon">💭</div>
-                          <blockquote className="quote-text">
-                            &ldquo;{msg.formatted.quote}&rdquo;
-                          </blockquote>
-                          <div className="quote-attribution">
-                            — Financial Wisdom
-                          </div>
-                        </div>
-                      )}
-
-
-                    </div>
-                  </div>
-                );
-              } else {
-                // Standard message display for other senders
-                return (
-                  <div key={i} className={`message ${msg.sender.toLowerCase()}`}>
-                    <div className="message-header">
-                      {msg.sender === "System" ? "💡" :
-                        msg.sender === "You" ? "🧑" : ""}
-                      <strong>{msg.sender}</strong>
-                    </div>
-                    <div className="message-body">{msg.text}</div>
-                  </div>
-                );
-              }
-            })}
-          </div>
-
-          {(loading || findingAlternatives) && (
-            <div className="loading-message">
-              <span className="loading-dots"></span>
-              {loading ? "Analyzing your purchase..." : "Searching for alternatives..."}
+                        );
+                    }
+                    return null;
+                })}
+                </div>
             </div>
-          )}
         </div>
       )}
+      
+      {showSavingsTracker && (
+          <SavingsTracker onClose={() => setShowSavingsTracker(false)} />
+      )}
 
-      {/* Progressive Financial Profile Modal */}
       {showFinancialProfile && (
         <ProgressiveFinancialProfile
           onProfileUpdate={handleFinancialProfileUpdate}
