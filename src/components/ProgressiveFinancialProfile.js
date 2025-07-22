@@ -90,6 +90,11 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
   };
 
   const handleNext = () => {
+    // Validate current input if required
+    if (!currentQuestion.optional && !profile[currentQuestion.field]) {
+      return;
+    }
+
     const updatedProfile = { ...profile };
     localStorage.setItem('quickFinancialProfile', JSON.stringify(updatedProfile));
 
@@ -98,6 +103,7 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
       return;
     }
 
+    // Calculate final metrics when completing
     const monthlyNet = (parseFloat(profile.monthlyIncome) || 0) -
       (parseFloat(profile.monthlyExpenses) || 0) -
       (parseFloat(profile.debtPayments) || 0);
@@ -126,8 +132,21 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
     onClose();
   };
 
+  const handleBack = () => {
+    if (step > 0) {
+      setStep(step - 1);
+    }
+  };
+
   const handleSkip = () => {
-    if (currentQuestion.optional) handleNext();
+    if (currentQuestion.optional) {
+      // Clear the field when skipping
+      setProfile(prev => ({
+        ...prev,
+        [currentQuestion.field]: ""
+      }));
+      handleNext();
+    }
   };
 
   function calculateHealthScore(profile) {
@@ -158,10 +177,14 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
   const progress = ((step + 1) / questions.length) * 100;
 
   return (
-    <div className="pfp-overlay">
+    <div className="pfp-overlay" onClick={(e) => {
+      if (e.target.className === 'pfp-overlay') onClose();
+    }}>
       <div className="pfp-modal">
         <button className="pfp-close" onClick={onClose} aria-label="Close">
-          ✕
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M13 1L1 13M1 1L13 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
         </button>
 
         <div className="pfp-header">
@@ -178,19 +201,23 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
         <div className="pfp-content">
           <div className="pfp-question">
             <h3>{currentQuestion.title}</h3>
-            <p className="pfp-help">{currentQuestion.help}</p>
+            {currentQuestion.help && (
+              <p className="pfp-help">{currentQuestion.help}</p>
+            )}
 
             {currentQuestion.type === 'number' && (
-              <div className="pfp-input-group">
-                <span className="pfp-prefix">{currentQuestion.prefix}</span>
-                <input
-                  type="number"
-                  value={profile[currentQuestion.field] || ''}
-                  onChange={e => handleInputChange(e.target.value)}
-                  placeholder={currentQuestion.placeholder}
-                  className="pfp-input"
-                  autoFocus
-                />
+              <div className="pfp-input-wrapper">
+                <div className="pfp-input-group">
+                  <span className="pfp-prefix">{currentQuestion.prefix}</span>
+                  <input
+                    type="number"
+                    value={profile[currentQuestion.field] || ''}
+                    onChange={e => handleInputChange(e.target.value)}
+                    placeholder={currentQuestion.placeholder}
+                    className="pfp-input"
+                    autoFocus
+                  />
+                </div>
               </div>
             )}
 
@@ -201,6 +228,7 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
                     key={choice.value}
                     className={`pfp-choice ${profile[currentQuestion.field] === choice.value ? 'selected' : ''}`}
                     onClick={() => handleInputChange(choice.value)}
+                    type="button"
                   >
                     <span className="pfp-choice-emoji">{choice.emoji}</span>
                     <span className="pfp-choice-label">{choice.label}</span>
@@ -213,19 +241,28 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
 
         <div className="pfp-actions">
           {step > 0 && (
-            <button className="pfp-back" onClick={() => setStep(step - 1)}>
+            <button 
+              className="pfp-button pfp-back" 
+              onClick={handleBack}
+              type="button"
+            >
               Back
             </button>
           )}
           {currentQuestion.optional && (
-            <button className="pfp-skip" onClick={handleSkip}>
+            <button 
+              className="pfp-button pfp-skip" 
+              onClick={handleSkip}
+              type="button"
+            >
               Skip
             </button>
           )}
           <button
-            className="pfp-next"
+            className="pfp-button pfp-next"
             onClick={handleNext}
             disabled={!profile[currentQuestion.field] && !currentQuestion.optional}
+            type="button"
           >
             {step === questions.length - 1 ? 'Complete' : 'Next'}
           </button>
