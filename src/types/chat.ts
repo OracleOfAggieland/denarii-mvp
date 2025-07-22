@@ -1,9 +1,9 @@
 /**
- * Core data models and types for the OpenAI Firebase Chatbot
+ * Core data model and types for the OpenAI Firebase Chatbot
  */
 
 /**
- * Represents a single message in the chat conversation
+ * Represents single message in the chat conversation
  */
 export interface Message {
   id: string;
