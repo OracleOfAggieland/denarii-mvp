@@ -4,7 +4,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Denarii',
-  description: 'Get Charlie Munger\'s rational advice on your purchasing decisions',
+  description: 'Get rational advice on your purchasing decisions',
 }
 
 const RootLayout = ({
