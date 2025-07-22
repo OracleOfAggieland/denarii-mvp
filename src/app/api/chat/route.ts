@@ -34,6 +34,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
     console.log(`Chat API called - Environment: ${currentEnv}`);
     console.log(`API Key present: ${!!process.env.OPENAI_API_KEY}`);
     console.log(`API Key length: ${process.env.OPENAI_API_KEY?.length || 0}`);
+    console.log(`API Key starts with sk-: ${process.env.OPENAI_API_KEY?.startsWith('sk-') || false}`);
+    console.log(`All env vars:`, Object.keys(process.env).filter(key => key.includes('OPENAI')));
     
     if (currentEnv === 'development') {
       logEnvironmentInfo();
