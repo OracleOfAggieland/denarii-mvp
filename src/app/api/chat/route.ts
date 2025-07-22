@@ -29,8 +29,12 @@ interface ChatResponse {
 
 export async function POST(request: NextRequest): Promise<NextResponse<ChatResponse>> {
   try {
-    // Log environment info in development for debugging
+    // Log environment info for debugging
     const currentEnv = getCurrentEnvironment();
+    console.log(`Chat API called - Environment: ${currentEnv}`);
+    console.log(`API Key present: ${!!process.env.OPENAI_API_KEY}`);
+    console.log(`API Key length: ${process.env.OPENAI_API_KEY?.length || 0}`);
+    
     if (currentEnv === 'development') {
       logEnvironmentInfo();
     }
@@ -39,9 +43,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
     const envValidation = validateEnvironment();
     if (!envValidation.isValid) {
       console.error('Environment validation failed:', envValidation.error);
+      console.error('OPENAI_API_KEY value:', process.env.OPENAI_API_KEY ? `[${process.env.OPENAI_API_KEY.length} chars]` : 'undefined');
       return NextResponse.json(
         { 
-          error: 'Server configuration error. Please contact support.',
+          error: `Server configuration error: ${envValidation.error}`,
           errorType: ErrorType.API_ERROR 
         },
         { status: 500 }
