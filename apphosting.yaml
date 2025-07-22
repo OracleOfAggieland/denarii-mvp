@@ -1,6 +1,0 @@
-runConfig:
-  env:
-    OPENAI_API_KEY:
-      secretEnv: "projects/denarii-mvp-f5aea/secrets/openai-api-key/versions/latest"
-    NODE_ENV: "production"
-    NEXT_TELEMETRY_DISABLED: "1"
