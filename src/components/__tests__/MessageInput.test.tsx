@@ -1,5 +1,5 @@
 /**
- * Unit test for MessageInput components
+ * Unit test for MessageInput component
  * Tests user input handling, form submission, and loading states
  */
 
