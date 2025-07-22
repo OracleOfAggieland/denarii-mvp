@@ -1,6 +1,6 @@
 runConfig:
   env:
     OPENAI_API_KEY:
-      secretEnv: "openai-api-key"
+      secretEnv: "OPENAI_API_KEY"
     NODE_ENV: "production"
     NEXT_TELEMETRY_DISABLED: "1"
