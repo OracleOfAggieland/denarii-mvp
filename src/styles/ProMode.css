@@ -1,0 +1,542 @@
+/* Pro Mode Styles */
+
+/* Pro Mode Alert in Result Bubble */
+.pro-mode-section {
+    margin: 24px 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-radius: 12px;
+    text-align: center;
+    animation: slideDown 0.5s ease-out;
+  }
+  
+  .pro-mode-alert {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #92400e;
+  }
+  
+  .pro-mode-icon {
+    font-size: 1.5rem;
+  }
+  
+  .pro-mode-button {
+    background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+    color: white;
+    border: none;
+    padding: 14px 32px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+  
+  .pro-mode-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* Pro Mode Page Styles */
+  .pro-mode-container {
+    min-height: calc(100vh - 200px);
+    padding: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+    animation: fadeIn 0.5s ease-out;
+  }
+  
+  .pro-mode-header {
+    text-align: center;
+    margin-bottom: 40px;
+    animation: slideDown 0.6s ease-out;
+  }
+  
+  .pro-mode-header h1 {
+    font-size: 2.5rem;
+    color: #111827;
+    margin: 0 0 12px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+  
+  .pro-icon {
+    font-size: 3rem;
+  }
+  
+  .pro-subtitle {
+    font-size: 1.2rem;
+    color: #6b7280;
+    margin: 0;
+  }
+  
+  /* Loading State */
+  .pro-mode-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    gap: 20px;
+  }
+  
+  .pro-mode-loading p {
+    font-size: 1.1rem;
+    color: #6b7280;
+  }
+  
+  /* Error State */
+  .pro-mode-error {
+    text-align: center;
+    padding: 40px;
+    background-color: #fee2e2;
+    border-radius: 12px;
+    color: #991b1b;
+  }
+  
+  .back-button {
+    margin-top: 20px;
+    padding: 10px 24px;
+    background-color: #dc2626;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .back-button:hover {
+    background-color: #b91c1c;
+  }
+  
+  /* Questions Section */
+  .pro-mode-content {
+    background-color: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    animation: slideUp 0.6s ease-out;
+  }
+  
+  .questions-section h2 {
+    font-size: 1.5rem;
+    color: #111827;
+    margin-bottom: 30px;
+  }
+  
+  .questions-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  
+  .question-item {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 20px;
+    background-color: #f9fafb;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+  }
+  
+  .question-item:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+  
+  .question-item label {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #374151;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .question-number {
+    color: #6366f1;
+    font-size: 1.2rem;
+  }
+  
+  .question-input {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+    resize: vertical;
+    transition: all 0.3s ease;
+    background-color: white;
+  }
+  
+  .question-input:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  }
+  
+  /* Form Actions */
+  .form-actions {
+    display: flex;
+    gap: 16px;
+    margin-top: 30px;
+    justify-content: center;
+  }
+  
+  .cancel-button {
+    padding: 14px 32px;
+    background-color: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .cancel-button:hover:not(:disabled) {
+    background-color: #e5e7eb;
+    border-color: #9ca3af;
+  }
+  
+  .analyze-button {
+    padding: 14px 32px;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .analyze-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35);
+  }
+  
+  .analyze-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  /* Results Section */
+  .pro-mode-results {
+    animation: fadeIn 0.6s ease-out;
+  }
+  
+  .analysis-card {
+    background-color: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    animation: slideUp 0.6s ease-out;
+  }
+  
+  .analysis-card h2 {
+    font-size: 1.8rem;
+    color: #111827;
+    margin: 0 0 30px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .analysis-icon {
+    font-size: 2rem;
+  }
+  
+  .analysis-content {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+  
+  .analysis-text {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #374151;
+    text-align: justify;
+  }
+  
+  /* Market Insights */
+  .market-insights {
+    background-color: #f0f9ff;
+    padding: 24px;
+    border-radius: 12px;
+    border-left: 4px solid #3b82f6;
+  }
+  
+  .market-insights h3 {
+    font-size: 1.3rem;
+    color: #1e40af;
+    margin: 0 0 16px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .insights-icon {
+    font-size: 1.5rem;
+  }
+  
+  .market-insights p {
+    font-size: 1rem;
+    color: #1e3a8a;
+    line-height: 1.6;
+    margin: 0;
+  }
+  
+  /* Recommendations */
+  .recommendations-section {
+    background-color: #f0fdf4;
+    padding: 24px;
+    border-radius: 12px;
+    border-left: 4px solid #10b981;
+  }
+  
+  .recommendations-section h3 {
+    font-size: 1.3rem;
+    color: #059669;
+    margin: 0 0 16px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .recommendations-icon {
+    font-size: 1.5rem;
+  }
+  
+  .recommendations-list {
+    margin: 0;
+    padding-left: 24px;
+    list-style-type: none;
+  }
+  
+  .recommendations-list li {
+    position: relative;
+    padding-left: 24px;
+    margin-bottom: 12px;
+    font-size: 1rem;
+    color: #047857;
+    line-height: 1.6;
+  }
+  
+  .recommendations-list li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    font-weight: bold;
+    font-size: 1.2rem;
+  }
+  
+  /* Confidence Meter */
+  .confidence-meter {
+    background-color: #fef3c7;
+    padding: 24px;
+    border-radius: 12px;
+    text-align: center;
+  }
+  
+  .confidence-meter h3 {
+    font-size: 1.2rem;
+    color: #92400e;
+    margin: 0 0 16px 0;
+  }
+  
+  .confidence-bar {
+    width: 100%;
+    height: 24px;
+    background-color: #fde68a;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  
+  .confidence-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+    border-radius: 12px;
+    transition: width 1s ease-out;
+    position: relative;
+  }
+  
+  .confidence-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.3) 0%,
+      transparent 50%,
+      rgba(0, 0, 0, 0.1) 100%
+    );
+  }
+  
+  .confidence-label {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #78350f;
+  }
+  
+  /* Results Actions */
+  .results-actions {
+    margin-top: 40px;
+    text-align: center;
+  }
+  
+  .back-to-home-button {
+    padding: 14px 40px;
+    background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+  
+  .back-to-home-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .pro-mode-header h1 {
+      font-size: 2rem;
+      flex-direction: column;
+    }
+  
+    .pro-icon {
+      font-size: 2.5rem;
+    }
+  
+    .pro-mode-content,
+    .analysis-card {
+      padding: 24px;
+    }
+  
+    .questions-section h2 {
+      font-size: 1.3rem;
+    }
+  
+    .question-item {
+      padding: 16px;
+    }
+  
+    .question-item label {
+      font-size: 1rem;
+    }
+  
+    .form-actions {
+      flex-direction: column;
+      gap: 12px;
+    }
+  
+    .cancel-button,
+    .analyze-button {
+      width: 100%;
+    }
+  
+    .analysis-card h2 {
+      font-size: 1.5rem;
+    }
+  
+    .analysis-text {
+      font-size: 1rem;
+    }
+  
+    .recommendations-list {
+      padding-left: 16px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .pro-mode-container {
+      padding: 16px;
+    }
+  
+    .pro-mode-header h1 {
+      font-size: 1.75rem;
+    }
+  
+    .pro-subtitle {
+      font-size: 1rem;
+    }
+  
+    .pro-mode-content,
+    .analysis-card {
+      padding: 20px;
+    }
+  
+    .questions-form {
+      gap: 16px;
+    }
+  
+    .market-insights,
+    .recommendations-section,
+    .confidence-meter {
+      padding: 16px;
+    }
+  }
+  
+  /* Animations */
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }

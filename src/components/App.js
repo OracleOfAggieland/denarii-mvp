@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react
 import PurchaseAdvisor from "./PurchaseAdvisor";
 import FinancialProfile from "./FinancialProfile";
 import About from "./About";
+import ProMode from "./ProMode";
 import "../styles/App.css";
 
 // Header Component
@@ -35,6 +36,11 @@ const Footer = () => {
 const Navigation = () => {
   const location = useLocation();
 
+  // Don't show navigation on Pro Mode page
+  if (location.pathname === '/pro-mode') {
+    return null;
+  }
+
   return (
     <div className="nav-container">
       {location.pathname === "/" ? (
@@ -63,6 +69,7 @@ const App = () => {
             <Route path="/" element={<PurchaseAdvisor />} />
             <Route path="/profile" element={<FinancialProfile />} />
             <Route path="/about" element={<About />} />
+            <Route path="/pro-mode" element={<ProMode />} />
           </Routes>
         </main>
 

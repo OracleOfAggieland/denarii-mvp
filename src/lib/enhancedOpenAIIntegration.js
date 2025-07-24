@@ -71,7 +71,12 @@ export const getEnhancedPurchaseRecommendation = async (itemName, cost, purpose,
       summary: finalSummary, // Use the new summary
       reasoning: structuredRec.reasoning, // Keep for the matrix details
       quote,
-      analysisDetails: structuredRec.analysisDetails,
+      analysisDetails: {
+        ...structuredRec.analysisDetails,
+        purchaseCategory: purchaseCategory, // Add purchase category
+        itemName: itemName,
+        itemCost: cost
+      },
       alternative,
       decisionMatrix: formatDecisionMatrix(decisionAnalysis.scores)
     };
@@ -101,7 +106,12 @@ export const getEnhancedPurchaseRecommendation = async (itemName, cost, purpose,
       summary: structuredRec.summary, // Use summary in fallback
       reasoning: structuredRec.reasoning,
       quote: "Price is what you pay. Value is what you get.",
-      analysisDetails: structuredRec.analysisDetails,
+      analysisDetails: {
+        ...structuredRec.analysisDetails,
+        purchaseCategory: 'HIGH_VALUE', // Default to HIGH_VALUE if classification fails
+        itemName: itemName,
+        itemCost: cost
+      },
       alternative,
       decisionMatrix: formatDecisionMatrix(decisionAnalysis.scores)
     };

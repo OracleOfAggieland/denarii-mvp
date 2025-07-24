@@ -18,6 +18,7 @@ interface ChatRequest {
     role: 'user' | 'assistant';
     content: string;
   }>;
+  useWebSearch?: boolean; // Add support for web search flag
 }
 
 // Response interface for type safety
@@ -104,6 +105,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
     // Build messages array for OpenAI API
     const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
     
+    // Add web search system message if requested
+    if (body.useWebSearch) {
+      messages.push({
+        role: 'system',
+        content: 'You have access to web search. Use it to find current market information, pricing trends, and expert reviews when analyzing this purchase. Search for recent reviews, pricing history, and upcoming alternatives or models. Include specific findings from your web search in your response.'
+      });
+    }
+    
     // Add conversation history if provided
     if (body.conversationHistory && body.conversationHistory.length > 0) {
       for (const historyMessage of body.conversationHistory) {
@@ -144,11 +153,22 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
 
     // Create OpenAI client and make request
     const openai = createOpenAIClient();
+    
+    // Use gpt-4o-search-preview model if web search is requested
+    const model = body.useWebSearch ? 'gpt-4o-search-preview' : (body.image ? 'gpt-4o' : config.model);
+    
     const completion = await openai.chat.completions.create({
-      model: body.image ? 'gpt-4o' : config.model, // Use gpt-4o for image requests (supports vision)
+      model: model,
       messages: messages,
-      temperature: config.temperature,
-      max_tokens: config.maxTokens,
+      // Only include temperature for non-search models
+      ...(body.useWebSearch ? {} : { temperature: config.temperature }),
+      max_tokens: body.useWebSearch ? 1000 : config.maxTokens, // More tokens for web search responses
+      // Add web search options if using search model
+      ...(body.useWebSearch && {
+        web_search_options: {
+          search_context_size: 'high' // Use high context for detailed analysis
+        }
+      })
     });
 
     // Extract response from OpenAI

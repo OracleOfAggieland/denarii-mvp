@@ -376,7 +376,7 @@ const PurchaseAdvisor = () => {
             <span className="card-icon">🛒</span>
             Analyze Your Purchase
           </h2>
-          <p className="card-subtitle">Tell us about the item you're considering</p>
+          <p className="card-subtitle">Tell us about the item you&apos;re considering</p>
         </div>
 
         <div className="card-body">
