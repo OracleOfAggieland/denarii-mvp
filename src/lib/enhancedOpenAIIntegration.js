@@ -1,16 +1,22 @@
 /**
  * Enhanced OpenAI API integration with structured decision model
- * Combines AI insights with academic decision framework
+ * Combines AI insights with academic decision framework and purchase classification
  */
 
 import { calculateDecisionScores, generateStructuredRecommendation } from './structuredDecisionModel';
+import { classifyPurchase } from './purchaseClassifier';
+import { getPromptForCategory } from './promptTemplates';
 
 /**
  * Get enhanced purchase recommendation combining structured model with AI insights
  */
 export const getEnhancedPurchaseRecommendation = async (itemName, cost, purpose, frequency, financialProfile, alternative) => {
   try {
-    // First, calculate using the structured decision model
+    // First, classify the purchase to determine appropriate prompt strategy
+    const classificationResult = await classifyPurchase(itemName, cost);
+    const purchaseCategory = classificationResult.category;
+
+    // Calculate using the structured decision model
     const decisionAnalysis = calculateDecisionScores(
       itemName,
       cost,
@@ -31,17 +37,8 @@ export const getEnhancedPurchaseRecommendation = async (itemName, cost, purpose,
     const initialSummary = structuredRec.summary;
     const finalDecision = structuredRec.decision;
 
-    // AI Prompt to refine the summary, now with the final decision for context
-    const aiPrompt = `You are a concise financial advisor. Your goal is to refine a summary to match a final decision.
-    
-    The final decision is: **${finalDecision}**.
-    
-    The initial summary is: "${initialSummary}".
-    
-    Please refine this summary to be more conversational and insightful, ensuring it clearly supports the final **${finalDecision}** decision. Keep it strictly to two sentences. Do not add any extra text, just the refined summary.
-    
-    Provide your response as a JSON object with a single key: "refinedSummary".
-    `;
+    // Get category-specific AI prompt instead of generic one
+    const aiPrompt = getPromptForCategory(purchaseCategory, initialSummary, finalDecision);
 
     const response = await fetch('/api/chat', {
         method: 'POST',
