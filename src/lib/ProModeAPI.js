@@ -8,27 +8,52 @@
  */
 export const generateProModeQuestions = async (purchaseData) => {
   try {
-    const prompt = `You are a financial advisor specializing in high-value purchases. 
-      The user is considering: ${purchaseData.itemName} for $${purchaseData.itemCost}.
-      
-      Generate exactly 3 probing questions that will help provide deeper analysis. Questions should:
-      1. Be specific to this item and price point
-      2. Uncover personal use cases, alternatives considered, and timing factors
-      3. Help assess long-term value and opportunity cost
-      
-      Return as JSON array with format:
-      [
-        {
-          "id": "q1",
-          "text": "Question text",
-          "placeholder": "Example answer hint"
-        }
-      ]`;
+    // Destructure for easier access
+    const {
+      itemName,
+      itemCost,
+      analysisDetails
+    } = purchaseData;
+    const topNegativeFactors = analysisDetails?.topFactors?.negative || [];
+
+    // Build a context string from the most important negative factors
+    const contextString = topNegativeFactors.length > 0 ?
+      `The initial analysis raised concerns about: ${topNegativeFactors.join(', ')}.` :
+      '';
+
+    const prompt = `You are a financial advisor specializing in high-value purchases.
+      The user is considering: ${itemName} for $${itemCost}.
+      ${contextString}
+
+      Generate exactly 3 probing questions that will help provide deeper analysis,
+      focusing on the identified areas of concern. Questions should:
+      1. Be specific to the item and the potential weaknesses found.
+      2. Uncover personal use cases, alternatives considered, and timing factors.
+      3. Help assess long-term value and opportunity cost, especially in relation to the concerns.
+
+      Return a JSON object with a "questions" key containing an array of exactly 3 question objects.
+      Each question object must have these fields:
+      - "id": A string like "q1", "q2", "q3"
+      - "text": The question text
+      - "placeholder": An example answer hint
+
+      Format your response as:
+      {
+        "questions": [
+          {"id": "q1", "text": "Question text", "placeholder": "Example answer hint"},
+          {"id": "q2", "text": "Question text", "placeholder": "Example answer hint"},
+          {"id": "q3", "text": "Question text", "placeholder": "Example answer hint"}
+        ]
+      }`;
 
     const response = await fetch('/api/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: prompt }),
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: prompt
+      }),
     });
 
     if (!response.ok) {
@@ -42,13 +67,26 @@ export const generateProModeQuestions = async (purchaseData) => {
       throw new Error(`API Error: ${data.error}`);
     }
 
+    // For Pro Mode questions, the server now returns the array directly
+    if (Array.isArray(data)) {
+      return data;
+    }
+
+    // Fallback: try to parse from response string if needed
     const cleanedResponse = data.response
       .replace(/^```json\s*/, '')
       .replace(/\s*```$/, '')
       .trim();
 
     console.log('Cleaned response:', cleanedResponse);
-    return JSON.parse(cleanedResponse);
+    const parsed = JSON.parse(cleanedResponse);
+    
+    // If it's an object with questions array, extract it
+    if (parsed.questions && Array.isArray(parsed.questions)) {
+      return parsed.questions;
+    }
+    
+    return parsed;
   } catch (error) {
     console.error('Error generating questions:', error);
     console.error('Error details:', {

@@ -28,7 +28,79 @@ interface ChatResponse {
   errorType?: ErrorType;
 }
 
-export async function POST(request: NextRequest): Promise<NextResponse<ChatResponse>> {
+// Type for completion options
+interface CompletionOptions {
+  model: string;
+  messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[];
+  temperature?: number;
+  max_tokens?: number;
+  response_format?: { type: 'json_object' };
+  web_search_options?: {
+    search_context_size: 'high' | 'medium' | 'low';
+  };
+}
+
+// Helper function to attempt to fix truncated JSON
+function attemptToFixTruncatedJSON(jsonString: string): string | null {
+  try {
+    // Try to find where the JSON was likely truncated
+    const lastValidChar = jsonString.lastIndexOf('"');
+    if (lastValidChar === -1) return null;
+    
+    // Try to close the JSON structure properly
+    let fixedJson = jsonString.substring(0, lastValidChar + 1);
+    
+    // Count open brackets/braces
+    let openBraces = 0;
+    let openBrackets = 0;
+    let inString = false;
+    let escapeNext = false;
+    
+    for (let i = 0; i < fixedJson.length; i++) {
+      const char = fixedJson[i];
+      
+      if (escapeNext) {
+        escapeNext = false;
+        continue;
+      }
+      
+      if (char === '\\') {
+        escapeNext = true;
+        continue;
+      }
+      
+      if (char === '"' && !escapeNext) {
+        inString = !inString;
+        continue;
+      }
+      
+      if (!inString) {
+        if (char === '{') openBraces++;
+        else if (char === '}') openBraces--;
+        else if (char === '[') openBrackets++;
+        else if (char === ']') openBrackets--;
+      }
+    }
+    
+    // Close any open structures
+    while (openBrackets > 0) {
+      fixedJson += ']';
+      openBrackets--;
+    }
+    
+    while (openBraces > 0) {
+      fixedJson += '}';
+      openBraces--;
+    }
+    
+    return fixedJson;
+  } catch (error) {
+    console.error('Error attempting to fix truncated JSON:', error);
+    return null;
+  }
+}
+
+export async function POST(request: NextRequest): Promise<NextResponse<ChatResponse | any[]>> {
   try {
     // Log environment info for debugging
     const currentEnv = getCurrentEnvironment();
@@ -157,19 +229,38 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
     // Use gpt-4o-search-preview model if web search is requested
     const model = body.useWebSearch ? 'gpt-4o-search-preview' : (body.image ? 'gpt-4o' : config.model);
     
-    const completion = await openai.chat.completions.create({
+    // Check if this is a Pro Mode questions request
+    const isProModeQuestions = body.message.includes('Generate exactly 3 probing questions');
+    
+    const completionOptions: CompletionOptions = {
       model: model,
       messages: messages,
-      // Only include temperature for non-search models
-      ...(body.useWebSearch ? {} : { temperature: config.temperature }),
-      max_tokens: body.useWebSearch ? 1000 : config.maxTokens, // More tokens for web search responses
-      // Add web search options if using search model
-      ...(body.useWebSearch && {
-        web_search_options: {
-          search_context_size: 'high' // Use high context for detailed analysis
-        }
-      })
-    });
+    };
+
+    // Add conditional options
+    if (!body.useWebSearch) {
+      completionOptions.temperature = config.temperature;
+    }
+    
+    // Use more tokens for Pro Mode questions to avoid truncation
+    if (isProModeQuestions) {
+      completionOptions.max_tokens = 800; // Increased from default for Pro Mode
+    } else {
+      completionOptions.max_tokens = body.useWebSearch ? 1000 : config.maxTokens;
+    }
+    
+    if (body.useWebSearch) {
+      completionOptions.web_search_options = {
+        search_context_size: 'high'
+      };
+    }
+    
+    // Add response_format for Pro Mode questions
+    if (isProModeQuestions) {
+      completionOptions.response_format = { type: "json_object" };
+    }
+    
+    const completion = await openai.chat.completions.create(completionOptions);
 
     // Extract response from OpenAI
     const assistantMessage = completion.choices[0]?.message?.content;
@@ -184,16 +275,95 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
       );
     }
 
-    // Return successful response
+    // Handle Pro Mode questions response specially
+    if (isProModeQuestions) {
+      try {
+        let parsedResponse;
+        
+        try {
+          parsedResponse = JSON.parse(assistantMessage);
+        } catch (initialError) {
+          console.error('Initial JSON parse failed, attempting to fix truncated JSON');
+          console.error('Raw response:', assistantMessage);
+          
+          // Try to fix truncated JSON
+          const fixedJson = attemptToFixTruncatedJSON(assistantMessage);
+          if (fixedJson) {
+            console.log('Attempting to parse fixed JSON:', fixedJson);
+            parsedResponse = JSON.parse(fixedJson);
+          } else {
+            throw initialError;
+          }
+        }
+        
+        // Check if this has the expected "questions" structure
+        if (parsedResponse.questions && Array.isArray(parsedResponse.questions)) {
+          // Validate that we have exactly 3 questions with proper structure
+          const questions = parsedResponse.questions;
+          
+          // If we have less than 3 questions due to truncation, use fallback
+          if (questions.length < 3) {
+            console.error('Not enough questions generated, got:', questions.length);
+            throw new Error('Incomplete questions generated');
+          }
+          
+          // Filter out any incomplete questions
+          const validQuestions = questions.filter((q: {id?: string; text?: string; placeholder?: string}) => 
+            q.id && typeof q.id === 'string' &&
+            q.text && typeof q.text === 'string' &&
+            q.placeholder && typeof q.placeholder === 'string'
+          );
+          
+          if (validQuestions.length < 3) {
+            console.error('Not enough valid questions after filtering:', validQuestions.length);
+            throw new Error('Invalid question format');
+          }
+          
+          // Return the first 3 valid questions
+          return NextResponse.json(validQuestions.slice(0, 3));
+        }
+        
+        // If it doesn't have the expected structure, throw an error
+        throw new Error('Response missing questions array');
+        
+      } catch (parseError) {
+        console.error('Error parsing Pro Mode questions:', parseError);
+        console.error('Raw response:', assistantMessage);
+        
+        // Return fallback questions
+        return NextResponse.json([
+          {
+            id: 'q1',
+            text: 'What specific features or capabilities are most important to you in this purchase?',
+            placeholder: 'e.g., I need it for professional work, specific features like...'
+          },
+          {
+            id: 'q2',
+            text: 'Have you researched alternatives? What made you choose this particular option?',
+            placeholder: 'e.g., I looked at X and Y, but this one has...'
+          },
+          {
+            id: 'q3',
+            text: 'How soon do you need this item, and are there any upcoming sales or releases you\'re aware of?',
+            placeholder: 'e.g., I need it by next month, Black Friday is coming...'
+          }
+        ]);
+      }
+    }
+
+    // Return successful response for non-Pro Mode requests
     return NextResponse.json({
       response: assistantMessage,
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('OpenAI API error:', error);
 
+    // Type guard for error object
+    const openAIError = error as { status?: number; code?: string; message?: string };
+
     // Handle specific OpenAI errors
-    if (error?.status === 429) {
+    if (openAIError.status === 429) {
       return NextResponse.json(
         { 
           error: 'Too many requests. Please wait a moment and try again.',
@@ -203,7 +373,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
       );
     }
 
-    if (error?.status === 401) {
+    if (openAIError.status === 401) {
       return NextResponse.json(
         { 
           error: 'Authentication failed. Please contact support.',
@@ -213,7 +383,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
       );
     }
 
-    if (error?.status >= 400 && error?.status < 500) {
+    if (openAIError.status && openAIError.status >= 400 && openAIError.status < 500) {
       return NextResponse.json(
         { 
           error: 'Invalid request to AI service',
@@ -224,7 +394,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
     }
 
     // Handle network/connection errors
-    if (error?.code === 'ENOTFOUND' || error?.code === 'ECONNREFUSED') {
+    if (openAIError.code === 'ENOTFOUND' || openAIError.code === 'ECONNREFUSED') {
       return NextResponse.json(
         { 
           error: 'Unable to connect to AI service. Please check your connection.',
