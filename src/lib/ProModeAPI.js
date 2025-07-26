@@ -21,22 +21,21 @@ export const generateProModeQuestions = async (purchaseData) => {
       `The initial analysis raised concerns about: ${topNegativeFactors.join(', ')}.` :
       '';
 
-    const prompt = `You are a financial advisor specializing in high-value purchases.
+    const prompt = `You are a financial advisor specializing in high-value purchases. 
       The user is considering: ${itemName} for $${itemCost}.
       ${contextString}
-
-      Generate exactly 3 probing questions that will help provide deeper analysis,
-      focusing on the identified areas of concern. Questions should:
-      1. Be specific to the item and the potential weaknesses found.
-      2. Uncover personal use cases, alternatives considered, and timing factors.
-      3. Help assess long-term value and opportunity cost, especially in relation to the concerns.
-
+      
+      Generate exactly 3 probing questions that will help provide deeper analysis, focusing on the identified areas of concern. Questions should:
+      1. Be specific to this item and price point
+      2. Uncover personal use cases, alternatives considered, and timing factors
+      3. Help assess long-term value and opportunity cost
+      
       Return a JSON object with a "questions" key containing an array of exactly 3 question objects.
       Each question object must have these fields:
       - "id": A string like "q1", "q2", "q3"
       - "text": The question text
       - "placeholder": An example answer hint
-
+      
       Format your response as:
       {
         "questions": [
@@ -48,12 +47,8 @@ export const generateProModeQuestions = async (purchaseData) => {
 
     const response = await fetch('/api/chat', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        message: prompt
-      }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: prompt }),
     });
 
     if (!response.ok) {
@@ -171,12 +166,15 @@ export const getProModeAnalysis = async (purchaseData, questions, answers) => {
     }
 
     const data = await response.json();
-    const cleanedResponse = data.response
-      .replace(/^```json\s*/, '')
-      .replace(/\s*```$/, '')
-      .trim();
+    
+    // Find and extract the JSON object from the response string
+    const jsonMatch = data.response.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error("No valid JSON object found in the API response.");
+    }
+    const jsonString = jsonMatch[0];
 
-    return JSON.parse(cleanedResponse);
+    return JSON.parse(jsonString);
   } catch (error) {
     console.error('Error getting pro analysis:', error);
     throw error;

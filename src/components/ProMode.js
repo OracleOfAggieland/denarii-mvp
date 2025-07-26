@@ -3,6 +3,34 @@ import { useNavigate } from 'react-router-dom';
 import { generateProModeQuestions, getProModeAnalysis } from '../lib/ProModeAPI';
 import '../styles/ProMode.css';
 
+const parseAndRenderLinks = (text) => {
+  if (!text) return null;
+  const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+  const parts = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = linkRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.substring(lastIndex, match.index));
+    }
+
+    const [fullMatch, linkText, url] = match;
+    parts.push(
+      <a href={url} target="_blank" rel="noopener noreferrer" className="analysis-link" key={url + lastIndex}>
+        {linkText}
+      </a>
+    );
+    lastIndex = match.index + fullMatch.length;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.substring(lastIndex));
+  }
+
+  return parts;
+};
+
 const ProMode = () => {
   const navigate = useNavigate();
   const [purchaseData, setPurchaseData] = useState(null);
@@ -171,7 +199,7 @@ const ProMode = () => {
               Comprehensive Analysis
             </h2>
             <div className="analysis-content">
-              <p className="analysis-text">{analysis.fullAnalysis}</p>
+              <p className="analysis-text">{parseAndRenderLinks(analysis.fullAnalysis)}</p>
               
               {analysis.marketInsights && (
                 <div className="market-insights">
@@ -179,7 +207,7 @@ const ProMode = () => {
                     <span className="insights-icon">📊</span>
                     Current Market Conditions
                   </h3>
-                  <p>{analysis.marketInsights}</p>
+                  <p>{parseAndRenderLinks(analysis.marketInsights)}</p>
                 </div>
               )}
 
