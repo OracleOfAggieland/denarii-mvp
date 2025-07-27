@@ -104,6 +104,29 @@ describe('Enhanced OpenAI Integration with Classification', () => {
     );
   });
 
+  test('should use DISCRETIONARY_MEDIUM classification for mid-range items', async () => {
+    classifyPurchase.mockResolvedValue({
+      category: 'DISCRETIONARY_MEDIUM',
+      cached: false
+    });
+
+    await getEnhancedPurchaseRecommendation(
+      'Coffee Maker',
+      150,
+      'kitchen',
+      'daily',
+      { income: 60000, expenses: 35000 },
+      null
+    );
+
+    expect(classifyPurchase).toHaveBeenCalledWith('Coffee Maker', 150);
+    expect(getPromptForCategory).toHaveBeenCalledWith(
+      'DISCRETIONARY_MEDIUM',
+      'This is a good purchase based on analysis.',
+      'Buy'
+    );
+  });
+
   test('should use HIGH_VALUE classification for expensive items', async () => {
     classifyPurchase.mockResolvedValue({
       category: 'HIGH_VALUE',
@@ -189,5 +212,93 @@ describe('Enhanced OpenAI Integration with Classification', () => {
     expect(result.decisionMatrix).toHaveProperty('utility');
     expect(Array.isArray(result.decisionMatrix.financial)).toBe(true);
     expect(Array.isArray(result.decisionMatrix.utility)).toBe(true);
+  });
+
+  test('should correctly classify items at price boundaries', async () => {
+    // Test $50 boundary (should be DISCRETIONARY_SMALL)
+    classifyPurchase.mockResolvedValue({
+      category: 'DISCRETIONARY_SMALL',
+      cached: false
+    });
+
+    await getEnhancedPurchaseRecommendation(
+      'Item at $50',
+      50,
+      'purpose',
+      'once',
+      { income: 50000, expenses: 30000 },
+      null
+    );
+
+    expect(classifyPurchase).toHaveBeenCalledWith('Item at $50', 50);
+
+    // Test $51 boundary (should be DISCRETIONARY_MEDIUM)
+    classifyPurchase.mockResolvedValue({
+      category: 'DISCRETIONARY_MEDIUM',
+      cached: false
+    });
+
+    await getEnhancedPurchaseRecommendation(
+      'Item at $51',
+      51,
+      'purpose',
+      'once',
+      { income: 50000, expenses: 30000 },
+      null
+    );
+
+    expect(classifyPurchase).toHaveBeenCalledWith('Item at $51', 51);
+
+    // Test $299 boundary (should be DISCRETIONARY_MEDIUM)
+    classifyPurchase.mockResolvedValue({
+      category: 'DISCRETIONARY_MEDIUM',
+      cached: false
+    });
+
+    await getEnhancedPurchaseRecommendation(
+      'Item at $299',
+      299,
+      'purpose',
+      'once',
+      { income: 50000, expenses: 30000 },
+      null
+    );
+
+    expect(classifyPurchase).toHaveBeenCalledWith('Item at $299', 299);
+
+    // Test $300 boundary (should be HIGH_VALUE)
+    classifyPurchase.mockResolvedValue({
+      category: 'HIGH_VALUE',
+      cached: false
+    });
+
+    await getEnhancedPurchaseRecommendation(
+      'Item at $300',
+      300,
+      'purpose',
+      'once',
+      { income: 50000, expenses: 30000 },
+      null
+    );
+
+    expect(classifyPurchase).toHaveBeenCalledWith('Item at $300', 300);
+  });
+
+  test('should include purchase category in analysis details', async () => {
+    classifyPurchase.mockResolvedValue({
+      category: 'DISCRETIONARY_MEDIUM',
+      cached: false
+    });
+
+    const result = await getEnhancedPurchaseRecommendation(
+      'Test item',
+      150,
+      'purpose',
+      'once',
+      { income: 50000, expenses: 30000 },
+      null
+    );
+
+    expect(result.analysisDetails).toHaveProperty('purchaseCategory', 'DISCRETIONARY_MEDIUM');
   });
 });

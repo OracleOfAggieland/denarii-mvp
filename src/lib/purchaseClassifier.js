@@ -6,7 +6,8 @@
 // Classification categories
 export const CLASSIFICATION_CATEGORIES = {
   ESSENTIAL_DAILY: 'ESSENTIAL_DAILY',
-  DISCRETIONARY_SMALL: 'DISCRETIONARY_SMALL', 
+  DISCRETIONARY_SMALL: 'DISCRETIONARY_SMALL',
+  DISCRETIONARY_MEDIUM: 'DISCRETIONARY_MEDIUM', 
   HIGH_VALUE: 'HIGH_VALUE'
 };
 
@@ -77,29 +78,33 @@ const getCacheEntry = (key) => {
 };
 
 /**
- * Apply price-based validation rules
+ * Apply strict price-based rules
+ * Following the requirement: price ranges must be enforced accurately
  */
 const applyPriceRules = (cost) => {
+  // Strictly enforce price ranges
   if (cost >= 300) {
     return CLASSIFICATION_CATEGORIES.HIGH_VALUE;
+  } else if (cost >= 51 && cost <= 299) {
+    return CLASSIFICATION_CATEGORIES.DISCRETIONARY_MEDIUM;
   }
-  return null; // No price-based override
+  // For items under $50, we'll use AI to distinguish between essential and discretionary
+  return null;
 };
 
 /**
- * Call OpenAI API for purchase classification
+ * Call OpenAI API for purchase classification (only for items under $50)
  */
 const callClassificationAPI = async (itemName, cost) => {
-  const classificationPrompt = `You are a purchase classification system. Classify this purchase into exactly one category:
+  const classificationPrompt = `You are a purchase classification system. Classify this purchase under $50 into exactly one category:
 
-ESSENTIAL_DAILY: Basic necessities under $50 (sanitizer, paper towels, toothpaste, basic food items)
-DISCRETIONARY_SMALL: Non-essential items under $50 (coffee makers, phone cases, gadgets, entertainment)
-HIGH_VALUE: Any item over $300 regardless of type
+ESSENTIAL_DAILY: Basic necessities (sanitizer, paper towels, toothpaste, basic food items, hygiene products)
+DISCRETIONARY_SMALL: Non-essential items (coffee makers, phone cases, gadgets, entertainment, decorative items)
 
 Item: "${itemName}"
 Cost: $${cost}
 
-Respond with ONLY the category name: ESSENTIAL_DAILY, DISCRETIONARY_SMALL, or HIGH_VALUE`;
+Respond with ONLY the category name: ESSENTIAL_DAILY or DISCRETIONARY_SMALL`;
 
   try {
     const response = await fetch('/api/chat', {
@@ -116,7 +121,7 @@ Respond with ONLY the category name: ESSENTIAL_DAILY, DISCRETIONARY_SMALL, or HI
     const classification = data.response?.trim().toUpperCase();
 
     // Validate the response is one of our expected categories
-    if (Object.values(CLASSIFICATION_CATEGORIES).includes(classification)) {
+    if (classification === 'ESSENTIAL_DAILY' || classification === 'DISCRETIONARY_SMALL') {
       return classification;
     } else {
       console.warn(`Invalid classification response: ${classification}`);
@@ -156,7 +161,7 @@ export const classifyPurchase = async (itemName, cost) => {
       };
     }
 
-    // Apply price-based rules first (hard override)
+    // Apply strict price-based rules first
     const priceBasedCategory = applyPriceRules(cost);
     if (priceBasedCategory) {
       setCacheEntry(cacheKey, priceBasedCategory);
@@ -166,14 +171,14 @@ export const classifyPurchase = async (itemName, cost) => {
       };
     }
 
-    // Call AI classification for items under $300
+    // For items under $50, use AI to classify between essential and discretionary
     const aiClassification = await callClassificationAPI(itemName, cost);
     
     let finalCategory;
     if (aiClassification) {
       finalCategory = aiClassification;
     } else {
-      // Fallback to DISCRETIONARY_SMALL on any error
+      // Fallback to DISCRETIONARY_SMALL for items under $50 on any error
       console.warn(`Classification failed for "${itemName}" ($${cost}), using fallback`);
       finalCategory = CLASSIFICATION_CATEGORIES.DISCRETIONARY_SMALL;
     }
@@ -189,11 +194,23 @@ export const classifyPurchase = async (itemName, cost) => {
   } catch (error) {
     console.error('Error in classifyPurchase:', error);
     
-    // Fallback to DISCRETIONARY_SMALL on any error
-    return {
-      category: CLASSIFICATION_CATEGORIES.DISCRETIONARY_SMALL,
-      cached: false
-    };
+    // Fallback based on price
+    if (cost >= 300) {
+      return {
+        category: CLASSIFICATION_CATEGORIES.HIGH_VALUE,
+        cached: false
+      };
+    } else if (cost >= 51) {
+      return {
+        category: CLASSIFICATION_CATEGORIES.DISCRETIONARY_MEDIUM,
+        cached: false
+      };
+    } else {
+      return {
+        category: CLASSIFICATION_CATEGORIES.DISCRETIONARY_SMALL,
+        cached: false
+      };
+    }
   }
 };
 
