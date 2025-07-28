@@ -1,12 +1,21 @@
-import type { Metadata } from 'next'
-import React from 'react'
-import './globals.css'
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import React from 'react';
+import './globals.css';
+import '../styles/App.css';
 
-const siteUrl = 'https://denarii-mvp--denarii-mvp-f5aea.us-central1.hosted.app';
+const inter = Inter({ subsets: ['latin'] });
 
+// This should be your production URL
+const siteUrl = 'https://denarii-mvp-f5aea.web.app';
+
+// This metadata object now handles the title, description, icons, and social media cards.
 export const metadata: Metadata = {
   title: 'Denarii',
   description: 'Get rational advice on your purchasing decisions',
+  icons: {
+    icon: '/icons8-money-96.png', // Handles the favicon
+  },
   openGraph: {
     title: 'Denarii',
     description: 'Get rational advice on your purchasing decisions',
@@ -29,21 +38,17 @@ export const metadata: Metadata = {
     description: 'Get rational advice on your purchasing decisions',
     images: [`${siteUrl}/og-image.png`], // Must be an absolute URL
   },
-}
+};
 
-const RootLayout = ({
+export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
-}) => {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
-      <head>
-        <link rel="icon" href="/icons8-money-96.png" type="image/png" />
-      </head>
-      <body className="antialiased">{children}</body>
+      {/* The body tag includes the font class from Next/Font and Tailwind's antialiased class for smoother text. */}
+      <body className={`${inter.className} antialiased`}>{children}</body>
     </html>
-  )
+  );
 }
-
-export default RootLayout
