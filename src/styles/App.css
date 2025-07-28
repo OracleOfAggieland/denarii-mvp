@@ -3499,3 +3499,294 @@ body {
     padding: 0 var(--spacing-sm);
   }
 }
+
+/* ============================================
+   CHAT INTERFACE STYLES - MOBILE FIXES
+   ============================================ */
+
+/* Chat Page Container - Fixed for mobile */
+.chat-page-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: calc(100vh - 120px);
+  padding: var(--spacing-lg);
+  background-color: var(--bg-secondary);
+  width: 100%;
+  box-sizing: border-box;
+  flex: 1;
+  /* Fix for mobile to account for navigation */
+  padding-bottom: 100px;
+}
+
+/* Chat Interface Container - Fixed positioning */
+.chat-interface-centered {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 900px;
+  height: calc(100vh - 160px);
+  background-color: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+  animation: fadeInUp 0.6s ease-out;
+  border: 1px solid var(--border-light);
+  margin: 0 auto;
+  position: relative;
+}
+
+/* Chat Header - Fixed mobile controls */
+.chat-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+  flex-wrap: nowrap;
+  gap: var(--spacing-sm);
+}
+
+.chat-title {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  color: var(--text-inverse);
+  flex: 1;
+  min-width: 0;
+}
+
+.chat-title-text {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.chat-controls {
+  display: flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Clear History Button - Mobile specific */
+.clear-history-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.btn-icon-only {
+  font-size: 1.1em;
+}
+
+.btn-text-desktop {
+  display: inline;
+}
+
+/* Navigation Container Fix - Don't block chat */
+.nav-container {
+  position: fixed;
+  bottom: var(--spacing-lg);
+  right: var(--spacing-lg);
+  z-index: 1000;
+  animation: fadeInUp 0.8s ease-out;
+  /* Don't show on chat page */
+}
+
+/* Hide navigation on chat page */
+.chat-page-container ~ .nav-container {
+  display: none;
+}
+
+/* Mobile Responsive Fixes */
+@media (max-width: 768px) {
+  .chat-page-container {
+    padding: var(--spacing-sm);
+    padding-bottom: 80px; /* Account for mobile navigation/quick actions */
+  }
+
+  .chat-interface-centered {
+    height: calc(100vh - 100px);
+    border-radius: var(--radius-md);
+  }
+
+  .chat-header {
+    padding: var(--spacing-md);
+  }
+
+  .chat-header-content {
+    gap: var(--spacing-xs);
+  }
+
+  .chat-title {
+    font-size: var(--font-size-lg);
+  }
+
+  .chat-title-text {
+    display: block;
+  }
+
+  .chat-icon {
+    display: none;
+  }
+
+  .chat-controls {
+    gap: 4px;
+  }
+
+  .voice-indicator {
+    font-size: var(--font-size-xs);
+    padding: 2px 6px;
+    margin-left: 4px;
+  }
+
+  /* Show only icon for clear button on mobile */
+  .btn-text-desktop {
+    display: none;
+  }
+
+  .clear-history-btn {
+    padding: var(--spacing-xs);
+    min-width: auto;
+  }
+
+  .btn.btn-sm {
+    padding: 6px 10px;
+    font-size: var(--font-size-xs);
+  }
+
+  .chat-messages {
+    padding: var(--spacing-md);
+    gap: var(--spacing-sm);
+  }
+
+  .message-bubble {
+    max-width: 85%;
+    padding: var(--spacing-sm);
+  }
+
+  .chat-input-container {
+    padding: var(--spacing-md);
+  }
+
+  .chat-input-form {
+    gap: var(--spacing-xs);
+  }
+
+  .chat-send-btn .btn-text {
+    display: none;
+  }
+
+  .empty-state-icon {
+    font-size: 3rem;
+  }
+
+  .empty-state-title {
+    font-size: var(--font-size-lg);
+  }
+
+  /* Quick Actions - Fixed mobile positioning */
+  .quick-actions {
+    padding: var(--spacing-sm);
+    gap: var(--spacing-xs);
+    position: relative;
+    z-index: 10;
+  }
+  
+  .quick-action-btn {
+    flex: 1;
+    min-width: 140px;
+    padding: var(--spacing-sm);
+  }
+  
+  .quick-action-text {
+    font-size: var(--font-size-xs);
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-page-container {
+    padding: 0;
+    padding-bottom: 0;
+  }
+
+  .chat-interface-centered {
+    height: 100vh;
+    border-radius: 0;
+    max-width: none;
+    /* Account for system UI and status bar */
+    height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  }
+
+  .chat-header {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  .chat-title {
+    font-size: var(--font-size-base);
+  }
+
+  .voice-indicator {
+    display: none;
+  }
+
+  .message-bubble {
+    max-width: 90%;
+  }
+
+  .user-message .message-bubble {
+    margin-left: var(--spacing-sm);
+  }
+
+  .assistant-message .message-bubble {
+    margin-right: var(--spacing-sm);
+  }
+
+  .chat-controls .btn-text {
+    display: none;
+  }
+
+  .quick-action-btn {
+    width: 100%;
+  }
+  
+  .empty-state-tips {
+    padding: 0 var(--spacing-sm);
+  }
+}
+
+/* Ensure proper stacking context */
+.app-layout {
+  position: relative;
+  z-index: 1;
+}
+
+.top-header {
+  z-index: 100;
+}
+
+.nav-drawer {
+  z-index: 1001;
+}
+
+.nav-overlay {
+  z-index: 999;
+}
+
+/* Prevent navigation from overlapping chat on all pages */
+@media (max-width: 768px) {
+  .main-content {
+    /* Add padding bottom to account for mobile navigation if present */
+    padding-bottom: 80px;
+  }
+  
+  /* But not on chat page since it has its own padding */
+  .chat-page-container {
+    padding-bottom: 0;
+  }
+}

@@ -184,14 +184,17 @@ const ChatInterface: React.FC = () => {
           <div className="chat-header-content">
             <h2 className="chat-title">
               <span className="chat-icon">💬</span>
-              Denarii Advisor
-              {isSessionActive && <span className="voice-indicator">🎤 Live</span>}
+              <span className="chat-title-text">
+                Denarii Advisor
+                {isSessionActive && <span className="voice-indicator">🎤 Live</span>}
+              </span>
             </h2>
             <div className="chat-controls">
               <VoiceControlButton />
               {messages.length > 0 && (
-                <button onClick={clearChatHistory} className="btn btn-secondary btn-sm">
-                  🗑️ Clear History
+                <button onClick={clearChatHistory} className="btn btn-secondary btn-sm clear-history-btn">
+                  <span className="btn-icon-only">🗑️</span>
+                  <span className="btn-text-desktop">Clear History</span>
                 </button>
               )}
             </div>

@@ -177,6 +177,34 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
     // Build messages array for OpenAI API
     const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
     
+    // Add system message for financial advisor context
+    const isProModeQuestions = body.message.includes('Generate exactly 3 probing questions');
+    
+    if (!isProModeQuestions) {
+      messages.push({
+        role: 'system',
+        content: `You are Denarii Advisor, a friendly and knowledgeable AI financial advisor helping users make smart purchasing decisions and achieve their financial goals. Your primary mission is to help users reach their first million through better daily financial decisions.
+
+Key responsibilities:
+- Analyze purchases and provide clear Buy/Don't Buy recommendations based on the user's financial situation
+- Focus on practical, actionable advice that helps users save money and build wealth
+- Consider opportunity cost, value for money, and long-term financial impact
+- Be encouraging and supportive while being honest about financial realities
+- Use simple, conversational language that anyone can understand
+- When users ask about specific purchases, provide thoughtful analysis considering their budget and goals
+- Suggest alternatives when appropriate to help users get better value
+- Remind users that small savings compound into significant wealth over time
+
+Personality:
+- Friendly, approachable, and non-judgmental
+- Optimistic about users' ability to achieve financial success
+- Patient and willing to explain financial concepts simply
+- Focused on empowering users to make informed decisions
+
+Remember: Every dollar saved and invested wisely brings users closer to financial independence. Help them see how today's smart choices lead to tomorrow's wealth.`
+      });
+    }
+    
     // Add web search system message if requested
     if (body.useWebSearch) {
       messages.push({
@@ -228,9 +256,6 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
     
     // Use gpt-4o-search-preview model if web search is requested
     const model = body.useWebSearch ? 'gpt-4o-search-preview' : (body.image ? 'gpt-4o' : config.model);
-    
-    // Check if this is a Pro Mode questions request
-    const isProModeQuestions = body.message.includes('Generate exactly 3 probing questions');
     
     const completionOptions: CompletionOptions = {
       model: model,

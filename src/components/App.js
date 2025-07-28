@@ -55,20 +55,20 @@ const Header = () => {
             Denarii Advisor
           </Link>
           <Link 
-            to="/user-guide" 
-            className={`nav-drawer-link ${location.pathname === '/user-guide' ? 'active' : ''}`}
-            onClick={closeMenu}
-          >
-            <span className="nav-drawer-icon">📖</span>
-            User Guide
-          </Link>
-          <Link 
             to="/finance-feed" 
             className={`nav-drawer-link ${location.pathname === '/finance-feed' ? 'active' : ''}`}
             onClick={closeMenu}
           >
             <span className="nav-drawer-icon">📺</span>
             Finance Feed
+          </Link>
+          <Link 
+            to="/user-guide" 
+            className={`nav-drawer-link ${location.pathname === '/user-guide' ? 'active' : ''}`}
+            onClick={closeMenu}
+          >
+            <span className="nav-drawer-icon">📖</span>
+            User Guide
           </Link>
           <Link 
             to="/about" 
