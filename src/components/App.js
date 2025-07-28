@@ -1,25 +1,86 @@
-import React from "react";
+import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react-router-dom";
 import PurchaseAdvisor from "./PurchaseAdvisor";
 import FinancialProfile from "./FinancialProfile";
 import About from "./About";
 import ProMode from "./ProMode";
+import UserGuide from "./UserGuide";
+import FinanceFeed from "./FinanceFeed";
 import "../styles/App.css";
 
-// Header Component
+// Header Component with Hamburger Menu
 const Header = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const location = useLocation();
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+  };
+
   return (
-    <header className="top-header">
-      <div className="header-content">
-        <Link to="/" className="logo">
-          <span className="logo-icon">💰</span>
-          Denarii
-        </Link>
-        <nav className="header-nav">
-          <Link to="/about" className="nav-link">About</Link>
+    <>
+      <header className="top-header">
+        <div className="header-content">
+          <Link to="/" className="logo" onClick={closeMenu}>
+            <span className="logo-icon">💰</span>
+            Denarii
+          </Link>
+          <button 
+            className={`hamburger-menu ${isMenuOpen ? 'active' : ''}`}
+            onClick={toggleMenu}
+            aria-label="Toggle navigation menu"
+            aria-expanded={isMenuOpen}
+          >
+            <span className="hamburger-line"></span>
+            <span className="hamburger-line"></span>
+            <span className="hamburger-line"></span>
+          </button>
+        </div>
+      </header>
+
+      {/* Navigation Drawer */}
+      <div className={`nav-drawer ${isMenuOpen ? 'open' : ''}`}>
+        <nav className="nav-drawer-content">
+          <Link 
+            to="/about" 
+            className={`nav-drawer-link ${location.pathname === '/about' ? 'active' : ''}`}
+            onClick={closeMenu}
+          >
+            <span className="nav-drawer-icon">ℹ️</span>
+            About
+          </Link>
+          <Link 
+            to="/user-guide" 
+            className={`nav-drawer-link ${location.pathname === '/user-guide' ? 'active' : ''}`}
+            onClick={closeMenu}
+          >
+            <span className="nav-drawer-icon">📖</span>
+            User Guide
+          </Link>
+          <Link 
+            to="/finance-feed" 
+            className={`nav-drawer-link ${location.pathname === '/finance-feed' ? 'active' : ''}`}
+            onClick={closeMenu}
+          >
+            <span className="nav-drawer-icon">📺</span>
+            Finance Feed
+          </Link>
         </nav>
       </div>
-    </header>
+
+      {/* Overlay */}
+      {isMenuOpen && (
+        <div 
+          className="nav-overlay"
+          onClick={closeMenu}
+          aria-hidden="true"
+        />
+      )}
+    </>
   );
 }
 
@@ -70,6 +131,8 @@ const App = () => {
             <Route path="/profile" element={<FinancialProfile />} />
             <Route path="/about" element={<About />} />
             <Route path="/pro-mode" element={<ProMode />} />
+            <Route path="/user-guide" element={<UserGuide />} />
+            <Route path="/finance-feed" element={<FinanceFeed />} />
           </Routes>
         </main>
 
