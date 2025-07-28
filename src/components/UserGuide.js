@@ -34,6 +34,110 @@ const UserGuide = () => {
         </div>
 
         <div className="guide-sections">
+          {/* Denarii Advisor Section - NEW */}
+          <div className="guide-section">
+            <div 
+              className="section-header"
+              onClick={() => toggleSection("denarii-advisor")}
+              role="button"
+              tabIndex="0"
+              aria-expanded={expandedSection === "denarii-advisor"}
+            >
+              <h3>
+                <span className="section-number">1</span>
+                <span className="section-icon">💬</span>
+                Denarii Advisor Chat
+              </h3>
+              <span className="toggle-indicator">
+                {expandedSection === "denarii-advisor" ? "−" : "+"}
+              </span>
+            </div>
+            
+            {expandedSection === "denarii-advisor" && (
+              <div className="section-content">
+                <div className="advisor-intro">
+                  <p>
+                    Denarii Advisor is your personal AI financial assistant available 24/7. 
+                    Have a conversation about any financial topic, get quick purchase advice, 
+                    or explore financial concepts in depth.
+                  </p>
+                </div>
+
+                <div className="advisor-features">
+                  <h4>Key Features</h4>
+                  <div className="feature-grid">
+                    <div className="feature-card">
+                      <span className="feature-icon">🎙️</span>
+                      <h5>Voice Conversations</h5>
+                      <p>Talk naturally with Denarii using voice chat for hands-free financial advice.</p>
+                    </div>
+                    <div className="feature-card">
+                      <span className="feature-icon">💡</span>
+                      <h5>Instant Advice</h5>
+                      <p>Get quick recommendations on purchases without filling out forms.</p>
+                    </div>
+                    <div className="feature-card">
+                      <span className="feature-icon">📚</span>
+                      <h5>Financial Education</h5>
+                      <p>Learn about investing, budgeting, and building wealth through conversation.</p>
+                    </div>
+                    <div className="feature-card">
+                      <span className="feature-icon">🔄</span>
+                      <h5>Context Awareness</h5>
+                      <p>Denarii remembers your conversation history for more personalized advice.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="advisor-usage">
+                  <h4>How to Use Denarii Advisor</h4>
+                  <div className="step-by-step">
+                    <div className="step">
+                      <div className="step-number">Step 1</div>
+                      <h4>Access the Advisor</h4>
+                      <p>Click on "Denarii Advisor" in the menu or navigation drawer to start chatting.</p>
+                    </div>
+
+                    <div className="step">
+                      <div className="step-number">Step 2</div>
+                      <h4>Choose Your Input Method</h4>
+                      <p>Type your questions or click the microphone button to start a voice conversation.</p>
+                    </div>
+
+                    <div className="step">
+                      <div className="step-number">Step 3</div>
+                      <h4>Ask Anything Financial</h4>
+                      <p>Examples of what you can ask:</p>
+                      <ul>
+                        <li>"Should I buy a new laptop for $1,200?"</li>
+                        <li>"How can I save more money each month?"</li>
+                        <li>"What's the 50/30/20 budgeting rule?"</li>
+                        <li>"Is it better to pay off debt or invest?"</li>
+                      </ul>
+                    </div>
+
+                    <div className="step">
+                      <div className="step-number">Step 4</div>
+                      <h4>Get Personalized Guidance</h4>
+                      <p>Denarii will provide advice based on your financial profile and goals. 
+                         For detailed purchase analysis, it may suggest using the Purchase Analyzer tool.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="advisor-tips">
+                  <h4>Pro Tips for Better Conversations</h4>
+                  <ul>
+                    <li><strong>Be specific:</strong> Include details like price, purpose, and timeframe for better advice</li>
+                    <li><strong>Ask follow-ups:</strong> Dive deeper into topics that interest you</li>
+                    <li><strong>Use voice mode:</strong> Great for brainstorming or when you're on the go</li>
+                    <li><strong>Review history:</strong> Your chat history is saved locally for reference</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Purchase Advisor Section */}
           <div className="guide-section">
             <div 
@@ -44,9 +148,9 @@ const UserGuide = () => {
               aria-expanded={expandedSection === "purchase-advisor"}
             >
               <h3>
-                <span className="section-number">1</span>
+                <span className="section-number">2</span>
                 <span className="section-icon">🛒</span>
-                How to Use the Purchase Advisor
+                Purchase Analyzer Tool
               </h3>
               <span className="toggle-indicator">
                 {expandedSection === "purchase-advisor" ? "−" : "+"}
@@ -55,6 +159,10 @@ const UserGuide = () => {
             
             {expandedSection === "purchase-advisor" && (
               <div className="section-content">
+                <p className="section-intro">
+                  The Purchase Analyzer provides in-depth analysis with a detailed decision matrix 
+                  and financial impact assessment. Perfect for important purchases that need careful consideration.
+                </p>
                 <div className="step-by-step">
                   <div className="step">
                     <div className="step-number">Step 1</div>
@@ -96,7 +204,7 @@ const UserGuide = () => {
                     <h4>Get Your Recommendation</h4>
                     <p>Click "Should I Buy It?" to receive your personalized analysis. 
                        The AI will consider your financial profile and provide a clear 
-                       Buy or Don't Buy recommendation.</p>
+                       Buy or Don't Buy recommendation with detailed reasoning.</p>
                   </div>
                 </div>
               </div>
@@ -113,7 +221,7 @@ const UserGuide = () => {
               aria-expanded={expandedSection === "understanding-results"}
             >
               <h3>
-                <span className="section-number">2</span>
+                <span className="section-number">3</span>
                 <span className="section-icon">📊</span>
                 Understanding Your Analysis Results
               </h3>
@@ -181,7 +289,7 @@ const UserGuide = () => {
               aria-expanded={expandedSection === "financial-profile"}
             >
               <h3>
-                <span className="section-number">3</span>
+                <span className="section-number">4</span>
                 <span className="section-icon">👤</span>
                 Your Financial Profile
               </h3>
@@ -244,7 +352,7 @@ const UserGuide = () => {
               aria-expanded={expandedSection === "pro-mode"}
             >
               <h3>
-                <span className="section-number">4</span>
+                <span className="section-number">5</span>
                 <span className="section-icon">💎</span>
                 Pro Mode for High-Value Purchases
               </h3>
@@ -305,7 +413,7 @@ const UserGuide = () => {
               aria-expanded={expandedSection === "tips"}
             >
               <h3>
-                <span className="section-number">5</span>
+                <span className="section-number">6</span>
                 <span className="section-icon">💡</span>
                 Tips for Best Results
               </h3>
@@ -361,11 +469,17 @@ const UserGuide = () => {
         {/* Quick Start CTA */}
         <div className="guide-cta">
           <h3>Ready to Make Smarter Financial Decisions?</h3>
-          <p>Start analyzing your next purchase with confidence.</p>
-          <Link to="/" className="cta-button">
-            <span className="btn-icon">🚀</span>
-            Try Purchase Advisor
-          </Link>
+          <p>Start with a quick chat or analyze your next purchase with confidence.</p>
+          <div className="cta-buttons">
+            <Link to="/chat" className="cta-button primary">
+              <span className="btn-icon">💬</span>
+              Chat with Denarii
+            </Link>
+            <Link to="/" className="cta-button secondary">
+              <span className="btn-icon">🛒</span>
+              Analyze a Purchase
+            </Link>
+          </div>
         </div>
       </div>
     </div>
