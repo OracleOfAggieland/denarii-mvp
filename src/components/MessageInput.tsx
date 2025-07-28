@@ -36,9 +36,9 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, isLoading })
   };
 
   return (
-    <div className="border-t border-border bg-background-card">
-      <form onSubmit={handleSubmit} className="flex gap-2 sm:gap-3 p-4 sm:p-6">
-        <div className="flex-1">
+    <div className="chat-input-container">
+      <form onSubmit={handleSubmit} className="chat-input-form">
+        <div className="input-wrapper">
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
@@ -47,30 +47,24 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, isLoading })
             aria-label="Type your message"
             disabled={isLoading}
             rows={1}
-            className="w-full resize-none border border-border rounded-md px-3 sm:px-4 py-2 sm:py-3 text-text-dark placeholder-text-light focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-all duration-200 text-sm sm:text-base"
+            className="chat-textarea"
             style={{ minHeight: '40px', maxHeight: '120px' }}
           />
         </div>
         <button
           type="submit"
           disabled={isLoading || !message.trim()}
-          className={`px-4 sm:px-6 py-2 sm:py-3 text-white font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-200 flex items-center gap-1 sm:gap-2 text-sm sm:text-base ${
-            isLoading || !message.trim()
-              ? 'bg-gray-300 cursor-not-allowed'
-              : 'bg-primary hover:bg-primary-dark active:transform active:scale-95'
-          }`}
+          className={`chat-send-btn ${isLoading || !message.trim() ? 'disabled' : ''}`}
         >
           {isLoading ? (
             <>
-              <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              <span className="hidden sm:inline">Sending...</span>
+              <span className="loading-spinner"></span>
+              <span className="btn-text">Sending...</span>
             </>
           ) : (
             <>
-              <span className="hidden sm:inline">Send</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-              </svg>
+              <span className="btn-text">Send</span>
+              <span className="send-icon">📤</span>
             </>
           )}
         </button>

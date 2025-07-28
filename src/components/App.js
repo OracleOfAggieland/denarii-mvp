@@ -6,6 +6,7 @@ import About from "./About";
 import ProMode from "./ProMode";
 import UserGuide from "./UserGuide";
 import FinanceFeed from "./FinanceFeed";
+import ChatInterface from "./ChatInterface";
 import "../styles/App.css";
 
 // Header Component with Hamburger Menu
@@ -68,6 +69,14 @@ const Header = () => {
           >
             <span className="nav-drawer-icon">📺</span>
             Finance Feed
+          </Link>
+          <Link 
+            to="/chat" 
+            className={`nav-drawer-link ${location.pathname === '/chat' ? 'active' : ''}`}
+            onClick={closeMenu}
+          >
+            <span className="nav-drawer-icon">💬</span>
+            Chat
           </Link>
         </nav>
       </div>
@@ -133,6 +142,7 @@ const App = () => {
             <Route path="/pro-mode" element={<ProMode />} />
             <Route path="/user-guide" element={<UserGuide />} />
             <Route path="/finance-feed" element={<FinanceFeed />} />
+            <Route path="/chat" element={<ChatInterface />} />
           </Routes>
         </main>
 
