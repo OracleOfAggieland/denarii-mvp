@@ -148,6 +148,11 @@
 html {
   font-size: 16px;
   scroll-behavior: smooth;
+  /* Prevent horizontal scrolling on mobile */
+  overflow-x: hidden;
+  /* Ensure proper mobile viewport handling */
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
 }
 
 body {
@@ -158,6 +163,10 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  /* Improve mobile scrolling */
+  -webkit-overflow-scrolling: touch;
+  /* Prevent zoom on double tap */
+  touch-action: manipulation;
 }
 
 /* ============================================
@@ -521,6 +530,13 @@ body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
   transition: var(--transition-all);
+  /* Ensure proper mobile input handling */
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  /* Prevent zoom on iOS */
+  font-size: 16px;
 }
 
 .form-input:focus,
@@ -1471,11 +1487,21 @@ body {
   font-size: 1rem;
   line-height: 1.6;
   color: #374151;
+  /* Ensure proper containment */
+  box-sizing: border-box;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
 
 .decision-body p {
   white-space: pre-wrap;
   margin-top: 0;
+}
+
+.decision-body * {
+  /* Ensure all child elements stay within bounds */
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .recommendation-summary {
@@ -1587,6 +1613,9 @@ body {
   z-index: 1000;
   backdrop-filter: blur(5px);
   padding: 16px;
+  /* Ensure proper mobile scrolling */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .result-bubble-container {
@@ -1599,6 +1628,10 @@ body {
   overflow-y: auto;
   position: relative;
   animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  /* Improve mobile scrolling */
+  -webkit-overflow-scrolling: touch;
+  /* Ensure content doesn't overflow */
+  box-sizing: border-box;
 }
 
 .close-bubble-btn {
@@ -1617,6 +1650,7 @@ body {
   justify-content: center;
   align-items: center;
   transition: background-color 0.2s, transform 0.2s;
+  z-index: 1001;
 }
 
 .close-bubble-btn:hover {
@@ -1626,6 +1660,8 @@ body {
 
 .result-bubble-container .analysis-container {
   padding: 24px;
+  /* Ensure proper spacing on mobile */
+  box-sizing: border-box;
 }
 
 /* ============================================
@@ -1935,10 +1971,14 @@ body {
   .purchase-analysis-card {
     width: calc(100% - 30px);
     padding: 20px;
+    /* Ensure proper mobile layout */
+    box-sizing: border-box;
   }
   
   .purchase-analysis-card .card-body {
     padding: 20px;
+    /* Ensure proper spacing for mobile inputs */
+    box-sizing: border-box;
   }
   
   .form-row {
@@ -1946,8 +1986,53 @@ body {
     gap: 16px;
   }
   
+  /* Improve input field mobile experience */
+  .form-group {
+    position: relative;
+    /* Ensure autocomplete dropdowns have space */
+    margin-bottom: 20px;
+  }
+  
+  .input-field,
+  .select-field {
+    /* Prevent zoom on iOS */
+    font-size: 16px;
+    /* Ensure proper mobile input handling */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    /* Better mobile touch targets */
+    min-height: 44px;
+    padding: 12px 16px;
+    /* Prevent autocomplete cutoff */
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* Ensure autocomplete suggestions are visible */
+  .form-group input::-webkit-contacts-auto-fill-button,
+  .form-group input::-webkit-credentials-auto-fill-button {
+    visibility: hidden;
+    display: none !important;
+    pointer-events: none;
+    height: 0;
+    width: 0;
+    margin: 0;
+  }
+  
   /* Decision Cards */
+  .result-bubble-overlay {
+    padding: 12px;
+    align-items: flex-start;
+    padding-top: 20px;
+  }
+  
   .result-bubble-container {
+    max-height: 85vh;
+    margin-top: 0;
+  }
+  
+  .result-bubble-container .analysis-container {
     padding: 16px;
   }
   
@@ -1965,6 +2050,32 @@ body {
   .decision-body,
   .decision-matrix-wrapper {
     padding: 16px;
+  }
+  
+  /* Pro Mode Section Mobile Improvements */
+  .pro-mode-section {
+    margin: 16px 0;
+    padding: 16px;
+    /* Ensure proper containment on mobile */
+    overflow: hidden;
+    word-wrap: break-word;
+  }
+  
+  .pro-mode-alert {
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 1rem;
+  }
+  
+  .pro-mode-button {
+    width: 100%;
+    max-width: 280px;
+    margin: 0 auto;
+    display: block;
+    padding: 12px 20px;
+    font-size: 0.9rem;
+    /* Prevent button from extending outside container */
+    box-sizing: border-box;
   }
   
   /* About Page */
@@ -2109,6 +2220,66 @@ body {
   /* Purchase Analysis Card */
   .purchase-analysis-card {
     width: calc(100% - 20px);
+    /* Ensure proper mobile layout */
+    margin: 0 auto 20px;
+  }
+  
+  /* Extra small mobile improvements */
+  .result-bubble-overlay {
+    padding: 8px;
+    align-items: flex-start;
+    padding-top: 10px;
+  }
+  
+  .result-bubble-container {
+    max-height: 90vh;
+    border-radius: 16px;
+  }
+  
+  .result-bubble-container .analysis-container {
+    padding: 12px;
+  }
+  
+  .decision-header {
+    padding: 12px;
+  }
+  
+  .decision-body,
+  .decision-matrix-wrapper {
+    padding: 12px;
+  }
+  
+  /* Pro Mode Section Extra Small Mobile */
+  .pro-mode-section {
+    margin: 8px 0;
+    padding: 12px;
+    border-radius: 8px;
+  }
+  
+  .pro-mode-alert {
+    font-size: 0.9rem;
+    flex-direction: column;
+    text-align: center;
+    gap: 6px;
+  }
+  
+  .pro-mode-button {
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 0.85rem;
+    border-radius: 6px;
+  }
+  
+  /* Form improvements for extra small screens */
+  .form-group {
+    margin-bottom: 16px;
+  }
+  
+  .input-field,
+  .select-field {
+    min-height: 40px;
+    padding: 10px 14px;
+    font-size: 16px;
   }
   
   /* About Page */

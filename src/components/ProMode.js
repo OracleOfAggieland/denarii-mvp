@@ -84,12 +84,7 @@ const ProMode = () => {
     }));
   };
 
-  const useHint = (questionId, hintText) => {
-    setAnswers(prev => ({
-      ...prev,
-      [questionId]: hintText
-    }));
-  };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -187,7 +182,7 @@ const ProMode = () => {
                         <button
                           type="button"
                           className="use-hint-button"
-                          onClick={() => useHint(question.id, question.placeholder)}
+                          onClick={() => handleAnswerChange(question.id, question.placeholder)}
                         >
                           Use Hint
                         </button>

@@ -8,6 +8,10 @@
     border-radius: 12px;
     text-align: center;
     animation: slideDown 0.5s ease-out;
+    /* Ensure proper containment */
+    box-sizing: border-box;
+    width: 100%;
+    overflow: hidden;
   }
   
   .pro-mode-alert {
@@ -36,6 +40,10 @@
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    /* Ensure button stays within container */
+    max-width: 100%;
+    width: auto;
+    box-sizing: border-box;
   }
   
   .pro-mode-button:hover {
@@ -526,6 +534,28 @@
   
   /* Responsive Design */
   @media (max-width: 768px) {
+    /* Pro Mode Section Mobile Fixes */
+    .pro-mode-section {
+      margin: 16px 0;
+      padding: 16px;
+    }
+    
+    .pro-mode-alert {
+      font-size: 1rem;
+      gap: 6px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .pro-mode-button {
+      padding: 12px 24px;
+      font-size: 0.9rem;
+      width: 100%;
+      max-width: 280px;
+      margin: 0 auto;
+      display: block;
+    }
+    
     .pro-mode-header h1 {
       font-size: 2rem;
       flex-direction: column;
@@ -594,6 +624,26 @@
   }
   
   @media (max-width: 480px) {
+    /* Pro Mode Section Extra Small Mobile */
+    .pro-mode-section {
+      margin: 12px 0;
+      padding: 12px;
+    }
+    
+    .pro-mode-alert {
+      font-size: 0.9rem;
+      flex-direction: column;
+      gap: 8px;
+      text-align: center;
+    }
+    
+    .pro-mode-button {
+      padding: 10px 20px;
+      font-size: 0.85rem;
+      width: 100%;
+      max-width: none;
+    }
+    
     .pro-mode-container {
       padding: 16px;
     }
