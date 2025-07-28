@@ -6,8 +6,8 @@ import '../styles/App.css';
 
 const inter = Inter({ subsets: ['latin'] });
 
-// This should be your production URL
-const siteUrl = 'https://denarii-mvp-f5aea.web.app';
+// This should be your production URL - using the actual deployed URL that Facebook detects
+const siteUrl = 'https://denarii-mvp--denarii-mvp-f5aea.us-central1.hosted.app';
 
 // This metadata object now handles the title, description, icons, and social media cards.
 export const metadata: Metadata = {
@@ -47,6 +47,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        {/* Additional meta tags for better social media compatibility */}
+        <meta property="og:image" content={`${siteUrl}/og-image.png`} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:type" content="image/png" />
+        <meta name="twitter:image" content={`${siteUrl}/og-image.png`} />
+      </head>
       {/* The body tag includes the font class from Next/Font and Tailwind's antialiased class for smoother text. */}
       <body className={`${inter.className} antialiased`}>{children}</body>
     </html>
