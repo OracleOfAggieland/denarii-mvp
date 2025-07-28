@@ -3390,3 +3390,112 @@ body {
     display: none;
   }
 }
+
+/* Quick Actions for Chat Interface */
+.quick-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background-color: var(--bg-secondary);
+  border-top: 1px solid var(--border-light);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.quick-action-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-all);
+  text-decoration: none;
+}
+
+.quick-action-btn:hover {
+  background-color: var(--primary-color);
+  color: var(--text-inverse);
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.quick-action-icon {
+  font-size: 1.2em;
+}
+
+.quick-action-text {
+  white-space: nowrap;
+}
+
+/* Empty State Tips */
+.empty-state-tips {
+  margin-top: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.empty-state-tip {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  background-color: var(--bg-secondary);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  margin: 0;
+}
+
+/* Voice Badge Enhancement */
+.voice-badge {
+  font-size: var(--font-size-xs);
+  margin-left: var(--spacing-xs);
+  opacity: 0.8;
+  animation: pulse 2s infinite;
+}
+
+/* Navigation Button in Messages */
+.message-content button {
+  margin: var(--spacing-sm) 0;
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.message-content button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .quick-actions {
+    padding: var(--spacing-sm);
+    gap: var(--spacing-xs);
+  }
+  
+  .quick-action-btn {
+    flex: 1;
+    min-width: 140px;
+    padding: var(--spacing-sm);
+  }
+  
+  .quick-action-text {
+    font-size: var(--font-size-xs);
+  }
+}
+
+@media (max-width: 480px) {
+  .quick-action-btn {
+    width: 100%;
+  }
+  
+  .empty-state-tips {
+    padding: 0 var(--spacing-sm);
+  }
+}

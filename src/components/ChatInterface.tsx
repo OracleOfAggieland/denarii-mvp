@@ -1,8 +1,9 @@
-// src/components/ChatInterface.tsx (Corrected)
+// src/components/ChatInterface.tsx
 
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Message } from '@/types/chat';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
@@ -10,6 +11,7 @@ import { useChatApi } from '../hooks/useChatApi';
 import { useRealtimeSession } from '../hooks/useRealtimeSession';
 
 const ChatInterface: React.FC = () => {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const { sendMessage, isLoading } = useChatApi();
   
@@ -19,7 +21,7 @@ const ChatInterface: React.FC = () => {
     startSession, 
     stopSession, 
     sendClientEvent,
-    events 
+    events
   } = useRealtimeSession();
 
   // Load chat history from localStorage on component mount
@@ -69,9 +71,31 @@ const ChatInterface: React.FC = () => {
           isVoice: true
         };
         setMessages(prev => [...prev, assistantMessage]);
+      } else if (latestEvent.type === 'ui.show_navigation_prompt') {
+        // Show navigation prompt as a special message
+        const navigationMessage: Message = {
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: latestEvent.data.message,
+          timestamp: new Date(),
+          isVoice: true
+        };
+        setMessages(prev => [...prev, navigationMessage]);
+        
+        // Add navigation button
+        setTimeout(() => {
+          const buttonMessage: Message = {
+            id: crypto.randomUUID(),
+            role: 'assistant',
+            content: `<button onclick="window.location.href='/';" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white; padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin: 8px 0;">Go to Purchase Analyzer →</button>`,
+            timestamp: new Date(),
+            isVoice: true
+          };
+          setMessages(prev => [...prev, buttonMessage]);
+        }, 500);
       }
     }
-  }, [events]);
+  }, [events, navigate]);
 
   const handleSendMessage = async (messageContent: string) => {
     if (isSessionActive) {
@@ -114,6 +138,21 @@ const ChatInterface: React.FC = () => {
     setMessages([]);
     localStorage.removeItem('chatHistory');
   };
+
+  // Enhanced start session with greeting
+  const handleStartSession = async () => {
+    await startSession();
+    
+    // Add a welcome message
+    const welcomeMessage: Message = {
+      id: crypto.randomUUID(),
+      role: 'assistant',
+      content: "🎤 Voice session started! I'm listening... Feel free to ask me about any purchase you're considering!",
+      timestamp: new Date(),
+      isVoice: true
+    };
+    setMessages(prev => [...prev, welcomeMessage]);
+  };
   
   const VoiceControlButton = () => {
     if (isConnecting) {
@@ -132,7 +171,7 @@ const ChatInterface: React.FC = () => {
       );
     }
     return (
-      <button onClick={startSession} className="btn btn-primary btn-sm">
+      <button onClick={handleStartSession} className="btn btn-primary btn-sm">
         🎤 Start Voice Session
       </button>
     );
@@ -145,7 +184,7 @@ const ChatInterface: React.FC = () => {
           <div className="chat-header-content">
             <h2 className="chat-title">
               <span className="chat-icon">💬</span>
-              Chat Assistant
+              Denarii Advisor
               {isSessionActive && <span className="voice-indicator">🎤 Live</span>}
             </h2>
             <div className="chat-controls">
@@ -161,9 +200,32 @@ const ChatInterface: React.FC = () => {
         
         <MessageList messages={messages} />
         
-        <MessageInput onSendMessage={handleSendMessage} isLoading={isLoading || isSessionActive} />
+        <MessageInput 
+          onSendMessage={handleSendMessage} 
+          isLoading={isLoading || isSessionActive}
+          placeholder={isSessionActive ? "Voice session active - speak to Denarii Advisor!" : "Ask about a purchase or financial advice..."}
+        />
+
+        {/* Quick Actions */}
+        <div className="quick-actions">
+          <button 
+            onClick={() => navigate('/')} 
+            className="quick-action-btn"
+          >
+            <span className="quick-action-icon">🛒</span>
+            <span className="quick-action-text">Analyze a Purchase</span>
+          </button>
+          <button 
+            onClick={() => navigate('/profile')} 
+            className="quick-action-btn"
+          >
+            <span className="quick-action-icon">👤</span>
+            <span className="quick-action-text">Financial Profile</span>
+          </button>
+        </div>
       </div>
     </div>
   );
 }
+
 export default ChatInterface;

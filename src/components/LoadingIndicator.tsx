@@ -25,7 +25,7 @@ const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({ isLoading }) => {
           </div>
           <div className="ml-4">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-sm font-medium text-primary">🤖 AI Assistant</span>
+              <span className="text-sm font-medium text-primary">🤖 Denarii Advisor</span>
             </div>
             <p className="text-sm text-text-medium italic">Thinking and generating response...</p>
           </div>

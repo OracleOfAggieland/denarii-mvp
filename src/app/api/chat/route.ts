@@ -268,7 +268,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
     if (!assistantMessage) {
       return NextResponse.json(
         { 
-          error: 'No response received from AI service',
+          error: 'No response received from Denarii Advisor service',
           errorType: ErrorType.API_ERROR 
         },
         { status: 500 }
@@ -386,7 +386,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
     if (openAIError.status && openAIError.status >= 400 && openAIError.status < 500) {
       return NextResponse.json(
         { 
-          error: 'Invalid request to AI service',
+          error: 'Invalid request to Denarii Advisor service',
           errorType: ErrorType.VALIDATION_ERROR 
         },
         { status: 400 }
@@ -397,7 +397,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
     if (openAIError.code === 'ENOTFOUND' || openAIError.code === 'ECONNREFUSED') {
       return NextResponse.json(
         { 
-          error: 'Unable to connect to AI service. Please check your connection.',
+          error: 'Unable to connect to Denarii Advisor service. Please check your connection.',
           errorType: ErrorType.NETWORK_ERROR 
         },
         { status: 503 }

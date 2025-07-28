@@ -64,7 +64,7 @@ describe('ChatInterface Integration Tests', () => {
       });
 
       // Verify loading state is cleared
-      expect(screen.queryByText('AI is thinking...')).not.toBeInTheDocument();
+      expect(screen.queryByText('Denarii Advisor is thinking...')).not.toBeInTheDocument();
       expect(screen.queryByText('Sending...')).not.toBeInTheDocument();
 
       // Verify input is cleared and enabled
@@ -251,7 +251,7 @@ describe('ChatInterface Integration Tests', () => {
 
       // Wait for error message to appear
       await waitFor(() => {
-        expect(screen.getByText('The AI service is temporarily unavailable. Please try again in a few moments.')).toBeInTheDocument();
+        expect(screen.getByText('The Denarii Advisor service is temporarily unavailable. Please try again in a few moments.')).toBeInTheDocument();
       });
 
       // Verify retry button is available

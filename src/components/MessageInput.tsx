@@ -5,9 +5,14 @@ import React, { useState, FormEvent } from 'react';
 interface MessageInputProps {
   onSendMessage: (message: string) => void;
   isLoading: boolean;
+  placeholder?: string;
 }
 
-const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, isLoading }) => {
+const MessageInput: React.FC<MessageInputProps> = ({ 
+  onSendMessage, 
+  isLoading,
+  placeholder = "Type your message here..."
+}) => {
   const [message, setMessage] = useState('');
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -43,7 +48,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, isLoading })
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type your message here..."
+            placeholder={placeholder}
             aria-label="Type your message"
             disabled={isLoading}
             rows={1}
@@ -72,4 +77,5 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, isLoading })
     </div>
   );
 }
+
 export default MessageInput;

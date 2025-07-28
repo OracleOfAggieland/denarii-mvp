@@ -1,6 +1,6 @@
 # Manual Accessibility Testing Guide
 
-This guide provides step-by-step instructions for manually testing the accessibility features of the purple-themed chatbot interface.
+This guide provides step-by-step instructions for manually testing the accessibility features of the purple-themed Denarii Advisor interface.
 
 ## 1. Keyboard Navigation Testing
 
@@ -29,18 +29,18 @@ This guide provides step-by-step instructions for manually testing the accessibi
 
 ### Test with Screen Reader (NVDA, JAWS, or VoiceOver)
 1. **Turn on your screen reader**
-2. **Navigate to the chat interface**
+2. **Navigate to the Denarii Advisor interface**
 3. **Verify the following announcements:**
    - Message input is announced as "Type your message"
    - User messages are announced as "Your message" with content
-   - AI messages are announced as "AI response" with content
+   - Denarii Advisor messages are announced as "Advisor response" with content
    - Loading states are announced when they appear
    - Error messages are announced when they appear
    - Timestamps are announced with proper context
 
 ### Test Message Navigation
 1. **Navigate through the message list** using screen reader commands
-2. **Verify** that each message is properly identified as user or AI
+2. **Verify** that each message is properly identified as user or Denarii Advisor
 3. **Check** that timestamps are announced with context
 
 ## 3. Visual Design Functionality Testing
@@ -58,7 +58,7 @@ This guide provides step-by-step instructions for manually testing the accessibi
 1. **Send several messages** to create a conversation
 2. **Verify visual styling:**
    - User messages: Purple background (indigo-600), white text, right-aligned
-   - AI messages: Light gray background (slate-100), dark text, left-aligned
+   - Denarii Advisor messages: Light gray background (slate-100), dark text, left-aligned
    - Timestamps: Proper contrast and secondary styling
    - Message bubbles: Rounded corners and shadows
 
@@ -75,7 +75,7 @@ This guide provides step-by-step instructions for manually testing the accessibi
 2. **Verify loading indicator:**
    - Shows purple color scheme (indigo background)
    - Spinner animation works
-   - "AI is thinking..." text is visible
+   - "Denarii Advisor is thinking..." text is visible
    - Loading state is announced to screen readers
 
 ## 4. Responsive Design Testing

@@ -108,7 +108,7 @@ function getErrorMessage(error: any, type: ErrorType): string {
         return 'Authentication failed. Please contact support.';
       }
       if (error.status >= 500) {
-        return 'The AI service is temporarily unavailable. Please try again in a few moments.';
+        return 'The Denarii Advisor service is temporarily unavailable. Please try again in a few moments.';
       }
       return error.message || 'An unexpected error occurred. Please try again.';
   }

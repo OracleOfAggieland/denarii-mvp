@@ -47,12 +47,12 @@ const Header = () => {
       <div className={`nav-drawer ${isMenuOpen ? 'open' : ''}`}>
         <nav className="nav-drawer-content">
           <Link 
-            to="/about" 
-            className={`nav-drawer-link ${location.pathname === '/about' ? 'active' : ''}`}
+            to="/chat" 
+            className={`nav-drawer-link ${location.pathname === '/chat' ? 'active' : ''}`}
             onClick={closeMenu}
           >
-            <span className="nav-drawer-icon">ℹ️</span>
-            About
+            <span className="nav-drawer-icon">💬</span>
+            Denarii Advisor
           </Link>
           <Link 
             to="/user-guide" 
@@ -71,12 +71,12 @@ const Header = () => {
             Finance Feed
           </Link>
           <Link 
-            to="/chat" 
-            className={`nav-drawer-link ${location.pathname === '/chat' ? 'active' : ''}`}
+            to="/about" 
+            className={`nav-drawer-link ${location.pathname === '/about' ? 'active' : ''}`}
             onClick={closeMenu}
           >
-            <span className="nav-drawer-icon">💬</span>
-            Chat
+            <span className="nav-drawer-icon">ℹ️</span>
+            About
           </Link>
         </nav>
       </div>
