@@ -811,7 +811,7 @@ body {
 
 .hero-subtitle .million-link {
   color: #FFD700;
-  text-decoration: none;
+  text-decoration: underline;
   font-weight: 700;
   cursor: pointer;
   text-shadow: 0 0 8px rgba(255, 215, 0, 0.7);
