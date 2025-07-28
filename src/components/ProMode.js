@@ -36,6 +36,7 @@ const ProMode = () => {
   const [purchaseData, setPurchaseData] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
+  const [visibleHints, setVisibleHints] = useState({});
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState(null);
@@ -76,9 +77,23 @@ const ProMode = () => {
     }));
   };
 
+  const toggleHint = (questionId) => {
+    setVisibleHints(prev => ({
+      ...prev,
+      [questionId]: !prev[questionId]
+    }));
+  };
+
+  const useHint = (questionId, hintText) => {
+    setAnswers(prev => ({
+      ...prev,
+      [questionId]: hintText
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validate all questions are answered
     if (Object.keys(answers).length !== questions.length) {
       alert('Please answer all questions before proceeding.');
@@ -148,15 +163,43 @@ const ProMode = () => {
             <form onSubmit={handleSubmit} className="questions-form">
               {questions.map((question, index) => (
                 <div key={question.id} className="question-item">
-                  <label htmlFor={`question-${question.id}`}>
-                    <span className="question-number">{index + 1}.</span>
-                    {question.text}
-                  </label>
+                  <div className="question-header">
+                    <label htmlFor={`question-${question.id}`}>
+                      <span className="question-number">{index + 1}.</span>
+                      {question.text}
+                    </label>
+                    <button
+                      type="button"
+                      className="hint-toggle"
+                      onClick={() => toggleHint(question.id)}
+                      aria-label={`${visibleHints[question.id] ? 'Hide' : 'Show'} hint for question ${index + 1}`}
+                      title={`${visibleHints[question.id] ? 'Hide' : 'Show'} hint`}
+                    >
+                      💡
+                    </button>
+                  </div>
+
+                  {visibleHints[question.id] && (
+                    <div className="hint-section">
+                      <div className="hint-content">
+                        <span className="hint-label">Hint:</span>
+                        <p className="hint-text">{question.placeholder}</p>
+                        <button
+                          type="button"
+                          className="use-hint-button"
+                          onClick={() => useHint(question.id, question.placeholder)}
+                        >
+                          Use Hint
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   <textarea
                     id={`question-${question.id}`}
                     value={answers[question.id] || ''}
                     onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                    placeholder={question.placeholder}
+                    placeholder="Enter your answer here..."
                     required
                     rows={3}
                     className="question-input"
@@ -200,7 +243,7 @@ const ProMode = () => {
             </h2>
             <div className="analysis-content">
               <p className="analysis-text">{parseAndRenderLinks(analysis.fullAnalysis)}</p>
-              
+
               {analysis.marketInsights && (
                 <div className="market-insights">
                   <h3>
@@ -229,7 +272,7 @@ const ProMode = () => {
                 <div className="confidence-meter">
                   <h3>Decision Confidence</h3>
                   <div className="confidence-bar">
-                    <div 
+                    <div
                       className="confidence-fill"
                       style={{ width: `${analysis.decisionConfidence}%` }}
                     />
