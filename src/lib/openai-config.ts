@@ -50,11 +50,11 @@ export const validateEnvironment = (): { isValid: boolean; error?: string; warni
     };
   }
 
-  // Validate API key format (OpenAI keys start with 'sk-')
+  // Validate API key format (OpenAI keys start with 'sk-' or 'sk-proj-')
   if (!process.env.OPENAI_API_KEY.startsWith('sk-')) {
     return {
       isValid: false,
-      error: 'OPENAI_API_KEY appears to be invalid (should start with "sk-")',
+      error: 'OPENAI_API_KEY appears to be invalid (should start with "sk-" or "sk-proj-")',
     };
   }
 

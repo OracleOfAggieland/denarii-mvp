@@ -1,5 +1,10 @@
 import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react-router-dom";
+import { AuthProvider, useAuth } from "../contexts/AuthContext";
+import UserProfile from "./UserProfile";
+import LoginPage from "./LoginPage";
+import TermsPage from "./TermsPage";
+import PrivacyPage from "./PrivacyPage";
 import PurchaseAdvisor from "./PurchaseAdvisor";
 import FinancialProfile from "./FinancialProfile";
 import About from "./About";
@@ -13,6 +18,7 @@ import "../styles/App.css";
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const { user } = useAuth();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -30,16 +36,19 @@ const Header = () => {
             <span className="logo-icon">💰</span>
             Denarii
           </Link>
-          <button 
-            className={`hamburger-menu ${isMenuOpen ? 'active' : ''}`}
-            onClick={toggleMenu}
-            aria-label="Toggle navigation menu"
-            aria-expanded={isMenuOpen}
-          >
-            <span className="hamburger-line"></span>
-            <span className="hamburger-line"></span>
-            <span className="hamburger-line"></span>
-          </button>
+          <div className="header-right">
+            {user && <UserProfile />}
+            <button 
+              className={`hamburger-menu ${isMenuOpen ? 'active' : ''}`}
+              onClick={toggleMenu}
+              aria-label="Toggle navigation menu"
+              aria-expanded={isMenuOpen}
+            >
+              <span className="hamburger-line"></span>
+              <span className="hamburger-line"></span>
+              <span className="hamburger-line"></span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -62,6 +71,16 @@ const Header = () => {
             <span className="nav-drawer-icon">📺</span>
             Finance Feed
           </Link>
+          {!user && (
+            <Link 
+              to="/login" 
+              className={`nav-drawer-link ${location.pathname === '/login' ? 'active' : ''}`}
+              onClick={closeMenu}
+            >
+              <span className="nav-drawer-icon">🔐</span>
+              Sign In
+            </Link>
+          )}
           <Link 
             to="/user-guide" 
             className={`nav-drawer-link ${location.pathname === '/user-guide' ? 'active' : ''}`}
@@ -130,26 +149,31 @@ const Navigation = () => {
 
 const App = () => {
   return (
-    <Router>
-      <div className="app-layout">
-        <Header />
+    <AuthProvider>
+      <Router>
+        <div className="app-layout">
+          <Header />
 
-        <main className="main-content">
-          <Routes>
-            <Route path="/" element={<PurchaseAdvisor />} />
-            <Route path="/profile" element={<FinancialProfile />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/pro-mode" element={<ProMode />} />
-            <Route path="/user-guide" element={<UserGuide />} />
-            <Route path="/finance-feed" element={<FinanceFeed />} />
-            <Route path="/chat" element={<ChatInterface />} />
-          </Routes>
-        </main>
+          <main className="main-content">
+            <Routes>
+              <Route path="/" element={<PurchaseAdvisor />} />
+              <Route path="/profile" element={<FinancialProfile />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/pro-mode" element={<ProMode />} />
+              <Route path="/user-guide" element={<UserGuide />} />
+              <Route path="/finance-feed" element={<FinanceFeed />} />
+              <Route path="/chat" element={<ChatInterface />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/terms" element={<TermsPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
+            </Routes>
+          </main>
 
-        <Footer />
-        <Navigation />
-      </div>
-    </Router>
+          <Footer />
+          <Navigation />
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 

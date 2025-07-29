@@ -3,6 +3,9 @@
    Refactored and organized for production use
    ============================================ */
 
+/* Import authentication styles */
+@import './auth.css';
+
 /* ============================================
    TABLE OF CONTENTS
    ============================================

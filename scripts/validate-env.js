@@ -9,10 +9,14 @@
 const path = require('path');
 const fs = require('fs');
 
-// Load environment variables from .env.local if it exists
-const envPath = path.join(process.cwd(), '.env.local');
-if (fs.existsSync(envPath)) {
-  require('dotenv').config({ path: envPath });
+// Load environment variables in the correct order (same as Next.js)
+const envFiles = ['.env.local', '.env'];
+for (const envFile of envFiles) {
+  const envPath = path.join(process.cwd(), envFile);
+  if (fs.existsSync(envPath)) {
+    console.log(`Loading environment from: ${envFile}`);
+    require('dotenv').config({ path: envPath, override: false });
+  }
 }
 
 console.log('🔍 Validating environment configuration...\n');
@@ -36,11 +40,11 @@ function validateEnvironment() {
     };
   }
 
-  // Validate API key format (OpenAI keys start with 'sk-')
+  // Validate API key format (OpenAI keys start with 'sk-' or 'sk-proj-')
   if (!process.env.OPENAI_API_KEY.startsWith('sk-')) {
     return {
       isValid: false,
-      error: 'OPENAI_API_KEY appears to be invalid (should start with "sk-")',
+      error: 'OPENAI_API_KEY appears to be invalid (should start with "sk-" or "sk-proj-")',
     };
   }
 
@@ -102,6 +106,10 @@ function logEnvironmentInfo() {
   console.log(`Temperature: ${config.temperature}`);
   console.log(`Max Tokens: ${config.maxTokens}`);
   console.log(`API Key configured: ${process.env.OPENAI_API_KEY ? 'Yes' : 'No'}`);
+  if (process.env.OPENAI_API_KEY) {
+    console.log(`API Key length: ${process.env.OPENAI_API_KEY.length}`);
+    console.log(`API Key first 10 chars: ${process.env.OPENAI_API_KEY.substring(0, 10)}`);
+  }
 }
 
 // Log current environment info
