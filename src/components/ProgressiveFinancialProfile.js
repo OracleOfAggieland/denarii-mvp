@@ -104,9 +104,13 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
     }
 
     // Calculate final metrics when completing
-    const monthlyNet = (parseFloat(profile.monthlyIncome) || 0) -
+    const income = parseFloat(profile.monthlyIncome) || 0;
+    const debt = parseFloat(profile.debtPayments) || 0;
+    const monthlyNet = income -
       (parseFloat(profile.monthlyExpenses) || 0) -
-      (parseFloat(profile.debtPayments) || 0);
+      debt;
+
+    const debtToIncomeRatio = income > 0 ? (debt / income) * 100 : 0;
 
     const savingsRatio = profile.currentSavings ?
       parseFloat(profile.currentSavings) / (parseFloat(profile.monthlyExpenses) || 1) : 0;
@@ -115,7 +119,8 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
 
     const summary = {
       monthlyNetIncome: monthlyNet,
-      savingsMonths: savingsRatio,
+      emergencyFundMonths: savingsRatio,
+      debtToIncomeRatio: debtToIncomeRatio,
       healthScore,
       hasEmergencyFund: profile.hasEmergencyFund === 'yes',
       primaryGoal: profile.financialGoal

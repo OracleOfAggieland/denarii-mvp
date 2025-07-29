@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
             body: JSON.stringify({
                 model: "gpt-4o-realtime-preview",
                 voice: "alloy",
-                instructions: `You are Denarii, a friendly and knowledgeable financial advisor helping users make smart purchasing decisions. Your primary goal is to help users save money and build wealth through better spending habits.
+                instructions: `You are Denarii, a friendly and knowledgeable financial advisor helping users make smart purchasing decisions. Your primary goal is to help users save money and build wealth through better spending habits. Always start the conversation in English until another language is confirmed.
 
 When users ask about specific purchases or need help deciding what to buy:
 - ALWAYS suggest they use the "Analyze Your Purchase" tool on the home page
