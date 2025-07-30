@@ -9,11 +9,13 @@ import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import { useChatApi } from '../hooks/useChatApi';
 import { useRealtimeSession } from '../hooks/useRealtimeSession';
+import { useFirestore } from '../hooks/useFirestore';
 
 const ChatInterface: React.FC = () => {
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const { sendMessage, isLoading } = useChatApi();
+  const firestore = useFirestore();
   
   const { 
     isSessionActive, 
@@ -24,28 +26,49 @@ const ChatInterface: React.FC = () => {
     events
   } = useRealtimeSession();
 
-  // Load chat history from localStorage on component mount
+  // Load chat history on component mount
   useEffect(() => {
-    const savedMessages = localStorage.getItem('chatHistory');
-    if (savedMessages) {
-      try {
-        const parsedMessages = JSON.parse(savedMessages).map((msg: any) => ({
-          ...msg,
-          timestamp: new Date(msg.timestamp)
-        }));
-        setMessages(parsedMessages);
-      } catch (error) {
-        console.error('Error loading chat history:', error);
+    const loadChatHistory = async () => {
+      if (firestore.isAuthenticated) {
+        const firestoreChat = await firestore.getChat();
+        if (firestoreChat && firestoreChat.messages) {
+          setMessages(firestoreChat.messages);
+          return;
+        }
       }
-    }
-  }, []);
+      
+      // Fallback to localStorage
+      const savedMessages = localStorage.getItem('chatHistory');
+      if (savedMessages) {
+        try {
+          const parsedMessages = JSON.parse(savedMessages).map((msg: any) => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp)
+          }));
+          setMessages(parsedMessages);
+        } catch (error) {
+          console.error('Error loading chat history:', error);
+        }
+      }
+    };
 
-  // Save messages to localStorage whenever messages change
+    loadChatHistory();
+  }, [firestore.isAuthenticated]);
+
+  // Save messages whenever they change
   useEffect(() => {
-    if (messages.length > 0) {
-      localStorage.setItem('chatHistory', JSON.stringify(messages));
-    }
-  }, [messages]);
+    const saveMessages = async () => {
+      if (messages.length > 0) {
+        if (firestore.isAuthenticated) {
+          await firestore.saveChat(messages);
+        } else {
+          localStorage.setItem('chatHistory', JSON.stringify(messages));
+        }
+      }
+    };
+
+    saveMessages();
+  }, [messages, firestore.isAuthenticated]);
 
   // Process voice session events and add them to chat history
   useEffect(() => {
@@ -134,9 +157,13 @@ const ChatInterface: React.FC = () => {
     }
   };
 
-  const clearChatHistory = () => {
+  const clearChatHistory = async () => {
     setMessages([]);
-    localStorage.removeItem('chatHistory');
+    if (firestore.isAuthenticated) {
+      await firestore.saveChat([]);
+    } else {
+      localStorage.removeItem('chatHistory');
+    }
   };
 
   // Enhanced start session with greeting

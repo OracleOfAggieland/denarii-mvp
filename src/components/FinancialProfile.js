@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useFirestore } from "../hooks/useFirestore";
 import "../styles/FinancialProfile.css";
 
 const FinancialProfile = () => {
+  const firestore = useFirestore();
+  
   // State for all form fields
   const [formData, setFormData] = useState({
     // Income
@@ -81,6 +84,53 @@ const FinancialProfile = () => {
     emergencyFundMonths: 0,
     hasSummary: false
   });
+
+  // Load profile on mount and set up real-time listener
+  useEffect(() => {
+    if (!firestore.isAuthenticated || !firestore.subscribeToProfile) {
+      return;
+    }
+
+    const unsubscribe = firestore.subscribeToProfile((firestoreProfile) => {
+      if (firestoreProfile) {
+        setFormData({
+          ...formData,
+          ...firestoreProfile,
+          summary: undefined // Remove summary from form data
+        });
+        if (firestoreProfile.summary) {
+          setSummary({
+              ...firestoreProfile.summary,
+              hasSummary: true
+            });
+          }
+        } else {
+          // Fallback to localStorage if no Firestore data
+          const savedProfile = localStorage.getItem('financialProfile');
+          if (savedProfile) {
+            const parsed = JSON.parse(savedProfile);
+            setFormData({
+              ...formData,
+              ...parsed,
+              summary: undefined
+            });
+            if (parsed.summary) {
+              setSummary({
+                ...parsed.summary,
+                hasSummary: true
+              });
+            }
+          }
+        }
+      });
+
+    // Return cleanup function
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [firestore.isAuthenticated, firestore.subscribeToProfile]);
 
   // Handle form input changes
   const handleInputChange = (e) => {
@@ -175,19 +225,26 @@ const FinancialProfile = () => {
   };
 
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     calculateSummary();
     
-    // Save to localStorage for use on the purchase advisor page
-    localStorage.setItem('financialProfile', JSON.stringify({
+    const profileData = {
       ...formData,
       summary
-    }));
+    };
+
+    // Save to Firestore if authenticated
+    if (firestore.isAuthenticated) {
+      await firestore.saveProfile(profileData);
+    } else {
+      // Fallback to localStorage
+      localStorage.setItem('financialProfile', JSON.stringify(profileData));
+    }
   };
 
   // Reset form data
-  const handleReset = () => {
+  const handleReset = async () => {
     if (window.confirm("Are you sure you want to reset all financial information?")) {
       setFormData({
         // Income
@@ -251,7 +308,50 @@ const FinancialProfile = () => {
         emergencyFundMonths: 0,
         hasSummary: false
       });
-      localStorage.removeItem('financialProfile');
+      
+      if (firestore.isAuthenticated) {
+        // Clear from Firestore
+        await firestore.saveProfile({
+          monthlyIncome: "",
+          incomeFrequency: "monthly",
+          otherIncomeSources: "",
+          housingCost: "",
+          utilitiesCost: "",
+          foodCost: "",
+          transportationCost: "",
+          insuranceCost: "",
+          subscriptionsCost: "",
+          otherExpenses: "",
+          creditCardDebt: "",
+          creditCardPayment: "",
+          studentLoanDebt: "",
+          studentLoanPayment: "",
+          carLoanDebt: "",
+          carLoanPayment: "",
+          mortgageDebt: "",
+          mortgagePayment: "",
+          otherDebt: "",
+          otherDebtPayment: "",
+          creditScore: "",
+          creditLimit: "",
+          currentCreditBalance: "",
+          checkingSavingsBalance: "",
+          emergencyFund: "",
+          retirementAccounts: "",
+          stocksAndBonds: "",
+          realEstateValue: "",
+          otherInvestments: "",
+          shortTermGoals: "",
+          midTermGoals: "",
+          longTermGoals: "",
+          purchaseTimeframe: "now",
+          riskTolerance: "moderate",
+          financialPriorities: "",
+          summary: null
+        });
+      } else {
+        localStorage.removeItem('financialProfile');
+      }
     }
   };
 

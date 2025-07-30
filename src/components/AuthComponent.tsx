@@ -3,6 +3,7 @@
 import React, { useEffect, useRef } from 'react';
 import { auth, isFirebaseConfigured } from '@/lib/firebase';
 import { GoogleAuthProvider, EmailAuthProvider, Auth } from 'firebase/auth';
+import { createUserDocument } from '@/lib/firestore/services';
 import * as firebaseui from 'firebaseui';
 import 'firebaseui/dist/firebaseui.css';
 
@@ -37,6 +38,10 @@ const AuthComponent: React.FC<AuthComponentProps> = ({ onSignInSuccess }) => {
             callbacks: {
                 signInSuccessWithAuthResult: function (authResult: any, redirectUrl?: string) {
                     console.log("FirebaseUI sign-in successful:", authResult.user.displayName);
+                    
+                    // Create user document in Firestore
+                    createUserDocument(authResult.user).catch(console.error);
+                    
                     if (onSignInSuccess) {
                         onSignInSuccess(authResult.user);
                     }

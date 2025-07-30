@@ -1,6 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "../contexts/AuthContext";
+import { FirestoreErrorBoundary } from "./FirestoreErrorBoundary";
+import OfflineIndicator from "./OfflineIndicator";
+import MigrationNotification from "./MigrationNotification";
+import { initializeOfflinePersistence } from "../lib/firestore/offline";
+import { useMigration } from "../lib/firestore/migration";
 import UserProfile from "./UserProfile";
 import LoginPage from "./LoginPage";
 import TermsPage from "./TermsPage";
@@ -13,6 +18,8 @@ import UserGuide from "./UserGuide";
 import FinanceFeed from "./FinanceFeed";
 import ChatInterface from "./ChatInterface";
 import "../styles/App.css";
+import "../styles/OfflineIndicator.css";
+import "../styles/MigrationNotification.css";
 
 // Header Component with Hamburger Menu
 const Header = () => {
@@ -147,32 +154,57 @@ const Navigation = () => {
   );
 }
 
+// Component to handle initialization and migration
+const AppInitializer = () => {
+  const { user } = useAuth();
+  const { shouldMigrate, triggerMigration, isAuthenticated } = useMigration();
+
+  useEffect(() => {
+    // Initialize offline persistence
+    initializeOfflinePersistence().catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    // Trigger migration when user logs in and has data to migrate
+    if (isAuthenticated && shouldMigrate) {
+      triggerMigration().catch(console.error);
+    }
+  }, [isAuthenticated, shouldMigrate, triggerMigration]);
+
+  return null; // This component doesn't render anything
+};
+
 const App = () => {
   return (
     <AuthProvider>
-      <Router>
-        <div className="app-layout">
-          <Header />
+      <FirestoreErrorBoundary>
+        <Router>
+          <div className="app-layout">
+            <AppInitializer />
+            <OfflineIndicator />
+            <MigrationNotification />
+            <Header />
 
-          <main className="main-content">
-            <Routes>
-              <Route path="/" element={<PurchaseAdvisor />} />
-              <Route path="/profile" element={<FinancialProfile />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/pro-mode" element={<ProMode />} />
-              <Route path="/user-guide" element={<UserGuide />} />
-              <Route path="/finance-feed" element={<FinanceFeed />} />
-              <Route path="/chat" element={<ChatInterface />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/terms" element={<TermsPage />} />
-              <Route path="/privacy" element={<PrivacyPage />} />
-            </Routes>
-          </main>
+            <main className="main-content">
+              <Routes>
+                <Route path="/" element={<PurchaseAdvisor />} />
+                <Route path="/profile" element={<FinancialProfile />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/pro-mode" element={<ProMode />} />
+                <Route path="/user-guide" element={<UserGuide />} />
+                <Route path="/finance-feed" element={<FinanceFeed />} />
+                <Route path="/chat" element={<ChatInterface />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/terms" element={<TermsPage />} />
+                <Route path="/privacy" element={<PrivacyPage />} />
+              </Routes>
+            </main>
 
-          <Footer />
-          <Navigation />
-        </div>
-      </Router>
+            <Footer />
+            <Navigation />
+          </div>
+        </Router>
+      </FirestoreErrorBoundary>
     </AuthProvider>
   );
 }

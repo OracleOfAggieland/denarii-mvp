@@ -1,0 +1,91 @@
+.migration-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  max-width: 400px;
+}
+
+.migration-banner {
+  background: #3b82f6;
+  color: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.migration-content {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.migration-icon {
+  font-size: 20px;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.migration-text strong {
+  display: block;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.migration-text p {
+  font-size: 14px;
+  margin: 0;
+  opacity: 0.9;
+  line-height: 1.4;
+}
+
+.migration-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.migration-button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.migration-button.primary {
+  background: white;
+  color: #3b82f6;
+}
+
+.migration-button.primary:hover:not(:disabled) {
+  background: #f8fafc;
+}
+
+.migration-button.primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.migration-button.secondary {
+  background: transparent;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.migration-button.secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+}

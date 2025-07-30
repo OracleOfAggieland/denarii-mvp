@@ -6,6 +6,7 @@ import ProgressiveFinancialProfile from "./ProgressiveFinancialProfile";
 import SavingsTracker from "./SavingsTracker";
 import ImageUploadSection from "./ImageUploadSection";
 import ResultBubble from "./ResultBubble";
+import { useFirestore } from "../hooks/useFirestore";
 import "../styles/App.css";
 
 // Constants
@@ -63,26 +64,66 @@ const createGoogleSearchLink = (itemName) => {
   return `https://www.google.com/search?q=${encodeURIComponent(itemName)}`;
 };
 
-const saveToHistory = (analysisResult, itemName, itemCost) => {
-  const history = JSON.parse(localStorage.getItem('purchaseHistory') || '[]');
+const saveToHistory = async (analysisResult, itemName, itemCost, firestore) => {
   const savings = analysisResult.alternative 
     ? parseFloat(itemCost) - analysisResult.alternative.price 
     : 0;
   
   const historyEntry = {
-    date: new Date().toISOString(),
+    date: new Date(),
     itemName: analysisResult.formatted.analysisDetails.itemName || itemName,
     itemCost: parseFloat(itemCost),
     decision: analysisResult.formatted.decision,
     savings: savings > 0 ? savings : 0,
-    alternative: analysisResult.alternative
+    alternative: analysisResult.alternative,
+    analysisDetails: analysisResult.formatted.analysisDetails
   };
 
-  history.unshift(historyEntry);
-  localStorage.setItem('purchaseHistory', JSON.stringify(history));
+  // Save to Firestore if authenticated
+  if (firestore.isAuthenticated) {
+    await firestore.savePurchase(historyEntry);
+  } else {
+    // Fallback to localStorage
+    const history = JSON.parse(localStorage.getItem('purchaseHistory') || '[]');
+    history.unshift({
+      ...historyEntry,
+      date: historyEntry.date.toISOString()
+    });
+    localStorage.setItem('purchaseHistory', JSON.stringify(history));
+  }
 };
 
-const loadFinancialProfile = () => {
+const loadFinancialProfile = async (firestore) => {
+  // Try to load from Firestore first if authenticated
+  if (firestore.isAuthenticated) {
+    const firestoreProfile = await firestore.getProfile();
+    if (firestoreProfile) {
+      // Convert Firestore profile to the expected format
+      return {
+        ...firestoreProfile,
+        summary: firestoreProfile.summary || {
+          monthlyNetIncome: ((parseFloat(firestoreProfile.monthlyIncome) || 0) -
+            (parseFloat(firestoreProfile.housingCost) || 0) -
+            (parseFloat(firestoreProfile.utilitiesCost) || 0) -
+            (parseFloat(firestoreProfile.foodCost) || 0) -
+            (parseFloat(firestoreProfile.transportationCost) || 0) -
+            (parseFloat(firestoreProfile.insuranceCost) || 0) -
+            (parseFloat(firestoreProfile.subscriptionsCost) || 0) -
+            (parseFloat(firestoreProfile.otherExpenses) || 0) -
+            (parseFloat(firestoreProfile.creditCardPayment) || 0) -
+            (parseFloat(firestoreProfile.studentLoanPayment) || 0) -
+            (parseFloat(firestoreProfile.carLoanPayment) || 0) -
+            (parseFloat(firestoreProfile.mortgagePayment) || 0) -
+            (parseFloat(firestoreProfile.otherDebtPayment) || 0)),
+          debtToIncomeRatio: 0,
+          emergencyFundMonths: 0,
+          healthScore: 50
+        }
+      };
+    }
+  }
+
+  // Fallback to localStorage
   const quickProfile = localStorage.getItem('quickFinancialProfile');
   if (quickProfile) {
     const parsed = JSON.parse(quickProfile);
@@ -122,25 +163,32 @@ const PurchaseAdvisor = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [financialProfile, setFinancialProfile] = useState(null);
   const [hasSeenProfilePrompt, setHasSeenProfilePrompt] = useState(false);
+  
+  // Firestore hook
+  const firestore = useFirestore();
 
   // Load financial profile on mount
   useEffect(() => {
-    const profile = loadFinancialProfile();
-    setFinancialProfile(profile);
+    const loadProfile = async () => {
+      const profile = await loadFinancialProfile(firestore);
+      setFinancialProfile(profile);
+    };
+    
+    loadProfile();
     setHasSeenProfilePrompt(!!localStorage.getItem('hasSeenProfilePrompt'));
 
     const handleStorageChange = (e) => {
       if (e.key === 'quickFinancialProfile' || e.key === 'financialProfile') {
-        setFinancialProfile(loadFinancialProfile());
+        loadProfile();
       }
     };
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+  }, [firestore.isAuthenticated]);
 
   // Callbacks
-  const handleFinancialProfileUpdate = useCallback((profile) => {
+  const handleFinancialProfileUpdate = useCallback(async (profile) => {
     const updatedProfile = {
       ...profile,
       summary: {
@@ -148,9 +196,15 @@ const PurchaseAdvisor = () => {
         emergencyFundMonths: profile.summary?.savingsMonths || profile.summary?.emergencyFundMonths || 0
       }
     };
+    
+    // Save to Firestore if authenticated
+    if (firestore.isAuthenticated) {
+      await firestore.saveProfile(updatedProfile);
+    }
+    
     setFinancialProfile(updatedProfile);
     dispatchUI({ type: 'TOGGLE_MODAL', modal: 'showFinancialProfile', value: false });
-  }, []);
+  }, [firestore]);
 
   const handleImageProcessed = useCallback(async (file, preview) => {
     setImageFile(file);
@@ -259,7 +313,7 @@ const PurchaseAdvisor = () => {
       };
       
       setMessages([mungerMessage]);
-      saveToHistory(mungerMessage, formState.itemName, formState.itemCost);
+      await saveToHistory(mungerMessage, formState.itemName, formState.itemCost, firestore);
       
       // Reset form
       dispatchForm({ type: 'RESET_FORM' });
@@ -283,7 +337,7 @@ const PurchaseAdvisor = () => {
     } finally {
       dispatchUI({ type: 'SET_LOADING', value: false });
     }
-  }, [formState, imageFile, financialProfile, hasSeenProfilePrompt, clearImage]);
+  }, [formState, imageFile, financialProfile, hasSeenProfilePrompt, clearImage, firestore]);
 
   // Render helpers
   const getHealthScoreColor = (score) => {

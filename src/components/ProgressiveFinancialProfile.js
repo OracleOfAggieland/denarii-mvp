@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { useFirestore } from "../hooks/useFirestore";
 import "../styles/ProgressiveFinancialProfile.css";
 
 const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
+  const { user } = useAuth();
+  const { saveProfile, getProfile, isAuthenticated } = useFirestore();
   const [step, setStep] = useState(0);
   const [profile, setProfile] = useState({
     monthlyIncome: "",
@@ -14,13 +18,81 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
   });
 
   useEffect(() => {
-    const savedProfile = localStorage.getItem('quickFinancialProfile');
-    if (savedProfile) {
-      const parsed = JSON.parse(savedProfile);
-      setProfile(parsed);
-      if (parsed.monthlyIncome && parsed.monthlyExpenses) setStep(4);
-    }
-  }, []);
+    const loadProfile = async () => {
+      if (isAuthenticated) {
+        // Load from Firestore if authenticated
+        try {
+          const firestoreProfile = await getProfile();
+          if (firestoreProfile) {
+            // Map Firestore profile to quick profile format
+            const quickProfile = {
+              monthlyIncome: firestoreProfile.monthlyIncome || "",
+              monthlyExpenses: calculateTotalExpenses(firestoreProfile),
+              currentSavings: firestoreProfile.checkingSavingsBalance || "",
+              hasEmergencyFund: firestoreProfile.emergencyFund ?
+                (parseFloat(firestoreProfile.emergencyFund) > 0 ? "yes" : "no") : null,
+              debtPayments: calculateTotalDebtPayments(firestoreProfile),
+              financialGoal: firestoreProfile.financialPriorities || "",
+              riskTolerance: firestoreProfile.riskTolerance || "moderate"
+            };
+            setProfile(quickProfile);
+            if (quickProfile.monthlyIncome && quickProfile.monthlyExpenses) setStep(4);
+          }
+        } catch (error) {
+          console.error('Error loading profile from Firestore:', error);
+          // Fall back to localStorage
+          loadFromLocalStorage();
+        }
+      } else {
+        // Load from localStorage if not authenticated
+        loadFromLocalStorage();
+      }
+    };
+
+    const loadFromLocalStorage = () => {
+      const savedProfile = localStorage.getItem('quickFinancialProfile');
+      if (savedProfile) {
+        const parsed = JSON.parse(savedProfile);
+        setProfile(parsed);
+        if (parsed.monthlyIncome && parsed.monthlyExpenses) setStep(4);
+      }
+    };
+
+    const calculateTotalExpenses = (firestoreProfile) => {
+      const expenses = [
+        firestoreProfile.housingCost,
+        firestoreProfile.utilitiesCost,
+        firestoreProfile.foodCost,
+        firestoreProfile.transportationCost,
+        firestoreProfile.insuranceCost,
+        firestoreProfile.subscriptionsCost,
+        firestoreProfile.otherExpenses
+      ];
+
+      const total = expenses.reduce((sum, expense) => {
+        return sum + (parseFloat(expense) || 0);
+      }, 0);
+
+      return total > 0 ? total.toString() : "";
+    };
+
+    const calculateTotalDebtPayments = (firestoreProfile) => {
+      const payments = [
+        firestoreProfile.creditCardPayment,
+        firestoreProfile.studentLoanPayment,
+        firestoreProfile.carLoanPayment,
+        firestoreProfile.otherDebtPayment
+      ];
+
+      const total = payments.reduce((sum, payment) => {
+        return sum + (parseFloat(payment) || 0);
+      }, 0);
+
+      return total > 0 ? total.toString() : "";
+    };
+
+    loadProfile();
+  }, [isAuthenticated, getProfile]);
 
   const questions = [
     {
@@ -89,13 +161,15 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
     }));
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     // Validate current input if required
     if (!currentQuestion.optional && !profile[currentQuestion.field]) {
       return;
     }
 
     const updatedProfile = { ...profile };
+
+    // Save to localStorage for immediate access
     localStorage.setItem('quickFinancialProfile', JSON.stringify(updatedProfile));
 
     if (step < questions.length - 1) {
@@ -132,7 +206,56 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
       lastUpdated: new Date().toISOString()
     };
 
+    // Save to localStorage
     localStorage.setItem('quickFinancialProfile', JSON.stringify(completeProfile));
+
+    // Save to Firestore if authenticated
+    if (isAuthenticated) {
+      try {
+        await saveProfile({
+          monthlyIncome: profile.monthlyIncome,
+          incomeFrequency: "monthly",
+          otherIncomeSources: "",
+          housingCost: "",
+          utilitiesCost: "",
+          foodCost: "",
+          transportationCost: "",
+          insuranceCost: "",
+          subscriptionsCost: "",
+          otherExpenses: profile.monthlyExpenses,
+          creditCardDebt: "",
+          creditCardPayment: profile.debtPayments,
+          studentLoanDebt: "",
+          studentLoanPayment: "",
+          carLoanDebt: "",
+          carLoanPayment: "",
+          mortgageDebt: "",
+          mortgagePayment: "",
+          otherDebt: "",
+          otherDebtPayment: "",
+          creditScore: "",
+          creditLimit: "",
+          currentCreditBalance: "",
+          checkingSavingsBalance: profile.currentSavings,
+          emergencyFund: profile.hasEmergencyFund === 'yes' ? profile.currentSavings : "0",
+          retirementAccounts: "",
+          stocksAndBonds: "",
+          realEstateValue: "",
+          otherInvestments: "",
+          shortTermGoals: "",
+          midTermGoals: "",
+          longTermGoals: "",
+          purchaseTimeframe: "",
+          riskTolerance: profile.riskTolerance,
+          financialPriorities: profile.financialGoal,
+          summary
+        });
+      } catch (error) {
+        console.error('Error saving profile to Firestore:', error);
+        // Continue with local storage fallback
+      }
+    }
+
     onProfileUpdate(completeProfile);
     onClose();
   };
@@ -188,7 +311,7 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
       <div className="pfp-modal">
         <button className="pfp-close" onClick={onClose} aria-label="Close">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M13 1L1 13M1 1L13 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            <path d="M13 1L1 13M1 1L13 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
         </button>
 
@@ -246,8 +369,8 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
 
         <div className="pfp-actions">
           {step > 0 && (
-            <button 
-              className="pfp-button pfp-back" 
+            <button
+              className="pfp-button pfp-back"
               onClick={handleBack}
               type="button"
             >
@@ -255,8 +378,8 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
             </button>
           )}
           {currentQuestion.optional && (
-            <button 
-              className="pfp-button pfp-skip" 
+            <button
+              className="pfp-button pfp-skip"
               onClick={handleSkip}
               type="button"
             >
@@ -274,7 +397,12 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
         </div>
 
         <div className="pfp-footer">
-          <p>Your data is saved locally and never shared</p>
+          <p>
+            {isAuthenticated
+              ? "Your data is securely saved to your account"
+              : "Your data is saved locally and never shared"
+            }
+          </p>
         </div>
       </div>
     </div>

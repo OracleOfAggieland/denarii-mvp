@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { generateProModeQuestions, getProModeAnalysis } from '../lib/ProModeAPI';
+import { useFirestore } from '../hooks/useFirestore';
 import '../styles/ProMode.css';
 
 const parseAndRenderLinks = (text) => {
@@ -33,6 +34,7 @@ const parseAndRenderLinks = (text) => {
 
 const ProMode = () => {
   const navigate = useNavigate();
+  const firestore = useFirestore();
   const [purchaseData, setPurchaseData] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
@@ -84,8 +86,6 @@ const ProMode = () => {
     }));
   };
 
-
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -103,6 +103,17 @@ const ProMode = () => {
         answers
       );
       setAnalysis(proAnalysis);
+      
+      // Save to Firestore if authenticated
+      if (firestore.isAuthenticated) {
+        await firestore.saveProAnalysis({
+          itemName: purchaseData.itemName,
+          itemCost: purchaseData.itemCost,
+          questions,
+          answers,
+          analysis: proAnalysis
+        });
+      }
     } catch (error) {
       console.error('Error getting pro analysis:', error);
       setError('Failed to generate analysis. Please try again.');

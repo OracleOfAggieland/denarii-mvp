@@ -1,22 +1,59 @@
 import React, { useState, useEffect } from 'react';
+import { useFirestore } from '../hooks/useFirestore';
 import '../styles/SavingsTracker.css';
 
 const SavingsTracker = ({ onClose }) => {
     const [history, setHistory] = useState([]);
     const [totalSavings, setTotalSavings] = useState(0);
     const [projection, setProjection] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+    
+    const firestore = useFirestore();
 
     useEffect(() => {
-        const savedHistory = JSON.parse(localStorage.getItem('purchaseHistory') || '[]');
-        setHistory(savedHistory);
+        if (firestore.isAuthenticated && firestore.subscribeToPurchaseHistory) {
+            setIsLoading(true);
+            
+            // Set up real-time listener for purchase history
+            const unsubscribe = firestore.subscribeToPurchaseHistory((purchaseHistory) => {
+                setHistory(purchaseHistory);
+                const savings = purchaseHistory.reduce((acc, item) => acc + (item.savings || 0), 0);
+                setTotalSavings(savings);
 
-        const savings = savedHistory.reduce((acc, item) => acc + (item.savings || 0), 0);
-        setTotalSavings(savings);
+                if (savings > 0) {
+                    calculateProjection(savings);
+                }
+                setIsLoading(false);
+            });
 
-        if (savings > 0) {
-            calculateProjection(savings);
+            return () => {
+                if (unsubscribe) {
+                    unsubscribe();
+                }
+            };
+        } else {
+            // Fallback to localStorage for non-authenticated users
+            const loadFromLocalStorage = () => {
+                setIsLoading(true);
+                const savedHistory = JSON.parse(localStorage.getItem('purchaseHistory') || '[]');
+                const purchaseHistory = savedHistory.map(item => ({
+                    ...item,
+                    date: new Date(item.date)
+                }));
+                
+                setHistory(purchaseHistory);
+                const savings = purchaseHistory.reduce((acc, item) => acc + (item.savings || 0), 0);
+                setTotalSavings(savings);
+
+                if (savings > 0) {
+                    calculateProjection(savings);
+                }
+                setIsLoading(false);
+            };
+
+            loadFromLocalStorage();
         }
-    }, []);
+    }, [firestore.isAuthenticated, firestore.subscribeToPurchaseHistory]);
 
     const calculateProjection = (currentSavings) => {
         const target = 1000000;
@@ -46,6 +83,19 @@ const SavingsTracker = ({ onClose }) => {
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
     };
+
+    if (isLoading) {
+        return (
+            <div className="savings-tracker-overlay">
+                <div className="savings-tracker-container">
+                    <button onClick={onClose} className="close-tracker-btn">×</button>
+                    <div className="tracker-header">
+                        <h2>Loading...</h2>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="savings-tracker-overlay">
@@ -80,7 +130,7 @@ const SavingsTracker = ({ onClose }) => {
                             history.map((item, index) => (
                                 <div key={index} className="history-item">
                                     <div className="item-details">
-                                        <span className="item-date">{new Date(item.date).toLocaleDateString()}</span>
+                                        <span className="item-date">{item.date.toLocaleDateString()}</span>
                                         <strong className="item-name">{item.itemName}</strong>
                                         <span className={`item-decision ${item.decision.toLowerCase().replace("'", "")}`}>{item.decision}</span>
                                     </div>
