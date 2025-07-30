@@ -11,8 +11,9 @@
     "test": "jest --watchAll=false",
     "validate-env": "node scripts/validate-env.js",
     "dev:validate": "npm run validate-env && npm run dev",
-    "deploy": "npm run build:firebase && firebase deploy",
-    "deploy:hosting": "npm run build:firebase && firebase deploy --only hosting"
+    "deploy": "npm run validate-env && npm run build:firebase && firebase deploy",
+    "deploy:hosting": "npm run validate-env && npm run build:firebase && firebase deploy --only hosting",
+    "deploy:apphosting": "firebase apphosting:backends:create --location=us-central1"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.11",
