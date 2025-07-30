@@ -38,6 +38,11 @@ if (typeof window !== 'undefined') {
   // Only initialize on client side
   try {
     if (!getApps().length && isFirebaseConfigured()) {
+      console.log('Initializing Firebase with config:', {
+        ...firebaseConfig,
+        apiKey: firebaseConfig.apiKey ? '[REDACTED]' : 'MISSING'
+      });
+      
       app = initializeApp(firebaseConfig);
       auth = getAuth(app);
       db = getFirestore(app);
@@ -46,13 +51,25 @@ if (typeof window !== 'undefined') {
       // No explicit enableIndexedDbPersistence() call needed
       
       console.log('Firebase initialized successfully');
+      console.log('Auth instance:', !!auth);
+      console.log('Firestore instance:', !!db);
     } else if (getApps().length > 0) {
       app = getApps()[0];
       auth = getAuth(app);
       db = getFirestore(app);
       console.log('Using existing Firebase app');
+      console.log('Auth instance:', !!auth);
+      console.log('Firestore instance:', !!db);
     } else {
       console.warn('Firebase not configured - authentication will be unavailable');
+      console.log('Firebase configuration check:', {
+        apiKey: !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+        authDomain: !!process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+        projectId: !!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+        storageBucket: !!process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+        messagingSenderId: !!process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+        appId: !!process.env.NEXT_PUBLIC_FIREBASE_APP_ID
+      });
     }
   } catch (error) {
     console.error('Firebase initialization error:', error);

@@ -22,7 +22,7 @@ import {
 } from '@/lib/firestore/collections';
 
 export const useFirestore = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,14 +35,22 @@ export const useFirestore = () => {
 
   // Purchase History
   const savePurchase = useCallback(async (purchaseData: Omit<PurchaseHistoryItem, 'userId' | 'createdAt'>) => {
-    if (!user) return;
+    if (!user) {
+      console.error('Cannot save purchase: user not authenticated');
+      throw new Error('User not authenticated');
+    }
+    
+    console.log('Saving purchase for user:', user.uid, 'Purchase data:', purchaseData);
     setIsLoading(true);
     setError(null);
     try {
       await savePurchaseHistory(user.uid, purchaseData);
+      console.log('Purchase saved successfully to Firestore');
     } catch (err) {
-      setError('Failed to save purchase history');
-      console.error(err);
+      const errorMessage = 'Failed to save purchase history';
+      setError(errorMessage);
+      console.error('Error saving purchase to Firestore:', err);
+      throw err; // Re-throw to allow component to handle fallback
     } finally {
       setIsLoading(false);
     }
@@ -224,7 +232,9 @@ export const useFirestore = () => {
   return {
     isLoading,
     error,
-    isAuthenticated: !!user,
+    authLoading,
+    isAuthenticated: !!user && !!user.uid && !authLoading,
+    user,
     savePurchase,
     getPurchaseHistory,
     saveProfile,

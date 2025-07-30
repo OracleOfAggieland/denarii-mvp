@@ -5,14 +5,14 @@ import "../styles/FinancialProfile.css";
 
 const FinancialProfile = () => {
   const firestore = useFirestore();
-  
+
   // State for all form fields
   const [formData, setFormData] = useState({
     // Income
     monthlyIncome: "",
     incomeFrequency: "monthly",
     otherIncomeSources: "",
-    
+
     // Expenses
     housingCost: "",
     utilitiesCost: "",
@@ -21,7 +21,7 @@ const FinancialProfile = () => {
     insuranceCost: "",
     subscriptionsCost: "",
     otherExpenses: "",
-    
+
     // Debt
     creditCardDebt: "",
     creditCardPayment: "",
@@ -33,30 +33,30 @@ const FinancialProfile = () => {
     mortgagePayment: "",
     otherDebt: "",
     otherDebtPayment: "",
-    
+
     // Credit
     creditScore: "",
     creditLimit: "",
     currentCreditBalance: "",
-    
+
     // Savings
     checkingSavingsBalance: "",
     emergencyFund: "",
-    
+
     // Investments
     retirementAccounts: "",
     stocksAndBonds: "",
     realEstateValue: "",
     otherInvestments: "",
-    
+
     // Goals
     shortTermGoals: "",
     midTermGoals: "",
     longTermGoals: "",
-    
+
     // Purchase Timing
     purchaseTimeframe: "now",
-    
+
     // Risk
     riskTolerance: "moderate",
     financialPriorities: ""
@@ -74,7 +74,7 @@ const FinancialProfile = () => {
     timing: false,
     risk: false
   });
-  
+
   // State for summary metrics
   const [summary, setSummary] = useState({
     monthlyNetIncome: 0,
@@ -100,29 +100,29 @@ const FinancialProfile = () => {
         });
         if (firestoreProfile.summary) {
           setSummary({
-              ...firestoreProfile.summary,
+            ...firestoreProfile.summary,
+            hasSummary: true
+          });
+        }
+      } else {
+        // Fallback to localStorage if no Firestore data
+        const savedProfile = localStorage.getItem('financialProfile');
+        if (savedProfile) {
+          const parsed = JSON.parse(savedProfile);
+          setFormData({
+            ...formData,
+            ...parsed,
+            summary: undefined
+          });
+          if (parsed.summary) {
+            setSummary({
+              ...parsed.summary,
               hasSummary: true
             });
           }
-        } else {
-          // Fallback to localStorage if no Firestore data
-          const savedProfile = localStorage.getItem('financialProfile');
-          if (savedProfile) {
-            const parsed = JSON.parse(savedProfile);
-            setFormData({
-              ...formData,
-              ...parsed,
-              summary: undefined
-            });
-            if (parsed.summary) {
-              setSummary({
-                ...parsed.summary,
-                hasSummary: true
-              });
-            }
-          }
         }
-      });
+      }
+    });
 
     // Return cleanup function
     return () => {
@@ -156,7 +156,7 @@ const FinancialProfile = () => {
     const adjustedIncome = formData.incomeFrequency === "annual" ? income / 12 : income;
     const otherIncome = parseFloat(formData.otherIncomeSources) || 0;
     const totalMonthlyIncome = adjustedIncome + otherIncome;
-    
+
     // Calculate total monthly expenses
     const expenses = [
       parseFloat(formData.housingCost) || 0,
@@ -167,7 +167,7 @@ const FinancialProfile = () => {
       parseFloat(formData.subscriptionsCost) || 0,
       parseFloat(formData.otherExpenses) || 0
     ].reduce((sum, value) => sum + value, 0);
-    
+
     // Calculate monthly debt payments
     const debtPayments = [
       parseFloat(formData.creditCardPayment) || 0,
@@ -176,7 +176,7 @@ const FinancialProfile = () => {
       parseFloat(formData.mortgagePayment) || 0,
       parseFloat(formData.otherDebtPayment) || 0
     ].reduce((sum, value) => sum + value, 0);
-    
+
     // Calculate total debt
     const totalDebt = [
       parseFloat(formData.creditCardDebt) || 0,
@@ -185,15 +185,15 @@ const FinancialProfile = () => {
       parseFloat(formData.mortgageDebt) || 0,
       parseFloat(formData.otherDebt) || 0
     ].reduce((sum, value) => sum + value, 0);
-    
+
     // Calculate debt-to-income ratio
     const debtToIncomeRatio = totalMonthlyIncome > 0 ? (debtPayments / totalMonthlyIncome) * 100 : 0;
-    
+
     // Calculate credit utilization
     const creditLimit = parseFloat(formData.creditLimit) || 0;
     const creditBalance = parseFloat(formData.currentCreditBalance) || 0;
     const creditUtilization = creditLimit > 0 ? (creditBalance / creditLimit) * 100 : 0;
-    
+
     // Calculate net worth
     const assets = [
       parseFloat(formData.checkingSavingsBalance) || 0,
@@ -203,17 +203,17 @@ const FinancialProfile = () => {
       parseFloat(formData.realEstateValue) || 0,
       parseFloat(formData.otherInvestments) || 0
     ].reduce((sum, value) => sum + value, 0);
-    
+
     const netWorth = assets - totalDebt;
-    
+
     // Calculate emergency fund coverage (in months)
     const monthlyExpensesWithDebt = expenses + debtPayments;
     const emergencyFund = parseFloat(formData.emergencyFund) || 0;
     const emergencyFundMonths = monthlyExpensesWithDebt > 0 ? emergencyFund / monthlyExpensesWithDebt : 0;
-    
+
     // Calculate monthly net income
     const monthlyNetIncome = totalMonthlyIncome - expenses - debtPayments;
-    
+
     setSummary({
       monthlyNetIncome,
       debtToIncomeRatio,
@@ -228,7 +228,7 @@ const FinancialProfile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     calculateSummary();
-    
+
     const profileData = {
       ...formData,
       summary
@@ -251,7 +251,7 @@ const FinancialProfile = () => {
         monthlyIncome: "",
         incomeFrequency: "monthly",
         otherIncomeSources: "",
-        
+
         // Expenses
         housingCost: "",
         utilitiesCost: "",
@@ -260,7 +260,7 @@ const FinancialProfile = () => {
         insuranceCost: "",
         subscriptionsCost: "",
         otherExpenses: "",
-        
+
         // Debt
         creditCardDebt: "",
         creditCardPayment: "",
@@ -272,30 +272,30 @@ const FinancialProfile = () => {
         mortgagePayment: "",
         otherDebt: "",
         otherDebtPayment: "",
-        
+
         // Credit
         creditScore: "",
         creditLimit: "",
         currentCreditBalance: "",
-        
+
         // Savings
         checkingSavingsBalance: "",
         emergencyFund: "",
-        
+
         // Investments
         retirementAccounts: "",
         stocksAndBonds: "",
         realEstateValue: "",
         otherInvestments: "",
-        
+
         // Goals
         shortTermGoals: "",
         midTermGoals: "",
         longTermGoals: "",
-        
+
         // Purchase Timing
         purchaseTimeframe: "now",
-        
+
         // Risk
         riskTolerance: "moderate",
         financialPriorities: ""
@@ -308,7 +308,7 @@ const FinancialProfile = () => {
         emergencyFundMonths: 0,
         hasSummary: false
       });
-      
+
       if (firestore.isAuthenticated) {
         // Clear from Firestore
         await firestore.saveProfile({
@@ -373,7 +373,7 @@ const FinancialProfile = () => {
               <span className="summary-icon">📊</span>
               Financial Summary
             </h2>
-            
+
             <div className="summary-grid">
               <div className="summary-item">
                 <h3>Monthly Net Income</h3>
@@ -381,76 +381,76 @@ const FinancialProfile = () => {
                   ${summary.monthlyNetIncome.toFixed(2)}
                 </p>
                 <p className="summary-description">
-                  {summary.monthlyNetIncome > 0 
-                    ? "You have positive cash flow each month" 
+                  {summary.monthlyNetIncome > 0
+                    ? "You have positive cash flow each month"
                     : "Your expenses exceed your income"}
                 </p>
               </div>
-              
+
               <div className="summary-item">
                 <h3>Debt-to-Income Ratio</h3>
                 <p className={`summary-value ${summary.debtToIncomeRatio < 36 ? 'positive' : summary.debtToIncomeRatio < 43 ? 'warning' : 'negative'}`}>
                   {summary.debtToIncomeRatio.toFixed(1)}%
                 </p>
                 <p className="summary-description">
-                  {summary.debtToIncomeRatio < 36 
-                    ? "Healthy (below 36%)" 
-                    : summary.debtToIncomeRatio < 43 
-                    ? "Caution (36-43%)" 
-                    : "High risk (above 43%)"}
+                  {summary.debtToIncomeRatio < 36
+                    ? "Healthy (below 36%)"
+                    : summary.debtToIncomeRatio < 43
+                      ? "Caution (36-43%)"
+                      : "High risk (above 43%)"}
                 </p>
               </div>
-              
+
               <div className="summary-item">
                 <h3>Credit Utilization</h3>
                 <p className={`summary-value ${summary.creditUtilization < 30 ? 'positive' : summary.creditUtilization < 50 ? 'warning' : 'negative'}`}>
                   {summary.creditUtilization.toFixed(1)}%
                 </p>
                 <p className="summary-description">
-                  {summary.creditUtilization < 30 
-                    ? "Good (below 30%)" 
-                    : summary.creditUtilization < 50 
-                    ? "Moderate (30-50%)" 
-                    : "High (above 50%)"}
+                  {summary.creditUtilization < 30
+                    ? "Good (below 30%)"
+                    : summary.creditUtilization < 50
+                      ? "Moderate (30-50%)"
+                      : "High (above 50%)"}
                 </p>
               </div>
-              
+
               <div className="summary-item">
                 <h3>Net Worth</h3>
                 <p className={`summary-value ${summary.netWorth >= 0 ? 'positive' : 'negative'}`}>
                   ${summary.netWorth.toFixed(2)}
                 </p>
                 <p className="summary-description">
-                  {summary.netWorth > 0 
-                    ? "Your assets exceed your debts" 
+                  {summary.netWorth > 0
+                    ? "Your assets exceed your debts"
                     : "Your debts exceed your assets"}
                 </p>
               </div>
-              
+
               <div className="summary-item">
                 <h3>Emergency Fund</h3>
                 <p className={`summary-value ${summary.emergencyFundMonths >= 3 ? 'positive' : summary.emergencyFundMonths >= 1 ? 'warning' : 'negative'}`}>
                   {summary.emergencyFundMonths.toFixed(1)} months
                 </p>
                 <p className="summary-description">
-                  {summary.emergencyFundMonths >= 6 
-                    ? "Excellent (6+ months)" 
-                    : summary.emergencyFundMonths >= 3 
-                    ? "Good (3-6 months)" 
-                    : summary.emergencyFundMonths >= 1 
-                    ? "Minimal (1-3 months)" 
-                    : "Insufficient (< 1 month)"}
+                  {summary.emergencyFundMonths >= 6
+                    ? "Excellent (6+ months)"
+                    : summary.emergencyFundMonths >= 3
+                      ? "Good (3-6 months)"
+                      : summary.emergencyFundMonths >= 1
+                        ? "Minimal (1-3 months)"
+                        : "Insufficient (< 1 month)"}
                 </p>
               </div>
             </div>
-            
+
             <div className="summary-actions">
               <Link to="/" className="action-button primary">
                 Get Purchase Advice
               </Link>
-              <button 
-                type="button" 
-                onClick={handleReset} 
+              <button
+                type="button"
+                onClick={handleReset}
                 className="action-button secondary"
               >
                 Reset Information
@@ -462,8 +462,8 @@ const FinancialProfile = () => {
         <form className="financial-form" onSubmit={handleSubmit}>
           {/* Income Section */}
           <div className="form-section">
-            <div 
-              className="section-header" 
+            <div
+              className="section-header"
               onClick={() => toggleSection('income')}
             >
               <h2>
@@ -474,13 +474,13 @@ const FinancialProfile = () => {
                 {expandedSections.income ? '▼' : '▶'}
               </span>
             </div>
-            
+
             {expandedSections.income && (
               <div className="section-content">
                 <div className="section-description">
                   <p>Your total earnings provide the foundation for financial decisions.</p>
                 </div>
-                
+
                 <div className="input-group">
                   <div className="form-group">
                     <label htmlFor="monthlyIncome">Income Amount:</label>
@@ -494,7 +494,7 @@ const FinancialProfile = () => {
                       className="input-field"
                     />
                   </div>
-                  
+
                   <div className="form-group">
                     <label htmlFor="incomeFrequency">Frequency:</label>
                     <select
@@ -509,7 +509,7 @@ const FinancialProfile = () => {
                     </select>
                   </div>
                 </div>
-                
+
                 <div className="form-group">
                   <label htmlFor="otherIncomeSources">Other Monthly Income (rentals, side gigs, etc.):</label>
                   <input
@@ -525,11 +525,11 @@ const FinancialProfile = () => {
               </div>
             )}
           </div>
-          
+
           {/* Expenses Section */}
           <div className="form-section">
-            <div 
-              className="section-header" 
+            <div
+              className="section-header"
               onClick={() => toggleSection('expenses')}
             >
               <h2>
@@ -540,13 +540,13 @@ const FinancialProfile = () => {
                 {expandedSections.expenses ? '▼' : '▶'}
               </span>
             </div>
-            
+
             {expandedSections.expenses && (
               <div className="section-content">
                 <div className="section-description">
                   <p>Your regular monthly obligations determine your baseline financial needs.</p>
                 </div>
-                
+
                 <div className="expenses-grid">
                   <div className="form-group">
                     <label htmlFor="housingCost">Housing (rent/mortgage):</label>
@@ -560,7 +560,7 @@ const FinancialProfile = () => {
                       className="input-field"
                     />
                   </div>
-                  
+
                   <div className="form-group">
                     <label htmlFor="utilitiesCost">Utilities:</label>
                     <input
@@ -573,7 +573,7 @@ const FinancialProfile = () => {
                       className="input-field"
                     />
                   </div>
-                  
+
                   <div className="form-group">
                     <label htmlFor="foodCost">Groceries & Dining:</label>
                     <input
@@ -586,7 +586,7 @@ const FinancialProfile = () => {
                       className="input-field"
                     />
                   </div>
-                  
+
                   <div className="form-group">
                     <label htmlFor="transportationCost">Transportation:</label>
                     <input
@@ -599,7 +599,7 @@ const FinancialProfile = () => {
                       className="input-field"
                     />
                   </div>
-                  
+
                   <div className="form-group">
                     <label htmlFor="insuranceCost">Insurance:</label>
                     <input
@@ -612,7 +612,7 @@ const FinancialProfile = () => {
                       className="input-field"
                     />
                   </div>
-                  
+
                   <div className="form-group">
                     <label htmlFor="subscriptionsCost">Subscriptions:</label>
                     <input
@@ -626,7 +626,7 @@ const FinancialProfile = () => {
                     />
                   </div>
                 </div>
-                
+
                 <div className="form-group">
                   <label htmlFor="otherExpenses">Other Monthly Expenses:</label>
                   <input
@@ -642,11 +642,11 @@ const FinancialProfile = () => {
               </div>
             )}
           </div>
-          
+
           {/* Debt Section */}
           <div className="form-section">
-            <div 
-              className="section-header" 
+            <div
+              className="section-header"
               onClick={() => toggleSection('debt')}
             >
               <h2>
@@ -657,13 +657,13 @@ const FinancialProfile = () => {
                 {expandedSections.debt ? '▼' : '▶'}
               </span>
             </div>
-            
+
             {expandedSections.debt && (
               <div className="section-content">
                 <div className="section-description">
                   <p>Your debt levels and monthly payments impact your ability to take on new purchases.</p>
                 </div>
-                
+
                 <div className="debt-entry">
                   <h3>Credit Cards</h3>
                   <div className="input-group">
@@ -679,7 +679,7 @@ const FinancialProfile = () => {
                         className="input-field"
                       />
                     </div>
-                    
+
                     <div className="form-group">
                       <label htmlFor="creditCardPayment">Monthly Payment:</label>
                       <input
@@ -694,7 +694,7 @@ const FinancialProfile = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="debt-entry">
                   <h3>Student Loans</h3>
                   <div className="input-group">
@@ -710,7 +710,7 @@ const FinancialProfile = () => {
                         className="input-field"
                       />
                     </div>
-                    
+
                     <div className="form-group">
                       <label htmlFor="studentLoanPayment">Monthly Payment:</label>
                       <input
@@ -725,7 +725,7 @@ const FinancialProfile = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="debt-entry">
                   <h3>Car Loan</h3>
                   <div className="input-group">
@@ -741,7 +741,7 @@ const FinancialProfile = () => {
                         className="input-field"
                       />
                     </div>
-                    
+
                     <div className="form-group">
                       <label htmlFor="carLoanPayment">Monthly Payment:</label>
                       <input
@@ -756,7 +756,7 @@ const FinancialProfile = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="debt-entry">
                   <h3>Mortgage</h3>
                   <div className="input-group">
@@ -772,7 +772,7 @@ const FinancialProfile = () => {
                         className="input-field"
                       />
                     </div>
-                    
+
                     <div className="form-group">
                       <label htmlFor="mortgagePayment">Monthly Payment:</label>
                       <input
@@ -787,7 +787,7 @@ const FinancialProfile = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="debt-entry">
                   <h3>Other Debts</h3>
                   <div className="input-group">
@@ -803,7 +803,7 @@ const FinancialProfile = () => {
                         className="input-field"
                       />
                     </div>
-                    
+
                     <div className="form-group">
                       <label htmlFor="otherDebtPayment">Monthly Payment:</label>
                       <input
@@ -821,11 +821,11 @@ const FinancialProfile = () => {
               </div>
             )}
           </div>
-          
+
           {/* Credit Section */}
           <div className="form-section">
-            <div 
-              className="section-header" 
+            <div
+              className="section-header"
               onClick={() => toggleSection('credit')}
             >
               <h2>
@@ -836,13 +836,13 @@ const FinancialProfile = () => {
                 {expandedSections.credit ? '▼' : '▶'}
               </span>
             </div>
-            
+
             {expandedSections.credit && (
               <div className="section-content">
                 <div className="section-description">
                   <p>Your credit health affects the cost of financing and borrowing capacity.</p>
                 </div>
-                
+
                 <div className="form-group">
                   <label htmlFor="creditScore">Credit Score:</label>
                   <input
@@ -857,7 +857,7 @@ const FinancialProfile = () => {
                     className="input-field"
                   />
                 </div>
-                
+
                 <div className="input-group">
                   <div className="form-group">
                     <label htmlFor="creditLimit">Total Credit Limit:</label>
@@ -871,7 +871,7 @@ const FinancialProfile = () => {
                       className="input-field"
                     />
                   </div>
-                  
+
                   <div className="form-group">
                     <label htmlFor="currentCreditBalance">Current Balance:</label>
                     <input
@@ -888,11 +888,11 @@ const FinancialProfile = () => {
               </div>
             )}
           </div>
-          
+
           {/* Savings Section */}
           <div className="form-section">
-            <div 
-              className="section-header" 
+            <div
+              className="section-header"
               onClick={() => toggleSection('savings')}
             >
               <h2>
@@ -903,13 +903,13 @@ const FinancialProfile = () => {
                 {expandedSections.savings ? '▼' : '▶'}
               </span>
             </div>
-            
+
             {expandedSections.savings && (
               <div className="section-content">
                 <div className="section-description">
                   <p>Your liquid assets provide a safety net and flexibility for discretionary purchases.</p>
                 </div>
-                
+
                 <div className="input-group">
                   <div className="form-group">
                     <label htmlFor="checkingSavingsBalance">Checking/Savings Balance:</label>
@@ -923,7 +923,7 @@ const FinancialProfile = () => {
                       className="input-field"
                     />
                   </div>
-                  
+
                   <div className="form-group">
                     <label htmlFor="emergencyFund">Emergency Fund:</label>
                     <input
@@ -940,11 +940,11 @@ const FinancialProfile = () => {
               </div>
             )}
           </div>
-          
+
           {/* Investments Section */}
           <div className="form-section">
-            <div 
-              className="section-header" 
+            <div
+              className="section-header"
               onClick={() => toggleSection('investments')}
             >
               <h2>
@@ -955,13 +955,13 @@ const FinancialProfile = () => {
                 {expandedSections.investments ? '▼' : '▶'}
               </span>
             </div>
-            
+
             {expandedSections.investments && (
               <div className="section-content">
                 <div className="section-description">
                   <p>Your investment portfolio contributes to your overall net worth and long-term financial health.</p>
                 </div>
-                
+
                 <div className="input-group">
                   <div className="form-group">
                     <label htmlFor="retirementAccounts">Retirement Accounts (401k, IRA, etc.):</label>
@@ -975,7 +975,7 @@ const FinancialProfile = () => {
                       className="input-field"
                     />
                   </div>
-                  
+
                   <div className="form-group">
                     <label htmlFor="stocksAndBonds">Stocks & Bonds:</label>
                     <input
@@ -989,7 +989,7 @@ const FinancialProfile = () => {
                     />
                   </div>
                 </div>
-                
+
                 <div className="input-group">
                   <div className="form-group">
                     <label htmlFor="realEstateValue">Real Estate Value:</label>
@@ -1003,7 +1003,7 @@ const FinancialProfile = () => {
                       className="input-field"
                     />
                   </div>
-                  
+
                   <div className="form-group">
                     <label htmlFor="otherInvestments">Other Investments:</label>
                     <input
@@ -1020,11 +1020,11 @@ const FinancialProfile = () => {
               </div>
             )}
           </div>
-          
+
           {/* Goals Section */}
           <div className="form-section">
-            <div 
-              className="section-header" 
+            <div
+              className="section-header"
               onClick={() => toggleSection('goals')}
             >
               <h2>
@@ -1035,13 +1035,13 @@ const FinancialProfile = () => {
                 {expandedSections.goals ? '▼' : '▶'}
               </span>
             </div>
-            
+
             {expandedSections.goals && (
               <div className="section-content">
                 <div className="section-description">
                   <p>Your financial goals help guide purchase decisions and prioritize spending.</p>
                 </div>
-                
+
                 <div className="form-group">
                   <label htmlFor="shortTermGoals">Short-term Goals (1-2 years):</label>
                   <textarea
@@ -1053,7 +1053,7 @@ const FinancialProfile = () => {
                     className="textarea-field"
                   />
                 </div>
-                
+
                 <div className="form-group">
                   <label htmlFor="midTermGoals">Mid-term Goals (3-5 years):</label>
                   <textarea
@@ -1065,7 +1065,7 @@ const FinancialProfile = () => {
                     className="textarea-field"
                   />
                 </div>
-                
+
                 <div className="form-group">
                   <label htmlFor="longTermGoals">Long-term Goals (5+ years):</label>
                   <textarea
@@ -1080,11 +1080,11 @@ const FinancialProfile = () => {
               </div>
             )}
           </div>
-          
+
           {/* Timing Section */}
           <div className="form-section">
-            <div 
-              className="section-header" 
+            <div
+              className="section-header"
               onClick={() => toggleSection('timing')}
             >
               <h2>
@@ -1095,13 +1095,13 @@ const FinancialProfile = () => {
                 {expandedSections.timing ? '▼' : '▶'}
               </span>
             </div>
-            
+
             {expandedSections.timing && (
               <div className="section-content">
                 <div className="section-description">
                   <p>When you typically prefer to make purchases affects the advice you&apos;ll receive.</p>
                 </div>
-                
+
                 <div className="form-group">
                   <label htmlFor="purchaseTimeframe">Preferred Purchase Timeframe:</label>
                   <select
@@ -1120,11 +1120,11 @@ const FinancialProfile = () => {
               </div>
             )}
           </div>
-          
+
           {/* Risk Section */}
           <div className="form-section">
-            <div 
-              className="section-header" 
+            <div
+              className="section-header"
               onClick={() => toggleSection('risk')}
             >
               <h2>
@@ -1135,13 +1135,13 @@ const FinancialProfile = () => {
                 {expandedSections.risk ? '▼' : '▶'}
               </span>
             </div>
-            
+
             {expandedSections.risk && (
               <div className="section-content">
                 <div className="section-description">
                   <p>Your risk tolerance and financial priorities help tailor purchase recommendations.</p>
                 </div>
-                
+
                 <div className="form-group">
                   <label htmlFor="riskTolerance">Risk Tolerance:</label>
                   <select
@@ -1156,7 +1156,7 @@ const FinancialProfile = () => {
                     <option value="aggressive">Aggressive - Willing to take risks for potential gains</option>
                   </select>
                 </div>
-                
+
                 <div className="form-group">
                   <label htmlFor="financialPriorities">Financial Priorities:</label>
                   <textarea
@@ -1171,7 +1171,7 @@ const FinancialProfile = () => {
               </div>
             )}
           </div>
-          
+
           <div className="form-actions">
             <button type="submit" className="submit-button">
               Calculate Financial Summary

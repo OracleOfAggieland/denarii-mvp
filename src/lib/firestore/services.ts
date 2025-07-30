@@ -55,15 +55,34 @@ import {
     userId: string,
     purchaseData: Omit<PurchaseHistoryItem, 'userId' | 'createdAt'>
   ): Promise<void> => {
-    if (!db || !userId) return;
+    if (!db) {
+      console.error('Cannot save purchase history: Firestore database not initialized');
+      throw new Error('Firestore database not initialized');
+    }
+    
+    if (!userId) {
+      console.error('Cannot save purchase history: userId is required');
+      throw new Error('userId is required');
+    }
   
-    const purchaseHistoryRef = collection(db, COLLECTIONS.PURCHASE_HISTORY);
-    await addDoc(purchaseHistoryRef, {
+    const documentData = {
       ...purchaseData,
       userId,
       date: Timestamp.fromDate(new Date(purchaseData.date)),
       createdAt: serverTimestamp()
-    });
+    };
+    
+    console.log('Saving purchase history document with userId:', userId);
+    console.log('Document data:', documentData);
+    
+    try {
+      const purchaseHistoryRef = collection(db, COLLECTIONS.PURCHASE_HISTORY);
+      const docRef = await addDoc(purchaseHistoryRef, documentData);
+      console.log('Purchase history document saved successfully with ID:', docRef.id);
+    } catch (error) {
+      console.error('Error saving purchase history document:', error);
+      throw error;
+    }
   };
   
   export const getUserPurchaseHistory = async (

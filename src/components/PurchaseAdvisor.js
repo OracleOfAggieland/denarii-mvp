@@ -79,17 +79,54 @@ const saveToHistory = async (analysisResult, itemName, itemCost, firestore) => {
     analysisDetails: analysisResult.formatted.analysisDetails
   };
 
+  console.log('=== Save to History Debug ===');
+  console.log('Auth loading:', firestore.authLoading);
+  console.log('Is authenticated:', firestore.isAuthenticated);
+  console.log('User:', firestore.user);
+  console.log('User UID:', firestore.user?.uid);
+  console.log('History entry:', historyEntry);
+  console.log('============================');
+
+  // Wait for auth to finish loading if it's still loading
+  if (firestore.authLoading) {
+    console.log('Auth still loading, waiting...');
+    // Wait a bit for auth to complete
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+
   // Save to Firestore if authenticated
-  if (firestore.isAuthenticated) {
-    await firestore.savePurchase(historyEntry);
+  if (firestore.isAuthenticated && firestore.user && firestore.user.uid && !firestore.authLoading) {
+    try {
+      console.log('Attempting to save purchase history for user:', firestore.user.uid);
+      await firestore.savePurchase(historyEntry);
+      console.log('Purchase history saved to Firestore successfully');
+    } catch (error) {
+      console.error('Failed to save purchase history to Firestore:', error);
+      console.error('Error details:', error.message, error.code);
+      // Fallback to localStorage on Firestore error
+      const history = JSON.parse(localStorage.getItem('purchaseHistory') || '[]');
+      history.unshift({
+        ...historyEntry,
+        date: historyEntry.date.toISOString()
+      });
+      localStorage.setItem('purchaseHistory', JSON.stringify(history));
+      console.log('Purchase history saved to localStorage as fallback');
+    }
   } else {
     // Fallback to localStorage
+    console.log('User not authenticated or auth still loading, saving to localStorage. Auth state:', {
+      isAuthenticated: firestore.isAuthenticated,
+      hasUser: !!firestore.user,
+      hasUid: !!(firestore.user && firestore.user.uid),
+      authLoading: firestore.authLoading
+    });
     const history = JSON.parse(localStorage.getItem('purchaseHistory') || '[]');
     history.unshift({
       ...historyEntry,
       date: historyEntry.date.toISOString()
     });
     localStorage.setItem('purchaseHistory', JSON.stringify(history));
+    console.log('Purchase history saved to localStorage (not authenticated or loading)');
   }
 };
 
@@ -166,6 +203,18 @@ const PurchaseAdvisor = () => {
   
   // Firestore hook
   const firestore = useFirestore();
+
+  // Debug function to test authentication and Firestore
+  const debugFirestoreAuth = () => {
+    console.log('=== Firestore Auth Debug ===');
+    console.log('Auth loading:', firestore.authLoading);
+    console.log('Is authenticated:', firestore.isAuthenticated);
+    console.log('User object:', firestore.user);
+    console.log('User UID:', firestore.user?.uid);
+    console.log('Firestore loading:', firestore.isLoading);
+    console.log('Firestore error:', firestore.error);
+    console.log('============================');
+  };
 
   // Load financial profile on mount
   useEffect(() => {
@@ -547,6 +596,14 @@ const PurchaseAdvisor = () => {
                 Should I Buy It?
               </span>
             )}
+          </button>
+          
+          {/* Debug button - remove in production */}
+          <button
+            onClick={debugFirestoreAuth}
+            style={{ marginLeft: '10px', padding: '5px 10px', fontSize: '12px', backgroundColor: '#f0f0f0' }}
+          >
+            Debug Auth
           </button>
         </div>
       </div>
