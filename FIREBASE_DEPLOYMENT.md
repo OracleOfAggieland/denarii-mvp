@@ -58,3 +58,4 @@ Environment variables are managed as Firebase secrets:
 - All sensitive values are stored as Firebase secrets, not in the repository
 - `.env.local` is gitignored and should never be committed
 - Firebase client configuration is safe to expose but managed as secrets for consistency
+- All App Hosting backends have been granted access to the required secrets
