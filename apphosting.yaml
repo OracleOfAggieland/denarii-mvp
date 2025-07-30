@@ -5,16 +5,16 @@ env:
     value: "1"
   - variable: OPENAI_API_KEY
     secret: OPENAI_API_KEY
-  # Firebase Configuration
+  # Firebase Configuration (using secrets)
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-    value: "AIzaSyAjr6Rn3OtzdqYxlS7lb8AoTzIFCUpat2Y"
+    secret: NEXT_PUBLIC_FIREBASE_API_KEY
   - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-    value: "denarii-mvp-f5aea.firebaseapp.com"
+    secret: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
   - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
-    value: "denarii-mvp-f5aea"
+    secret: NEXT_PUBLIC_FIREBASE_PROJECT_ID
   - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-    value: "denarii-mvp-f5aea.firebasestorage.app"
+    secret: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
   - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-    value: "524883355333"
+    secret: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
   - variable: NEXT_PUBLIC_FIREBASE_APP_ID
-    value: "1:524883355333:web:cad9227a762aed0898b2ac"
+    secret: NEXT_PUBLIC_FIREBASE_APP_ID

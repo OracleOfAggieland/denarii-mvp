@@ -38,11 +38,23 @@ firebase deploy --only hosting
 ## Configuration
 
 - **firebase.json**: Firebase hosting configuration
-- **next.config.js**: Next.js static export configuration
-- **out/**: Static export output directory (created during build)
+- **apphosting.yaml**: Firebase App Hosting environment configuration
+- **next.config.js**: Next.js configuration
+- **.env.local**: Local development environment variables (not committed)
 
-## Notes
+## Environment Variables
 
-- The application is configured for static export compatibility with Firebase Hosting
-- API routes will not work with static export - consider Firebase Functions for server-side functionality
-- Environment variables for production should be configured in Firebase hosting settings
+### Local Development
+1. Copy `.env.local.example` to `.env.local`
+2. Fill in your actual API keys and Firebase configuration
+
+### Production (Firebase App Hosting)
+Environment variables are managed as Firebase secrets:
+- Use `firebase apphosting:secrets:set VARIABLE_NAME` to set secrets
+- Reference secrets in `apphosting.yaml` using `secret: SECRET_NAME`
+
+## Security Notes
+
+- All sensitive values are stored as Firebase secrets, not in the repository
+- `.env.local` is gitignored and should never be committed
+- Firebase client configuration is safe to expose but managed as secrets for consistency
