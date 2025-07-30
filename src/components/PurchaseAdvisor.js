@@ -65,10 +65,10 @@ const createGoogleSearchLink = (itemName) => {
 };
 
 const saveToHistory = async (analysisResult, itemName, itemCost, firestore) => {
-  const savings = analysisResult.alternative 
-    ? parseFloat(itemCost) - analysisResult.alternative.price 
+  const savings = analysisResult.alternative
+    ? parseFloat(itemCost) - analysisResult.alternative.price
     : 0;
-  
+
   const historyEntry = {
     date: new Date(),
     itemName: analysisResult.formatted.analysisDetails.itemName || itemName,
@@ -185,7 +185,7 @@ const loadFinancialProfile = async (firestore) => {
       financialGoal: parsed.financialGoal || "balance"
     };
   }
-  
+
   const savedProfile = localStorage.getItem('financialProfile');
   return savedProfile ? JSON.parse(savedProfile) : null;
 };
@@ -200,7 +200,7 @@ const PurchaseAdvisor = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [financialProfile, setFinancialProfile] = useState(null);
   const [hasSeenProfilePrompt, setHasSeenProfilePrompt] = useState(false);
-  
+
   // Firestore hook
   const firestore = useFirestore();
 
@@ -213,6 +213,8 @@ const PurchaseAdvisor = () => {
     console.log('User UID:', firestore.user?.uid);
     console.log('Firestore loading:', firestore.isLoading);
     console.log('Firestore error:', firestore.error);
+    console.log('Firestore object keys:', Object.keys(firestore));
+    console.log('Full firestore object:', firestore);
     console.log('============================');
   };
 
@@ -222,7 +224,7 @@ const PurchaseAdvisor = () => {
       const profile = await loadFinancialProfile(firestore);
       setFinancialProfile(profile);
     };
-    
+
     loadProfile();
     setHasSeenProfilePrompt(!!localStorage.getItem('hasSeenProfilePrompt'));
 
@@ -245,12 +247,12 @@ const PurchaseAdvisor = () => {
         emergencyFundMonths: profile.summary?.savingsMonths || profile.summary?.emergencyFundMonths || 0
       }
     };
-    
+
     // Save to Firestore if authenticated
     if (firestore.isAuthenticated) {
       await firestore.saveProfile(updatedProfile);
     }
-    
+
     setFinancialProfile(updatedProfile);
     dispatchUI({ type: 'TOGGLE_MODAL', modal: 'showFinancialProfile', value: false });
   }, [firestore]);
@@ -258,7 +260,7 @@ const PurchaseAdvisor = () => {
   const handleImageProcessed = useCallback(async (file, preview) => {
     setImageFile(file);
     setImagePreview(preview);
-    
+
     if (file) {
       try {
         const base64Image = await new Promise((resolve) => {
@@ -272,10 +274,10 @@ const PurchaseAdvisor = () => {
 
         const itemDetails = await analyzeImageWithOpenAI(base64Image);
         if (itemDetails && itemDetails.name && itemDetails.name !== "Error") {
-          dispatchForm({ 
-            type: 'SET_ITEM_FROM_IMAGE', 
-            name: itemDetails.name, 
-            cost: itemDetails.cost?.toString() 
+          dispatchForm({
+            type: 'SET_ITEM_FROM_IMAGE',
+            name: itemDetails.name,
+            cost: itemDetails.cost?.toString()
           });
         }
       } catch (error) {
@@ -360,14 +362,14 @@ const PurchaseAdvisor = () => {
         },
         alternative: alternative
       };
-      
+
       setMessages([mungerMessage]);
       await saveToHistory(mungerMessage, formState.itemName, formState.itemCost, firestore);
-      
+
       // Reset form
       dispatchForm({ type: 'RESET_FORM' });
       clearImage();
-      
+
       dispatchUI({ type: 'SHOW_RESULTS' });
     } catch (error) {
       console.error("Error:", error);
@@ -407,8 +409,8 @@ const PurchaseAdvisor = () => {
         <h1 className="hero-title">To Buy or not to Buy?</h1>
         <p className="hero-subtitle">
           That is the{" "}
-          <span 
-            className="million-link" 
+          <span
+            className="million-link"
             onClick={() => dispatchUI({ type: 'TOGGLE_MODAL', modal: 'showSavingsTracker', value: true })}
           >
             million
@@ -597,7 +599,7 @@ const PurchaseAdvisor = () => {
               </span>
             )}
           </button>
-          
+
           {/* Debug button - remove in production */}
           <button
             onClick={debugFirestoreAuth}
@@ -616,7 +618,7 @@ const PurchaseAdvisor = () => {
           createGoogleSearchLink={createGoogleSearchLink}
         />
       )}
-      
+
       {/* Modals */}
       {uiState.showSavingsTracker && (
         <SavingsTracker onClose={() => dispatchUI({ type: 'TOGGLE_MODAL', modal: 'showSavingsTracker', value: false })} />

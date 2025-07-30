@@ -1,6 +1,23 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { doc, collection, query, where, orderBy, limit, onSnapshot, Unsubscribe } from 'firebase/firestore';
+import {
+  doc,
+  setDoc,
+  getDoc,
+  getDocs,
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  serverTimestamp,
+  Timestamp,
+  onSnapshot,
+  Unsubscribe
+} from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import {
   savePurchaseHistory,
@@ -39,7 +56,7 @@ export const useFirestore = () => {
       console.error('Cannot save purchase: user not authenticated');
       throw new Error('User not authenticated');
     }
-    
+
     console.log('Saving purchase for user:', user.uid, 'Purchase data:', purchaseData);
     setIsLoading(true);
     setError(null);
@@ -56,12 +73,57 @@ export const useFirestore = () => {
     }
   }, [user]);
 
-  const getPurchaseHistory = useCallback(async (): Promise<PurchaseHistoryItem[]> => {
-    if (!user) return [];
+  // Get all purchase history (no limit)
+  const getAllPurchaseHistory = useCallback(async (): Promise<PurchaseHistoryItem[]> => {
+    if (!user || !db) return [];
     setIsLoading(true);
     setError(null);
     try {
-      return await getUserPurchaseHistory(user.uid);
+      const purchaseHistoryRef = collection(db, COLLECTIONS.PURCHASE_HISTORY);
+      const q = query(
+        purchaseHistoryRef,
+        where('userId', '==', user.uid),
+        orderBy('date', 'desc')
+      );
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({
+        ...doc.data(),
+        id: doc.id,
+        date: doc.data().date.toDate()
+      } as unknown as PurchaseHistoryItem));
+    } catch (err) {
+      setError('Failed to load all purchase history');
+      console.error(err);
+      return [];
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user]);
+
+  // Enhanced getPurchaseHistory with optional limit parameter
+  const getPurchaseHistory = useCallback(async (limitCount?: number): Promise<PurchaseHistoryItem[]> => {
+    if (!user || !db) return [];
+    setIsLoading(true);
+    setError(null);
+    try {
+      const purchaseHistoryRef = collection(db, COLLECTIONS.PURCHASE_HISTORY);
+      let q = query(
+        purchaseHistoryRef,
+        where('userId', '==', user.uid),
+        orderBy('date', 'desc')
+      );
+
+      if (limitCount) {
+        q = query(q, limit(limitCount));
+      }
+
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({
+        ...doc.data(),
+        id: doc.id,
+        date: doc.data().date.toDate()
+      } as unknown as PurchaseHistoryItem));
     } catch (err) {
       setError('Failed to load purchase history');
       console.error(err);
@@ -196,8 +258,9 @@ export const useFirestore = () => {
     return onSnapshot(q, (snapshot) => {
       const purchases = snapshot.docs.map(doc => ({
         ...doc.data(),
+        id: doc.id,
         date: doc.data().date.toDate()
-      } as PurchaseHistoryItem));
+      } as unknown as PurchaseHistoryItem));
       callback(purchases);
     }, (error) => {
       console.error('Error listening to purchase history changes:', error);
@@ -237,6 +300,7 @@ export const useFirestore = () => {
     user,
     savePurchase,
     getPurchaseHistory,
+    getAllPurchaseHistory, // New method
     saveProfile,
     getProfile,
     saveChat,

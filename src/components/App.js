@@ -17,6 +17,7 @@ import ProMode from "./ProMode";
 import UserGuide from "./UserGuide";
 import FinanceFeed from "./FinanceFeed";
 import ChatInterface from "./ChatInterface";
+import { Dashboard } from "./Dashboard";
 import "../styles/App.css";
 import "../styles/OfflineIndicator.css";
 import "../styles/MigrationNotification.css";
@@ -69,6 +70,14 @@ const Header = () => {
           >
             <span className="nav-drawer-icon">💬</span>
             Denarii Advisor
+          </Link>
+          <Link 
+            to="/dashboard" 
+            className={`nav-drawer-link ${location.pathname === '/dashboard' ? 'active' : ''}`}
+            onClick={closeMenu}
+          >
+            <span className="nav-drawer-icon">📊</span>
+            Financial Dashboard
           </Link>
           <Link 
             to="/finance-feed" 
@@ -194,6 +203,7 @@ const App = () => {
                 <Route path="/user-guide" element={<UserGuide />} />
                 <Route path="/finance-feed" element={<FinanceFeed />} />
                 <Route path="/chat" element={<ChatInterface />} />
+                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/terms" element={<TermsPage />} />
                 <Route path="/privacy" element={<PrivacyPage />} />
