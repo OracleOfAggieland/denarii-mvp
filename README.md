@@ -4,6 +4,9 @@ Denarii is an intelligent financial advisor application that helps you make info
 
 ## Features
 
+### 📊 Purchase Analyzer
+Comprehensive analysis tool for evaluating potential purchases with detailed breakdowns and recommendations.
+
 ### 🤖 Denarii Advisor
 Your personal AI financial advisor that provides:
 - **Smart Purchase Analysis**: Get detailed insights on any item you're considering buying
@@ -22,9 +25,6 @@ Your personal AI financial advisor that provides:
 - "Is now a good time to upgrade my phone?"
 - "Help me analyze this car purchase"
 - "What should I consider before buying a house?"
-
-### 📊 Purchase Analyzer
-Comprehensive analysis tool for evaluating potential purchases with detailed breakdowns and recommendations.
 
 ### 👤 Financial Profile
 Personalized financial assessment to help Denarii Advisor provide better recommendations.

@@ -1,6 +1,7 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
+import { getStorage, FirebaseStorage } from 'firebase/storage';
 
 // Sanitize environment variables to remove whitespace and newlines
 const sanitizeEnvVar = (value: string | undefined): string | undefined => {
@@ -33,6 +34,7 @@ const firebaseConfig = {
 let app: FirebaseApp | undefined = undefined;
 let auth: Auth | undefined = undefined;
 let db: Firestore | undefined = undefined;
+let storage: FirebaseStorage | undefined = undefined;
 
 if (typeof window !== 'undefined') {
   // Only initialize on client side
@@ -46,6 +48,7 @@ if (typeof window !== 'undefined') {
       app = initializeApp(firebaseConfig);
       auth = getAuth(app);
       db = getFirestore(app);
+      storage = getStorage(app);
       
       // Note: Firestore v9+ automatically handles offline persistence
       // No explicit enableIndexedDbPersistence() call needed
@@ -57,6 +60,7 @@ if (typeof window !== 'undefined') {
       app = getApps()[0];
       auth = getAuth(app);
       db = getFirestore(app);
+      storage = getStorage(app);
       console.log('Using existing Firebase app');
       console.log('Auth instance:', !!auth);
       console.log('Firestore instance:', !!db);
@@ -77,8 +81,9 @@ if (typeof window !== 'undefined') {
     app = undefined;
     auth = undefined;
     db = undefined;
+    storage = undefined;
   }
 }
 
-export { auth, db, isFirebaseConfigured };
+export { auth, db, storage, isFirebaseConfigured };
 export default app;

@@ -34,6 +34,79 @@ const UserGuide = () => {
         </div>
 
         <div className="guide-sections">
+          {/* Purchase Analyzer Section */}
+          <div className="guide-section">
+            <div 
+              className="section-header"
+              onClick={() => toggleSection("purchase-advisor")}
+              role="button"
+              tabIndex="0"
+              aria-expanded={expandedSection === "purchase-advisor"}
+            >
+              <h3>
+                <span className="section-number">1</span>
+                <span className="section-icon">🛒</span>
+                Purchase Analyzer Tool
+              </h3>
+              <span className="toggle-indicator">
+                {expandedSection === "purchase-advisor" ? "−" : "+"}
+              </span>
+            </div>
+            
+            {expandedSection === "purchase-advisor" && (
+              <div className="section-content">
+                <p className="section-intro">
+                  The Purchase Analyzer provides in-depth analysis with a detailed decision matrix 
+                  and financial impact assessment. Perfect for important purchases that need careful consideration.
+                </p>
+                <div className="step-by-step">
+                  <div className="step">
+                    <div className="step-number">Step 1</div>
+                    <h4>Enter Item Details</h4>
+                    <p>Start by entering the name of the item you're considering and its cost. 
+                       You can also add optional details like:</p>
+                    <ul>
+                      <li><strong>Purpose:</strong> What you'll use it for</li>
+                      <li><strong>Frequency:</strong> How often you'll use it (Daily, Weekly, Monthly, etc.)</li>
+                    </ul>
+                  </div>
+
+                  <div className="step">
+                    <div className="step-number">Step 2</div>
+                    <h4>Add a Photo (Optional)</h4>
+                    <p>Click "Add Item Photo" to:</p>
+                    <ul>
+                      <li>📷 Take a photo with your camera</li>
+                      <li>📤 Upload an existing image</li>
+                      <li>📁 Drag and drop a file</li>
+                    </ul>
+                    <p className="tip">
+                      <strong>💡 Pro Tip:</strong> Adding a photo helps our AI better identify 
+                      the item and provide more accurate pricing comparisons!
+                    </p>
+                  </div>
+
+                  <div className="step">
+                    <div className="step-number">Step 3</div>
+                    <h4>Choose Analysis Options</h4>
+                    <p>Select whether you want Denarii to:</p>
+                    <ul>
+                      <li>✅ Find cheaper alternatives online (recommended)</li>
+                    </ul>
+                  </div>
+
+                  <div className="step">
+                    <div className="step-number">Step 4</div>
+                    <h4>Get Your Recommendation</h4>
+                    <p>Click "Should I Buy It?" to receive your personalized analysis. 
+                       The AI will consider your financial profile and provide a clear 
+                       Buy or Don't Buy recommendation with detailed reasoning.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Denarii Advisor Section - NEW */}
           <div className="guide-section">
             <div 
@@ -44,7 +117,7 @@ const UserGuide = () => {
               aria-expanded={expandedSection === "denarii-advisor"}
             >
               <h3>
-                <span className="section-number">1</span>
+                <span className="section-number">2</span>
                 <span className="section-icon">💬</span>
                 Denarii Advisor Chat
               </h3>
@@ -133,79 +206,6 @@ const UserGuide = () => {
                     <li><strong>Use voice mode:</strong> Great for brainstorming or when you're on the go</li>
                     <li><strong>Review history:</strong> Your chat history is saved locally for reference</li>
                   </ul>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Purchase Advisor Section */}
-          <div className="guide-section">
-            <div 
-              className="section-header"
-              onClick={() => toggleSection("purchase-advisor")}
-              role="button"
-              tabIndex="0"
-              aria-expanded={expandedSection === "purchase-advisor"}
-            >
-              <h3>
-                <span className="section-number">2</span>
-                <span className="section-icon">🛒</span>
-                Purchase Analyzer Tool
-              </h3>
-              <span className="toggle-indicator">
-                {expandedSection === "purchase-advisor" ? "−" : "+"}
-              </span>
-            </div>
-            
-            {expandedSection === "purchase-advisor" && (
-              <div className="section-content">
-                <p className="section-intro">
-                  The Purchase Analyzer provides in-depth analysis with a detailed decision matrix 
-                  and financial impact assessment. Perfect for important purchases that need careful consideration.
-                </p>
-                <div className="step-by-step">
-                  <div className="step">
-                    <div className="step-number">Step 1</div>
-                    <h4>Enter Item Details</h4>
-                    <p>Start by entering the name of the item you're considering and its cost. 
-                       You can also add optional details like:</p>
-                    <ul>
-                      <li><strong>Purpose:</strong> What you'll use it for</li>
-                      <li><strong>Frequency:</strong> How often you'll use it (Daily, Weekly, Monthly, etc.)</li>
-                    </ul>
-                  </div>
-
-                  <div className="step">
-                    <div className="step-number">Step 2</div>
-                    <h4>Add a Photo (Optional)</h4>
-                    <p>Click "Add Item Photo" to:</p>
-                    <ul>
-                      <li>📷 Take a photo with your camera</li>
-                      <li>📤 Upload an existing image</li>
-                      <li>📁 Drag and drop a file</li>
-                    </ul>
-                    <p className="tip">
-                      <strong>💡 Pro Tip:</strong> Adding a photo helps our AI better identify 
-                      the item and provide more accurate pricing comparisons!
-                    </p>
-                  </div>
-
-                  <div className="step">
-                    <div className="step-number">Step 3</div>
-                    <h4>Choose Analysis Options</h4>
-                    <p>Select whether you want Denarii to:</p>
-                    <ul>
-                      <li>✅ Find cheaper alternatives online (recommended)</li>
-                    </ul>
-                  </div>
-
-                  <div className="step">
-                    <div className="step-number">Step 4</div>
-                    <h4>Get Your Recommendation</h4>
-                    <p>Click "Should I Buy It?" to receive your personalized analysis. 
-                       The AI will consider your financial profile and provide a clear 
-                       Buy or Don't Buy recommendation with detailed reasoning.</p>
-                  </div>
                 </div>
               </div>
             )}

@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import React from 'react';
 import './globals.css';
 import '../styles/App.css';
+import { MEDIA_URLS } from '../lib/storage';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
   title: 'Denarii',
   description: 'Get rational advice on your purchasing decisions',
   icons: {
-    icon: '/icons8-money-96.png', // Handles the favicon
+    icon: MEDIA_URLS.FAVICON, // Handles the favicon from Firebase Storage
   },
   openGraph: {
     title: 'Denarii',
@@ -23,7 +24,7 @@ export const metadata: Metadata = {
     siteName: 'Denarii',
     images: [
       {
-        url: `${siteUrl}/og-image.png`, // Must be an absolute URL
+        url: MEDIA_URLS.OG_IMAGE, // Firebase Storage URL
         width: 1200,
         height: 630,
         alt: 'Denarii - Rational Purchasing Advisor',
@@ -36,7 +37,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Denarii',
     description: 'Get rational advice on your purchasing decisions',
-    images: [`${siteUrl}/og-image.png`], // Must be an absolute URL
+    images: [MEDIA_URLS.OG_IMAGE], // Firebase Storage URL
   },
 };
 
@@ -49,11 +50,11 @@ export default function RootLayout({
     <html lang="en">
       <head>
         {/* Additional meta tags for better social media compatibility */}
-        <meta property="og:image" content={`${siteUrl}/og-image.png`} />
+        <meta property="og:image" content={MEDIA_URLS.OG_IMAGE} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:image:type" content="image/png" />
-        <meta name="twitter:image" content={`${siteUrl}/og-image.png`} />
+        <meta name="twitter:image" content={MEDIA_URLS.OG_IMAGE} />
         {/* Referrer policy for better external image loading */}
         <meta name="referrer" content="no-referrer-when-downgrade" />
       </head>
