@@ -17,7 +17,7 @@
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.11",
     "autoprefixer": "^10.4.21",
-    "firebase": "^12.0.0",
+    "firebase": "^10.0.0",
     "firebaseui": "^6.1.0",
     "next": "^14.2.30",
     "openai": "^5.10.1",
