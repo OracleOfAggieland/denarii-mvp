@@ -60,17 +60,46 @@ export const useFirestore = () => {
     console.log('Saving purchase for user:', user.uid, 'Purchase data:', purchaseData);
     setIsLoading(true);
     setError(null);
-    try {
-      await savePurchaseHistory(user.uid, purchaseData);
-      console.log('Purchase saved successfully to Firestore');
-    } catch (err) {
-      const errorMessage = 'Failed to save purchase history';
-      setError(errorMessage);
-      console.error('Error saving purchase to Firestore:', err);
-      throw err; // Re-throw to allow component to handle fallback
-    } finally {
-      setIsLoading(false);
+    
+    // Add retry logic for network issues
+    const maxRetries = 3;
+    let lastError: any;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`Attempt ${attempt}/${maxRetries} to save purchase history`);
+        await savePurchaseHistory(user.uid, purchaseData);
+        console.log('Purchase saved successfully to Firestore');
+        return; // Success, exit retry loop
+      } catch (err: any) {
+        lastError = err;
+        console.error(`Attempt ${attempt} failed:`, err);
+        
+        // Check if it's a network/connection error that might be retryable
+        const isRetryableError = err?.code === 'unavailable' || 
+                                err?.code === 'deadline-exceeded' ||
+                                err?.message?.includes('transport') ||
+                                err?.message?.includes('network') ||
+                                err?.message?.includes('connection');
+        
+        if (attempt < maxRetries && isRetryableError) {
+          // Wait before retrying (exponential backoff)
+          const delay = Math.pow(2, attempt - 1) * 1000; // 1s, 2s, 4s
+          console.log(`Retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        
+        // If not retryable or max retries reached, break
+        break;
+      }
     }
+    
+    // All retries failed
+    const errorMessage = 'Failed to save purchase history after multiple attempts';
+    setError(errorMessage);
+    console.error('Error saving purchase to Firestore after retries:', lastError);
+    throw lastError; // Re-throw to allow component to handle fallback
   }, [user]);
 
   // Get all purchase history (no limit)

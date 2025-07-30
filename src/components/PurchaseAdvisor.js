@@ -6,7 +6,9 @@ import ProgressiveFinancialProfile from "./ProgressiveFinancialProfile";
 import SavingsTracker from "./SavingsTracker";
 import ImageUploadSection from "./ImageUploadSection";
 import ResultBubble from "./ResultBubble";
+import FirestoreConnectionTest from "./FirestoreConnectionTest";
 import { useFirestore } from "../hooks/useFirestore";
+import { useFirestoreConnection } from "../hooks/useFirestoreConnection";
 import "../styles/App.css";
 
 // Constants
@@ -87,46 +89,63 @@ const saveToHistory = async (analysisResult, itemName, itemCost, firestore) => {
   console.log('History entry:', historyEntry);
   console.log('============================');
 
-  // Wait for auth to finish loading if it's still loading
-  if (firestore.authLoading) {
-    console.log('Auth still loading, waiting...');
-    // Wait a bit for auth to complete
-    await new Promise(resolve => setTimeout(resolve, 1000));
-  }
-
-  // Save to Firestore if authenticated
-  if (firestore.isAuthenticated && firestore.user && firestore.user.uid && !firestore.authLoading) {
+  // Helper function to save to localStorage
+  const saveToLocalStorage = (reason) => {
+    console.log(`Saving to localStorage: ${reason}`);
     try {
-      console.log('Attempting to save purchase history for user:', firestore.user.uid);
-      await firestore.savePurchase(historyEntry);
-      console.log('Purchase history saved to Firestore successfully');
-    } catch (error) {
-      console.error('Failed to save purchase history to Firestore:', error);
-      console.error('Error details:', error.message, error.code);
-      // Fallback to localStorage on Firestore error
       const history = JSON.parse(localStorage.getItem('purchaseHistory') || '[]');
       history.unshift({
         ...historyEntry,
         date: historyEntry.date.toISOString()
       });
       localStorage.setItem('purchaseHistory', JSON.stringify(history));
-      console.log('Purchase history saved to localStorage as fallback');
+      console.log('Purchase history saved to localStorage successfully');
+    } catch (localError) {
+      console.error('Failed to save to localStorage:', localError);
+    }
+  };
+
+  // Wait for auth to finish loading if it's still loading
+  if (firestore.authLoading) {
+    console.log('Auth still loading, waiting...');
+    // Wait longer for auth to complete with timeout
+    const authTimeout = 5000; // 5 seconds
+    const startTime = Date.now();
+    
+    while (firestore.authLoading && (Date.now() - startTime) < authTimeout) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
+    if (firestore.authLoading) {
+      console.log('Auth loading timeout, falling back to localStorage');
+      saveToLocalStorage('auth loading timeout');
+      return;
+    }
+  }
+
+  // Save to Firestore if authenticated
+  if (firestore.isAuthenticated && firestore.user && firestore.user.uid && !firestore.authLoading) {
+    try {
+      console.log('Attempting to save purchase history for user:', firestore.user.uid);
+      
+      // Add a timeout to the save operation
+      const savePromise = firestore.savePurchase(historyEntry);
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Save operation timed out')), 15000); // 15 second timeout
+      });
+      
+      await Promise.race([savePromise, timeoutPromise]);
+      console.log('Purchase history saved to Firestore successfully');
+    } catch (error) {
+      console.error('Failed to save purchase history to Firestore:', error);
+      console.error('Error details:', error.message, error.code);
+      
+      // Always fallback to localStorage on any Firestore error
+      saveToLocalStorage(`Firestore error: ${error.message || 'Unknown error'}`);
     }
   } else {
     // Fallback to localStorage
-    console.log('User not authenticated or auth still loading, saving to localStorage. Auth state:', {
-      isAuthenticated: firestore.isAuthenticated,
-      hasUser: !!firestore.user,
-      hasUid: !!(firestore.user && firestore.user.uid),
-      authLoading: firestore.authLoading
-    });
-    const history = JSON.parse(localStorage.getItem('purchaseHistory') || '[]');
-    history.unshift({
-      ...historyEntry,
-      date: historyEntry.date.toISOString()
-    });
-    localStorage.setItem('purchaseHistory', JSON.stringify(history));
-    console.log('Purchase history saved to localStorage (not authenticated or loading)');
+    saveToLocalStorage(`User not authenticated. Auth state: authenticated=${firestore.isAuthenticated}, hasUser=${!!firestore.user}, hasUid=${!!(firestore.user && firestore.user.uid)}, authLoading=${firestore.authLoading}`);
   }
 };
 
@@ -203,6 +222,7 @@ const PurchaseAdvisor = () => {
 
   // Firestore hook
   const firestore = useFirestore();
+  const { isConnected, lastError } = useFirestoreConnection();
 
   // Debug function to test authentication and Firestore
   const debugFirestoreAuth = () => {
@@ -328,18 +348,29 @@ const PurchaseAdvisor = () => {
     dispatchUI({ type: 'HIDE_RESULTS' });
 
     try {
+      console.log('=== Starting Purchase Analysis ===');
+      console.log('Firestore connection status:', isConnected);
+      console.log('Auth status:', { 
+        isAuthenticated: firestore.isAuthenticated, 
+        authLoading: firestore.authLoading,
+        hasUser: !!firestore.user 
+      });
+      
       const recognizedItemName = formState.itemName;
       const costValue = parseFloat(formState.itemCost);
       let alternative = null;
 
       // Find alternatives if requested
       if (formState.searchForAlternative) {
+        console.log('Finding alternatives...');
         dispatchUI({ type: 'SET_FINDING_ALTERNATIVES', value: true });
         alternative = await findCheaperAlternative(recognizedItemName, costValue);
         dispatchUI({ type: 'SET_FINDING_ALTERNATIVES', value: false });
+        console.log('Alternatives found:', alternative);
       }
 
       // Get recommendation
+      console.log('Getting recommendation...');
       const recommendation = await getEnhancedPurchaseRecommendation(
         recognizedItemName,
         costValue,
@@ -348,6 +379,7 @@ const PurchaseAdvisor = () => {
         financialProfile,
         alternative
       );
+      console.log('Recommendation received:', recommendation);
 
       const mungerMessage = {
         sender: "Munger",
@@ -364,13 +396,17 @@ const PurchaseAdvisor = () => {
       };
 
       setMessages([mungerMessage]);
+      
+      console.log('Saving to history...');
       await saveToHistory(mungerMessage, formState.itemName, formState.itemCost, firestore);
+      console.log('History saved successfully');
 
       // Reset form
       dispatchForm({ type: 'RESET_FORM' });
       clearImage();
 
       dispatchUI({ type: 'SHOW_RESULTS' });
+      console.log('=== Purchase Analysis Complete ===');
     } catch (error) {
       console.error("Error:", error);
       const errorMessage = {
@@ -405,6 +441,25 @@ const PurchaseAdvisor = () => {
 
   return (
     <div className="App">
+      {/* Debug components - remove in production */}
+      <FirestoreConnectionTest />
+      
+      {/* Connection status indicator */}
+      <div style={{
+        position: 'fixed',
+        top: '10px',
+        left: '10px',
+        background: isConnected === true ? '#10b981' : isConnected === false ? '#ef4444' : '#f59e0b',
+        color: 'white',
+        padding: '5px 10px',
+        borderRadius: '5px',
+        fontSize: '12px',
+        zIndex: 9999
+      }}>
+        Firestore: {isConnected === true ? 'Connected' : isConnected === false ? 'Disconnected' : 'Checking...'}
+        {lastError && <div style={{ fontSize: '10px' }}>Error: {lastError}</div>}
+      </div>
+      
       <div className="hero-section">
         <h1 className="hero-title">To Buy or not to Buy?</h1>
         <p className="hero-subtitle">
@@ -600,12 +655,27 @@ const PurchaseAdvisor = () => {
             )}
           </button>
 
-          {/* Debug button - remove in production */}
+          {/* Debug buttons - remove in production */}
           <button
             onClick={debugFirestoreAuth}
             style={{ marginLeft: '10px', padding: '5px 10px', fontSize: '12px', backgroundColor: '#f0f0f0' }}
           >
             Debug Auth
+          </button>
+          <button
+            onClick={() => {
+              console.log('=== Manual Connection Test ===');
+              console.log('Firestore connected:', isConnected);
+              console.log('Last error:', lastError);
+              console.log('Auth state:', {
+                isAuthenticated: firestore.isAuthenticated,
+                authLoading: firestore.authLoading,
+                user: firestore.user?.uid
+              });
+            }}
+            style={{ marginLeft: '5px', padding: '5px 10px', fontSize: '12px', backgroundColor: '#e0f0ff' }}
+          >
+            Test Connection
           </button>
         </div>
       </div>
