@@ -1,4 +1,4 @@
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { useFirestore } from '@/hooks/useFirestore';
 
 export interface LocalStorageData {

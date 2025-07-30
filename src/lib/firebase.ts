@@ -1,27 +1,32 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore, enableIndexedDbPersistence } from 'firebase/firestore';
+import { getFirestore, Firestore } from 'firebase/firestore';
+
+// Sanitize environment variables to remove whitespace and newlines
+const sanitizeEnvVar = (value: string | undefined): string | undefined => {
+  return value?.trim().replace(/[\r\n]/g, '') || undefined;
+};
 
 // Check if Firebase environment variables are configured
 const isFirebaseConfigured = () => {
   return !!(
-    process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
-    process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN &&
-    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID &&
-    process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET &&
-    process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID &&
-    process.env.NEXT_PUBLIC_FIREBASE_APP_ID
+    sanitizeEnvVar(process.env.NEXT_PUBLIC_FIREBASE_API_KEY) &&
+    sanitizeEnvVar(process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN) &&
+    sanitizeEnvVar(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) &&
+    sanitizeEnvVar(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET) &&
+    sanitizeEnvVar(process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID) &&
+    sanitizeEnvVar(process.env.NEXT_PUBLIC_FIREBASE_APP_ID)
   );
 };
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'demo-api-key',
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'demo-project.firebaseapp.com',
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'demo-project',
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'demo-project.appspot.com',
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '123456789',
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '1:123456789:web:abcdef123456',
+  apiKey: sanitizeEnvVar(process.env.NEXT_PUBLIC_FIREBASE_API_KEY) || 'demo-api-key',
+  authDomain: sanitizeEnvVar(process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN) || 'demo-project.firebaseapp.com',
+  projectId: sanitizeEnvVar(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) || 'demo-project',
+  storageBucket: sanitizeEnvVar(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET) || 'demo-project.appspot.com',
+  messagingSenderId: sanitizeEnvVar(process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID) || '123456789',
+  appId: sanitizeEnvVar(process.env.NEXT_PUBLIC_FIREBASE_APP_ID) || '1:123456789:web:abcdef123456',
 };
 
 // Initialize Firebase only if not already initialized
@@ -37,14 +42,8 @@ if (typeof window !== 'undefined') {
       auth = getAuth(app);
       db = getFirestore(app);
       
-      // Enable offline persistence
-      enableIndexedDbPersistence(db).catch((err) => {
-        if (err.code === 'failed-precondition') {
-          console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
-        } else if (err.code === 'unimplemented') {
-          console.warn('The current browser does not support all of the features required to enable persistence');
-        }
-      });
+      // Note: Firestore v9+ automatically handles offline persistence
+      // No explicit enableIndexedDbPersistence() call needed
       
       console.log('Firebase initialized successfully');
     } else if (getApps().length > 0) {

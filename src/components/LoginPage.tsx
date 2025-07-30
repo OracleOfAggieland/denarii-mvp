@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthComponent from './AuthComponent';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const LoginPage: React.FC = () => {
   const { user } = useAuth();

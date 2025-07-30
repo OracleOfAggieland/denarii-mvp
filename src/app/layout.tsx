@@ -54,6 +54,8 @@ export default function RootLayout({
         <meta property="og:image:height" content="630" />
         <meta property="og:image:type" content="image/png" />
         <meta name="twitter:image" content={`${siteUrl}/og-image.png`} />
+        {/* Referrer policy for better external image loading */}
+        <meta name="referrer" content="no-referrer-when-downgrade" />
       </head>
       {/* The body tag includes the font class from Next/Font and Tailwind's antialiased class for smoother text. */}
       <body className={`${inter.className} antialiased`}>{children}</body>

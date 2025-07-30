@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 import { doc, collection, query, where, orderBy, limit, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import {

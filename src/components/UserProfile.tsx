@@ -1,11 +1,25 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
+import { useProfileImage } from '../hooks/useProfileImage';
 
 const UserProfile: React.FC = () => {
   const { user, signOut } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const {
+    shouldShowImage,
+    optimizedImageUrl,
+    initials,
+    isLoading,
+    handleImageLoad,
+    handleImageError,
+  } = useProfileImage({
+    photoURL: user?.photoURL || null,
+    displayName: user?.displayName || null,
+    email: user?.email || null,
+  });
 
   if (!user) return null;
 
@@ -24,21 +38,24 @@ const UserProfile: React.FC = () => {
 
   return (
     <div className="user-profile">
-      <button 
+      <button
         className="user-profile-button"
         onClick={toggleDropdown}
         aria-expanded={isDropdownOpen}
         aria-haspopup="true"
       >
-        {user.photoURL ? (
-          <img 
-            src={user.photoURL} 
-            alt={user.displayName || 'User'} 
-            className="user-avatar"
+        {shouldShowImage ? (
+          <img
+            src={optimizedImageUrl || user.photoURL || ''}
+            alt={user.displayName || 'User'}
+            className={`user-avatar ${isLoading ? 'loading' : ''}`}
+            onLoad={handleImageLoad}
+            onError={handleImageError}
+            referrerPolicy="no-referrer"
           />
         ) : (
           <div className="user-avatar-placeholder">
-            {(user.displayName || user.email || 'U')[0].toUpperCase()}
+            {initials}
           </div>
         )}
         <span className="user-name">
@@ -56,7 +73,7 @@ const UserProfile: React.FC = () => {
             <p className="user-email">{user.email}</p>
           </div>
           <hr className="dropdown-divider" />
-          <button 
+          <button
             className="sign-out-button"
             onClick={handleSignOut}
           >
@@ -66,7 +83,7 @@ const UserProfile: React.FC = () => {
       )}
 
       {isDropdownOpen && (
-        <div 
+        <div
           className="dropdown-overlay"
           onClick={() => setIsDropdownOpen(false)}
         />
