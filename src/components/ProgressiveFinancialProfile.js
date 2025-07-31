@@ -1,3 +1,4 @@
+// src/components/ProgressiveFinancialProfile.js
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useFirestore } from "../hooks/useFirestore";
@@ -162,15 +163,25 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
   const currentQuestion = questions[step];
 
   const handleInputChange = value => {
+    console.log('Input change:', currentQuestion.field, value);
     setProfile(prev => ({
       ...prev,
       [currentQuestion.field]: value
     }));
   };
 
-  const handleNext = async () => {
+  const handleNext = async (e) => {
+    // Prevent any default form submission
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    console.log('handleNext called, step:', step, 'field:', currentQuestion.field, 'value:', profile[currentQuestion.field]);
+
     // Validate current input if required
     if (!currentQuestion.optional && !profile[currentQuestion.field]) {
+      console.log('Validation failed - field is empty');
       return;
     }
 
@@ -287,6 +298,13 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
     }
   };
 
+  const handleChoiceClick = (e, value) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Choice clicked:', value);
+    handleInputChange(value);
+  };
+
   function calculateHealthScore(profile) {
     let score = 50;
     const income = parseFloat(profile.monthlyIncome) || 0;
@@ -318,8 +336,8 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
     <div className="pfp-overlay" onClick={(e) => {
       if (e.target.className === 'pfp-overlay') onClose();
     }}>
-      <div className="pfp-modal">
-        <button className="pfp-close" onClick={onClose} aria-label="Close">
+      <div className="pfp-modal" onClick={(e) => e.stopPropagation()}>
+        <button className="pfp-close" onClick={onClose} aria-label="Close" type="button">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M13 1L1 13M1 1L13 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
@@ -354,6 +372,12 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
                     placeholder={currentQuestion.placeholder}
                     className="pfp-input"
                     autoFocus
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleNext();
+                      }
+                    }}
                   />
                 </div>
               </div>
@@ -365,7 +389,7 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
                   <button
                     key={choice.value}
                     className={`pfp-choice ${profile[currentQuestion.field] === choice.value ? 'selected' : ''}`}
-                    onClick={() => handleInputChange(choice.value)}
+                    onClick={(e) => handleChoiceClick(e, choice.value)}
                     type="button"
                   >
                     <span className="pfp-choice-emoji">{choice.emoji}</span>
@@ -401,6 +425,10 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
             onClick={handleNext}
             disabled={!profile[currentQuestion.field] && !currentQuestion.optional}
             type="button"
+            style={{ 
+              pointerEvents: (!profile[currentQuestion.field] && !currentQuestion.optional) ? 'none' : 'auto',
+              opacity: (!profile[currentQuestion.field] && !currentQuestion.optional) ? 0.5 : 1
+            }}
           >
             {step === questions.length - 1 ? 'Complete' : 'Next'}
           </button>
