@@ -29,7 +29,7 @@ describe('ChatInterface Integration Tests', () => {
   describe('Complete Chat Interaction Flow', () => {
     it('should handle complete end-to-end chat interaction successfully', async () => {
       const user = userEvent.setup();
-      
+
       // Mock successful API response
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -47,7 +47,7 @@ describe('ChatInterface Integration Tests', () => {
       // Type and send a message
       const input = screen.getByPlaceholderText('Type your message...');
       await user.type(input, 'Hello, how are you?');
-      
+
       const sendButton = screen.getByRole('button', { name: 'Send' });
       await user.click(sendButton);
 
@@ -86,7 +86,7 @@ describe('ChatInterface Integration Tests', () => {
 
     it('should preserve conversation context across multiple messages', async () => {
       const user = userEvent.setup();
-      
+
       // Mock first API response
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -153,7 +153,7 @@ describe('ChatInterface Integration Tests', () => {
   describe('Error Handling Scenarios', () => {
     it('should handle network errors and show retry functionality', async () => {
       const user = userEvent.setup();
-      
+
       // Mock network error that doesn't trigger automatic retry
       mockFetch.mockRejectedValueOnce(new TypeError('Network error'));
 
@@ -161,7 +161,7 @@ describe('ChatInterface Integration Tests', () => {
 
       const input = screen.getByPlaceholderText('Type your message...');
       await user.type(input, 'Test message');
-      
+
       const sendButton = screen.getByRole('button', { name: 'Send' });
       await user.click(sendButton);
 
@@ -176,7 +176,7 @@ describe('ChatInterface Integration Tests', () => {
 
     it('should handle API rate limit errors with automatic retry', async () => {
       const user = userEvent.setup();
-      
+
       // Mock rate limit error
       mockFetch.mockResolvedValueOnce({
         ok: false,
@@ -191,7 +191,7 @@ describe('ChatInterface Integration Tests', () => {
 
       const input = screen.getByPlaceholderText('Type your message...');
       await user.type(input, 'Test message');
-      
+
       const sendButton = screen.getByRole('button', { name: 'Send' });
       await user.click(sendButton);
 
@@ -203,7 +203,7 @@ describe('ChatInterface Integration Tests', () => {
 
     it('should handle API authentication errors', async () => {
       const user = userEvent.setup();
-      
+
       // Mock authentication error
       mockFetch.mockResolvedValueOnce({
         ok: false,
@@ -218,7 +218,7 @@ describe('ChatInterface Integration Tests', () => {
 
       const input = screen.getByPlaceholderText('Type your message...');
       await user.type(input, 'Test message');
-      
+
       const sendButton = screen.getByRole('button', { name: 'Send' });
       await user.click(sendButton);
 
@@ -230,7 +230,7 @@ describe('ChatInterface Integration Tests', () => {
 
     it('should handle server errors gracefully', async () => {
       const user = userEvent.setup();
-      
+
       // Mock server error
       mockFetch.mockResolvedValueOnce({
         ok: false,
@@ -245,7 +245,7 @@ describe('ChatInterface Integration Tests', () => {
 
       const input = screen.getByPlaceholderText('Type your message...');
       await user.type(input, 'Test message');
-      
+
       const sendButton = screen.getByRole('button', { name: 'Send' });
       await user.click(sendButton);
 
@@ -260,7 +260,7 @@ describe('ChatInterface Integration Tests', () => {
 
     it('should handle validation errors', async () => {
       const user = userEvent.setup();
-      
+
       // Mock validation error
       mockFetch.mockResolvedValueOnce({
         ok: false,
@@ -275,7 +275,7 @@ describe('ChatInterface Integration Tests', () => {
 
       const input = screen.getByPlaceholderText('Type your message...');
       await user.type(input, 'Test message');
-      
+
       const sendButton = screen.getByRole('button', { name: 'Send' });
       await user.click(sendButton);
 
@@ -307,7 +307,7 @@ describe('ChatInterface Integration Tests', () => {
 
     it('should handle retry functionality correctly', async () => {
       const user = userEvent.setup();
-      
+
       // Mock network error
       mockFetch.mockRejectedValueOnce(new TypeError('Network error'));
 
@@ -315,7 +315,7 @@ describe('ChatInterface Integration Tests', () => {
 
       const input = screen.getByPlaceholderText('Type your message...');
       await user.type(input, 'Test message');
-      
+
       const sendButton = screen.getByRole('button', { name: 'Send' });
       await user.click(sendButton);
 
@@ -350,7 +350,7 @@ describe('ChatInterface Integration Tests', () => {
 
     it('should handle error dismissal correctly', async () => {
       const user = userEvent.setup();
-      
+
       // Mock error
       mockFetch.mockRejectedValueOnce(new TypeError('Network error'));
 
@@ -358,7 +358,7 @@ describe('ChatInterface Integration Tests', () => {
 
       const input = screen.getByPlaceholderText('Type your message...');
       await user.type(input, 'Test message');
-      
+
       const sendButton = screen.getByRole('button', { name: 'Send' });
       await user.click(sendButton);
 
@@ -369,7 +369,7 @@ describe('ChatInterface Integration Tests', () => {
 
       // Find and click dismiss button (X button)
       const dismissButtons = screen.getAllByRole('button');
-      const dismissButton = dismissButtons.find(button => 
+      const dismissButton = dismissButtons.find(button =>
         button.querySelector('svg') && !button.textContent?.trim()
       );
       expect(dismissButton).toBeDefined();

@@ -1,3 +1,4 @@
+// src/app/layout.tsx
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import React from 'react';
@@ -15,7 +16,25 @@ export const metadata: Metadata = {
   title: 'Denarii',
   description: 'Get rational advice on your purchasing decisions',
   icons: {
-    icon: MEDIA_URLS.FAVICON, // Handles the favicon from Firebase Storage
+    icon: [
+      {
+        url: MEDIA_URLS.FAVICON,
+        type: 'image/png',
+        sizes: '96x96',
+      },
+      // Multiple fallback options
+      {
+        url: 'https://firebasestorage.googleapis.com/v0/b/denarii-mvp-f5aea.appspot.com/o/icons8-money-96.png?alt=media',
+        type: 'image/png',
+        sizes: '96x96',
+      },
+      {
+        url: '/favicon.ico',
+        type: 'image/x-icon',
+      }
+    ],
+    shortcut: MEDIA_URLS.FAVICON,
+    apple: MEDIA_URLS.FAVICON,
   },
   openGraph: {
     title: 'Denarii',
@@ -24,7 +43,7 @@ export const metadata: Metadata = {
     siteName: 'Denarii',
     images: [
       {
-        url: MEDIA_URLS.OG_IMAGE, // Firebase Storage URL
+        url: MEDIA_URLS.OG_IMAGE,
         width: 1200,
         height: 630,
         alt: 'Denarii - Rational Purchasing Advisor',
@@ -37,7 +56,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Denarii',
     description: 'Get rational advice on your purchasing decisions',
-    images: [MEDIA_URLS.OG_IMAGE], // Firebase Storage URL
+    images: [MEDIA_URLS.OG_IMAGE],
   },
 };
 
@@ -57,6 +76,9 @@ export default function RootLayout({
         <meta name="twitter:image" content={MEDIA_URLS.OG_IMAGE} />
         {/* Referrer policy for better external image loading */}
         <meta name="referrer" content="no-referrer-when-downgrade" />
+        {/* Preconnect to Firebase Storage for faster loading */}
+        <link rel="preconnect" href="https://firebasestorage.googleapis.com" />
+        <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com" />
       </head>
       {/* The body tag includes the font class from Next/Font and Tailwind's antialiased class for smoother text. */}
       <body className={`${inter.className} antialiased`}>{children}</body>

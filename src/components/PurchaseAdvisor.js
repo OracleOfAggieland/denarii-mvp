@@ -1,3 +1,4 @@
+// src/components/PurchaseAdvisor.js
 import React, { useState, useReducer, useCallback, useEffect } from "react";
 import { analyzeImageWithOpenAI, findCheaperAlternative } from "../lib/openaiAPI";
 import { getEnhancedPurchaseRecommendation } from "../lib/enhancedOpenAIIntegration";
@@ -330,7 +331,6 @@ const PurchaseAdvisor = () => {
 
     try {
       console.log('=== Starting Purchase Analysis ===');
-      console.log('Firestore connection status:', isConnected);
       console.log('Auth status:', { 
         isAuthenticated: firestore.isAuthenticated, 
         authLoading: firestore.authLoading,
