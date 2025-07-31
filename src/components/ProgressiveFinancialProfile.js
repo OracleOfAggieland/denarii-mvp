@@ -22,8 +22,10 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
       if (isAuthenticated) {
         // Load from Firestore if authenticated
         try {
+          console.log('Loading financial profile from Firestore...');
           const firestoreProfile = await getProfile();
           if (firestoreProfile) {
+            console.log('Firestore profile loaded successfully');
             // Map Firestore profile to quick profile format
             const quickProfile = {
               monthlyIncome: firestoreProfile.monthlyIncome || "",
@@ -37,14 +39,19 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
             };
             setProfile(quickProfile);
             if (quickProfile.monthlyIncome && quickProfile.monthlyExpenses) setStep(4);
+          } else {
+            console.log('No Firestore profile found, falling back to localStorage');
+            loadFromLocalStorage();
           }
         } catch (error) {
           console.error('Error loading profile from Firestore:', error);
+          console.log('Firestore error, falling back to localStorage');
           // Fall back to localStorage
           loadFromLocalStorage();
         }
       } else {
         // Load from localStorage if not authenticated
+        console.log('User not authenticated, loading from localStorage');
         loadFromLocalStorage();
       }
     };
@@ -212,6 +219,7 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
     // Save to Firestore if authenticated
     if (isAuthenticated) {
       try {
+        console.log('Saving profile to Firestore...');
         await saveProfile({
           monthlyIncome: profile.monthlyIncome,
           incomeFrequency: "monthly",
@@ -250,9 +258,11 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
           financialPriorities: profile.financialGoal,
           summary
         });
+        console.log('Profile saved to Firestore successfully');
       } catch (error) {
         console.error('Error saving profile to Firestore:', error);
-        // Continue with local storage fallback
+        console.log('Firestore save failed, but localStorage backup is available');
+        // Continue with local storage fallback - don't block the user
       }
     }
 

@@ -6,9 +6,7 @@ import ProgressiveFinancialProfile from "./ProgressiveFinancialProfile";
 import SavingsTracker from "./SavingsTracker";
 import ImageUploadSection from "./ImageUploadSection";
 import ResultBubble from "./ResultBubble";
-import FirestoreConnectionTest from "./FirestoreConnectionTest";
 import { useFirestore } from "../hooks/useFirestore";
-import { useFirestoreConnection } from "../hooks/useFirestoreConnection";
 import "../styles/App.css";
 
 // Constants
@@ -81,9 +79,7 @@ const saveToHistory = async (analysisResult, itemName, itemCost, firestore) => {
     analysisDetails: analysisResult.formatted.analysisDetails
   };
 
-  console.log('=== Save to History Debug ===');
-  console.log('Auth loading:', firestore.authLoading);
-  console.log('Is authenticated:', firestore.isAuthenticated);
+
   console.log('User:', firestore.user);
   console.log('User UID:', firestore.user?.uid);
   console.log('History entry:', historyEntry);
@@ -222,21 +218,6 @@ const PurchaseAdvisor = () => {
 
   // Firestore hook
   const firestore = useFirestore();
-  const { isConnected, lastError } = useFirestoreConnection();
-
-  // Debug function to test authentication and Firestore
-  const debugFirestoreAuth = () => {
-    console.log('=== Firestore Auth Debug ===');
-    console.log('Auth loading:', firestore.authLoading);
-    console.log('Is authenticated:', firestore.isAuthenticated);
-    console.log('User object:', firestore.user);
-    console.log('User UID:', firestore.user?.uid);
-    console.log('Firestore loading:', firestore.isLoading);
-    console.log('Firestore error:', firestore.error);
-    console.log('Firestore object keys:', Object.keys(firestore));
-    console.log('Full firestore object:', firestore);
-    console.log('============================');
-  };
 
   // Load financial profile on mount
   useEffect(() => {
@@ -441,24 +422,6 @@ const PurchaseAdvisor = () => {
 
   return (
     <div className="App">
-      {/* Debug components - remove in production */}
-      <FirestoreConnectionTest />
-      
-      {/* Connection status indicator */}
-      <div style={{
-        position: 'fixed',
-        top: '10px',
-        left: '10px',
-        background: isConnected === true ? '#10b981' : isConnected === false ? '#ef4444' : '#f59e0b',
-        color: 'white',
-        padding: '5px 10px',
-        borderRadius: '5px',
-        fontSize: '12px',
-        zIndex: 9999
-      }}>
-        Firestore: {isConnected === true ? 'Connected' : isConnected === false ? 'Disconnected' : 'Checking...'}
-        {lastError && <div style={{ fontSize: '10px' }}>Error: {lastError}</div>}
-      </div>
       
       <div className="hero-section">
         <h1 className="hero-title">To Buy or not to Buy?</h1>
@@ -655,28 +618,7 @@ const PurchaseAdvisor = () => {
             )}
           </button>
 
-          {/* Debug buttons - remove in production */}
-          <button
-            onClick={debugFirestoreAuth}
-            style={{ marginLeft: '10px', padding: '5px 10px', fontSize: '12px', backgroundColor: '#f0f0f0' }}
-          >
-            Debug Auth
-          </button>
-          <button
-            onClick={() => {
-              console.log('=== Manual Connection Test ===');
-              console.log('Firestore connected:', isConnected);
-              console.log('Last error:', lastError);
-              console.log('Auth state:', {
-                isAuthenticated: firestore.isAuthenticated,
-                authLoading: firestore.authLoading,
-                user: firestore.user?.uid
-              });
-            }}
-            style={{ marginLeft: '5px', padding: '5px 10px', fontSize: '12px', backgroundColor: '#e0f0ff' }}
-          >
-            Test Connection
-          </button>
+
         </div>
       </div>
 

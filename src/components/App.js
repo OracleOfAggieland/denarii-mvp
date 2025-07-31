@@ -3,9 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react
 import { AuthProvider, useAuth } from "../contexts/AuthContext";
 import { FirestoreErrorBoundary } from "./FirestoreErrorBoundary";
 import OfflineIndicator from "./OfflineIndicator";
-import MigrationNotification from "./MigrationNotification";
 import { initializeOfflinePersistence } from "../lib/firestore/offline";
-import { useMigration } from "../lib/firestore/migration";
 import UserProfile from "./UserProfile";
 import LoginPage from "./LoginPage";
 import TermsPage from "./TermsPage";
@@ -20,7 +18,6 @@ import ChatInterface from "./ChatInterface";
 import { Dashboard } from "./Dashboard";
 import "../styles/App.css";
 import "../styles/OfflineIndicator.css";
-import "../styles/MigrationNotification.css";
 
 // Header Component with Hamburger Menu
 const Header = () => {
@@ -163,22 +160,12 @@ const Navigation = () => {
   );
 }
 
-// Component to handle initialization and migration
+// Component to handle initialization
 const AppInitializer = () => {
-  const { user } = useAuth();
-  const { shouldMigrate, triggerMigration, isAuthenticated } = useMigration();
-
   useEffect(() => {
     // Initialize offline persistence
     initializeOfflinePersistence().catch(console.error);
   }, []);
-
-  useEffect(() => {
-    // Trigger migration when user logs in and has data to migrate
-    if (isAuthenticated && shouldMigrate) {
-      triggerMigration().catch(console.error);
-    }
-  }, [isAuthenticated, shouldMigrate, triggerMigration]);
 
   return null; // This component doesn't render anything
 };
@@ -191,7 +178,6 @@ const App = () => {
           <div className="app-layout">
             <AppInitializer />
             <OfflineIndicator />
-            <MigrationNotification />
             <Header />
 
             <main className="main-content">

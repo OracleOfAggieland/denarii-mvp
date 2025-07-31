@@ -34,17 +34,28 @@ export class FirestoreConnectionManager {
       this.retryCount = 0;
       this.notifyListeners();
       console.log('Firestore connection established');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to establish Firestore connection:', error);
       this.isConnected = false;
       this.notifyListeners();
       
-      // Retry with exponential backoff
-      if (this.retryCount < this.maxRetries) {
+      // Check if it's a retryable error
+      const isRetryableError = error?.code === 'unavailable' || 
+                              error?.code === 'deadline-exceeded' ||
+                              error?.message?.includes('transport') ||
+                              error?.message?.includes('network') ||
+                              error?.message?.includes('connection');
+      
+      // Retry with exponential backoff only for retryable errors
+      if (this.retryCount < this.maxRetries && isRetryableError) {
         const delay = Math.pow(2, this.retryCount) * 1000;
         this.retryCount++;
         console.log(`Retrying connection in ${delay}ms (attempt ${this.retryCount}/${this.maxRetries})`);
         setTimeout(() => this.initializeConnection(), delay);
+      } else if (!isRetryableError) {
+        console.error('Non-retryable connection error, stopping retry attempts');
+      } else {
+        console.error('Max connection retries reached, giving up');
       }
     }
   }

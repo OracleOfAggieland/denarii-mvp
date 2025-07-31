@@ -7,10 +7,10 @@ import './validateFirebaseConfig';
 // Sanitize environment variables to remove whitespace and newlines
 const sanitizeEnvVar = (value: string | undefined): string | undefined => {
   if (!value) return undefined;
-  
+
   // Remove all types of whitespace and newlines
   const sanitized = value.trim().replace(/[\r\n\t\s]/g, '');
-  
+
   // Log if we found problematic characters
   if (sanitized !== value.trim()) {
     console.warn('Found and removed whitespace/newlines from environment variable:', {
@@ -18,7 +18,7 @@ const sanitizeEnvVar = (value: string | undefined): string | undefined => {
       sanitized: JSON.stringify(sanitized)
     });
   }
-  
+
   return sanitized || undefined;
 };
 
@@ -59,24 +59,24 @@ if (typeof window !== 'undefined') {
         apiKey: firebaseConfig.apiKey ? '[REDACTED]' : 'MISSING',
         projectId: firebaseConfig.projectId
       });
-      
+
       // Validate project ID doesn't contain invalid characters
       if (firebaseConfig.projectId && /[\r\n\t]/.test(firebaseConfig.projectId)) {
         console.error('Project ID contains invalid characters:', JSON.stringify(firebaseConfig.projectId));
         throw new Error('Invalid project ID format');
       }
-      
+
       app = initializeApp(firebaseConfig);
       auth = getAuth(app);
       db = getFirestore(app);
       storage = getStorage(app);
-      
+
       // Test Firestore connection
       console.log('Testing Firestore connection...');
-      
+
       // Note: Firestore v9+ automatically handles offline persistence
       // No explicit enableIndexedDbPersistence() call needed
-      
+
       console.log('Firebase initialized successfully');
       console.log('Auth instance:', !!auth);
       console.log('Firestore instance:', !!db);

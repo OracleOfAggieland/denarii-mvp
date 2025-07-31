@@ -182,25 +182,62 @@ import {
     profileData: Omit<FinancialProfileData, 'userId' | 'lastUpdated'>
   ): Promise<void> => {
     if (!db || !userId) return;
+
+    // Ensure connection before attempting to save
+    console.log('Checking Firestore connection for profile save...');
+    const isConnected = await connectionManager.ensureConnection();
+    if (!isConnected) {
+      throw new Error('Unable to establish Firestore connection for profile save');
+    }
+    console.log('Firestore connection confirmed for profile save');
   
     const profileRef = doc(db, COLLECTIONS.FINANCIAL_PROFILES, userId);
-    await setDoc(profileRef, {
+    
+    const documentData = {
       ...profileData,
       userId,
       lastUpdated: serverTimestamp()
+    };
+    
+    // Add timeout to the operation
+    const savePromise = setDoc(profileRef, documentData);
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Profile save operation timed out after 15 seconds')), 15000);
     });
+    
+    await Promise.race([savePromise, timeoutPromise]);
+    console.log('Financial profile saved successfully for user:', userId);
   };
   
   export const getFinancialProfile = async (
     userId: string
   ): Promise<FinancialProfileData | null> => {
     if (!db || !userId) return null;
+
+    // Ensure connection before attempting to read
+    console.log('Checking Firestore connection for profile read...');
+    const isConnected = await connectionManager.ensureConnection();
+    if (!isConnected) {
+      throw new Error('Unable to establish Firestore connection for profile read');
+    }
+    console.log('Firestore connection confirmed for profile read');
   
     const profileRef = doc(db, COLLECTIONS.FINANCIAL_PROFILES, userId);
-    const profileDoc = await getDoc(profileRef);
+    
+    // Add timeout to the operation
+    const readPromise = getDoc(profileRef);
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Profile read operation timed out after 10 seconds')), 10000);
+    });
+    
+    const profileDoc = await Promise.race([readPromise, timeoutPromise]) as any;
   
-    if (!profileDoc.exists()) return null;
+    if (!profileDoc.exists()) {
+      console.log('No financial profile found for user:', userId);
+      return null;
+    }
   
+    console.log('Financial profile loaded successfully for user:', userId);
     return {
       ...profileDoc.data(),
       lastUpdated: profileDoc.data().lastUpdated?.toDate()

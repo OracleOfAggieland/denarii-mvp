@@ -135,31 +135,63 @@ export const useFirestore = () => {
     if (!user || !db) return [];
     setIsLoading(true);
     setError(null);
-    try {
-      const purchaseHistoryRef = collection(db, COLLECTIONS.PURCHASE_HISTORY);
-      let q = query(
-        purchaseHistoryRef,
-        where('userId', '==', user.uid),
-        orderBy('date', 'desc')
-      );
+    
+    // Add retry logic for network issues
+    const maxRetries = 3;
+    let lastError: any;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`Attempt ${attempt}/${maxRetries} to load purchase history`);
+        const purchaseHistoryRef = collection(db, COLLECTIONS.PURCHASE_HISTORY);
+        let q = query(
+          purchaseHistoryRef,
+          where('userId', '==', user.uid),
+          orderBy('date', 'desc')
+        );
 
-      if (limitCount) {
-        q = query(q, limit(limitCount));
+        if (limitCount) {
+          q = query(q, limit(limitCount));
+        }
+
+        const snapshot = await getDocs(q);
+        const purchases = snapshot.docs.map(doc => ({
+          ...doc.data(),
+          id: doc.id,
+          date: doc.data().date.toDate()
+        } as unknown as PurchaseHistoryItem));
+        
+        console.log('Purchase history loaded successfully:', purchases.length, 'items');
+        return purchases;
+      } catch (err: any) {
+        lastError = err;
+        console.error(`Purchase history load attempt ${attempt} failed:`, err);
+        
+        // Check if it's a network/connection error that might be retryable
+        const isRetryableError = err?.code === 'unavailable' || 
+                                err?.code === 'deadline-exceeded' ||
+                                err?.message?.includes('transport') ||
+                                err?.message?.includes('network') ||
+                                err?.message?.includes('connection');
+        
+        if (attempt < maxRetries && isRetryableError) {
+          // Wait before retrying (exponential backoff)
+          const delay = Math.pow(2, attempt - 1) * 1000; // 1s, 2s, 4s
+          console.log(`Retrying purchase history load in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        
+        // If not retryable or max retries reached, break
+        break;
       }
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({
-        ...doc.data(),
-        id: doc.id,
-        date: doc.data().date.toDate()
-      } as unknown as PurchaseHistoryItem));
-    } catch (err) {
-      setError('Failed to load purchase history');
-      console.error(err);
-      return [];
-    } finally {
-      setIsLoading(false);
     }
+    
+    // All retries failed
+    const errorMessage = 'Failed to load purchase history after multiple attempts';
+    setError(errorMessage);
+    console.error('Error loading purchase history after retries:', lastError);
+    return [];
   }, [user]);
 
   // Financial Profile
@@ -167,29 +199,92 @@ export const useFirestore = () => {
     if (!user) return;
     setIsLoading(true);
     setError(null);
-    try {
-      await saveFinancialProfile(user.uid, profileData);
-    } catch (err) {
-      setError('Failed to save financial profile');
-      console.error(err);
-    } finally {
-      setIsLoading(false);
+    
+    // Add retry logic for network issues
+    const maxRetries = 3;
+    let lastError: any;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`Attempt ${attempt}/${maxRetries} to save financial profile`);
+        await saveFinancialProfile(user.uid, profileData);
+        console.log('Financial profile saved successfully');
+        return; // Success, exit retry loop
+      } catch (err: any) {
+        lastError = err;
+        console.error(`Profile save attempt ${attempt} failed:`, err);
+        
+        // Check if it's a network/connection error that might be retryable
+        const isRetryableError = err?.code === 'unavailable' || 
+                                err?.code === 'deadline-exceeded' ||
+                                err?.message?.includes('transport') ||
+                                err?.message?.includes('network') ||
+                                err?.message?.includes('connection');
+        
+        if (attempt < maxRetries && isRetryableError) {
+          // Wait before retrying (exponential backoff)
+          const delay = Math.pow(2, attempt - 1) * 1000; // 1s, 2s, 4s
+          console.log(`Retrying profile save in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        
+        // If not retryable or max retries reached, break
+        break;
+      }
     }
+    
+    // All retries failed
+    const errorMessage = 'Failed to save financial profile after multiple attempts';
+    setError(errorMessage);
+    console.error('Error saving profile after retries:', lastError);
+    throw lastError;
   }, [user]);
 
   const getProfile = useCallback(async (): Promise<FinancialProfileData | null> => {
     if (!user) return null;
     setIsLoading(true);
     setError(null);
-    try {
-      return await getFinancialProfile(user.uid);
-    } catch (err) {
-      setError('Failed to load financial profile');
-      console.error(err);
-      return null;
-    } finally {
-      setIsLoading(false);
+    
+    // Add retry logic for network issues
+    const maxRetries = 3;
+    let lastError: any;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`Attempt ${attempt}/${maxRetries} to load financial profile`);
+        const profile = await getFinancialProfile(user.uid);
+        console.log('Financial profile loaded successfully:', !!profile);
+        return profile;
+      } catch (err: any) {
+        lastError = err;
+        console.error(`Profile load attempt ${attempt} failed:`, err);
+        
+        // Check if it's a network/connection error that might be retryable
+        const isRetryableError = err?.code === 'unavailable' || 
+                                err?.code === 'deadline-exceeded' ||
+                                err?.message?.includes('transport') ||
+                                err?.message?.includes('network') ||
+                                err?.message?.includes('connection');
+        
+        if (attempt < maxRetries && isRetryableError) {
+          // Wait before retrying (exponential backoff)
+          const delay = Math.pow(2, attempt - 1) * 1000; // 1s, 2s, 4s
+          console.log(`Retrying profile load in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        
+        // If not retryable or max retries reached, break
+        break;
+      }
     }
+    
+    // All retries failed
+    const errorMessage = 'Failed to load financial profile after multiple attempts';
+    setError(errorMessage);
+    console.error('Error loading profile after retries:', lastError);
+    return null;
   }, [user]);
 
   // Chat History
