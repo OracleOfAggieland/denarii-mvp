@@ -29,7 +29,6 @@ export const getAuthenticatedMediaUrl = async (filename: string): Promise<string
     const fileRef = ref(storage, filename);
     return await getDownloadURL(fileRef);
   } catch (error) {
-    console.warn(`Failed to get authenticated URL for ${filename}, falling back to direct URL:`, error);
     return getMediaUrl(filename);
   }
 };

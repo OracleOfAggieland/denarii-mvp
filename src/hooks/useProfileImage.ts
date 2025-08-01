@@ -23,7 +23,6 @@ export const useProfileImage = ({ photoURL, displayName, email }: UseProfileImag
   };
 
   const handleImageError = () => {
-    console.warn('Profile image failed to load:', photoURL);
     setImageError(true);
     setIsLoading(false);
   };
@@ -38,15 +37,12 @@ export const useProfileImage = ({ photoURL, displayName, email }: UseProfileImag
         // Remove existing size parameters and add optimized ones
         const baseUrl = url.split('=')[0];
         const optimizedUrl = `${baseUrl}=s96-c`;
-        console.log('Optimizing Google profile image:', { original: url, optimized: optimizedUrl });
         return optimizedUrl;
       }
       
       // Handle other image URLs
-      console.log('Using original image URL:', url);
       return url;
     } catch (error) {
-      console.warn('Error processing image URL:', error);
       return url;
     }
   };

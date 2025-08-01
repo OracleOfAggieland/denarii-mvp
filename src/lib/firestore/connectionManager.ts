@@ -32,7 +32,6 @@ export class FirestoreConnectionManager {
       await enableNetwork(db);
       this.isConnected = true;
       this.notifyListeners();
-      console.log('Firestore connection established');
     } catch (error) {
       console.error('Failed to establish Firestore connection:', error);
       this.isConnected = false;
@@ -57,20 +56,17 @@ export class FirestoreConnectionManager {
   }
 
   private async handleOnline(): Promise<void> {
-    console.log('Network came online, reconnecting Firestore...');
     if (db && !this.isConnected) {
       await this.initializeConnection();
     }
   }
 
   private async handleOffline(): Promise<void> {
-    console.log('Network went offline, disabling Firestore network...');
     if (db) {
       try {
         await disableNetwork(db);
         this.isConnected = false;
         this.notifyListeners();
-        console.log('Firestore network disabled');
       } catch (error) {
         console.error('Failed to disable Firestore network:', error);
       }

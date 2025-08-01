@@ -160,8 +160,6 @@ export const useRealtimeSession = () => {
         timestamp: new Date().toLocaleTimeString() 
       };
       setEvents(prev => [displayEvent, ...prev]);
-    } else {
-      console.error("Data channel is not open. Cannot send event.");
     }
   }, []);
 

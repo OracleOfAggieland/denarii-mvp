@@ -121,12 +121,5 @@ export const getOpenAIConfig = (): OpenAIConfig => {
  * Logs environment configuration (without sensitive data) for debugging
  */
 export const logEnvironmentInfo = (): void => {
-  const currentEnv = getCurrentEnvironment();
-  const config = getOpenAIConfig();
-  
-  console.log(`Environment: ${currentEnv}`);
-  console.log(`OpenAI Model: ${config.model}`);
-  console.log(`Temperature: ${config.temperature}`);
-  console.log(`Max Tokens: ${config.maxTokens}`);
-  console.log(`API Key configured: ${process.env.OPENAI_API_KEY ? 'Yes' : 'No'}`);
+  // Environment info logging removed for production
 };

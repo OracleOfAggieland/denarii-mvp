@@ -1,5 +1,4 @@
 // src/components/Dashboard/RecentActivityWidget.js
-import React from 'react';
 
 const RecentActivityWidget = ({ purchases, onViewAll }) => {
   // Format currency

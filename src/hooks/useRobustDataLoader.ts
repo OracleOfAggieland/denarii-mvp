@@ -62,14 +62,11 @@ export const useRobustDataLoader = <T>(
       setState(prev => ({ ...prev, loading: true, error: null }));
     }
     
-    console.log(`Loading ${dataKey} for user:`, user.uid);
-
     try {
       // Try to load from Firestore
       const firestoreData = await firestoreLoaderRef.current();
       
       if (firestoreData) {
-        console.log(`${dataKey} loaded successfully from Firestore`);
         setState({
           data: firestoreData,
           loading: false,
@@ -83,7 +80,6 @@ export const useRobustDataLoader = <T>(
       // If no Firestore data, try localStorage
       const localData = loadFromLocalStorage();
       if (localData) {
-        console.log(`${dataKey} loaded from localStorage fallback`);
         setState({
           data: localData,
           loading: false,
@@ -95,7 +91,6 @@ export const useRobustDataLoader = <T>(
       }
 
       // No data found anywhere
-      console.log(`No ${dataKey} found in Firestore or localStorage`);
       setState({
         data: null,
         loading: false,
@@ -110,7 +105,6 @@ export const useRobustDataLoader = <T>(
       // Try localStorage as fallback on error
       const localData = loadFromLocalStorage();
       if (localData) {
-        console.log(`Using localStorage fallback for ${dataKey} due to error`);
         setState({
           data: localData,
           loading: false,

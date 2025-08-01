@@ -56,7 +56,6 @@ export const generateProModeQuestions = async (purchaseData) => {
     }
 
     const data = await response.json();
-    console.log('API response data:', data);
 
     if (data.error) {
       throw new Error(`API Error: ${data.error}`);
@@ -72,8 +71,6 @@ export const generateProModeQuestions = async (purchaseData) => {
       .replace(/^```json\s*/, '')
       .replace(/\s*```$/, '')
       .trim();
-
-    console.log('Cleaned response:', cleanedResponse);
     const parsed = JSON.parse(cleanedResponse);
     
     // If it's an object with questions array, extract it
@@ -84,11 +81,6 @@ export const generateProModeQuestions = async (purchaseData) => {
     return parsed;
   } catch (error) {
     console.error('Error generating questions:', error);
-    console.error('Error details:', {
-      message: error.message,
-      status: error.status,
-      response: error.response
-    });
     // Fallback questions
     return [
       {

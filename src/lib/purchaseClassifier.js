@@ -124,7 +124,6 @@ Respond with ONLY the category name: ESSENTIAL_DAILY or DISCRETIONARY_SMALL`;
     if (classification === 'ESSENTIAL_DAILY' || classification === 'DISCRETIONARY_SMALL') {
       return classification;
     } else {
-      console.warn(`Invalid classification response: ${classification}`);
       return null;
     }
   } catch (error) {
@@ -179,7 +178,6 @@ export const classifyPurchase = async (itemName, cost) => {
       finalCategory = aiClassification;
     } else {
       // Fallback to DISCRETIONARY_SMALL for items under $50 on any error
-      console.warn(`Classification failed for "${itemName}" ($${cost}), using fallback`);
       finalCategory = CLASSIFICATION_CATEGORIES.DISCRETIONARY_SMALL;
     }
 

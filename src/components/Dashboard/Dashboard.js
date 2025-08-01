@@ -1,5 +1,5 @@
 // src/components/Dashboard/Dashboard.js
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useFirestore } from '../../hooks/useFirestore';
@@ -10,6 +10,34 @@ import ExpenseBreakdownWidget from './ExpenseBreakdownWidget';
 import RecentActivityWidget from './RecentActivityWidget';
 import DashboardSkeleton from './DashboardSkeleton';
 import '../../styles/Dashboard.css';
+import EnvironmentChecker from '../EnvironmentChecker';
+
+// Error types for better error handling
+const ERROR_TYPES = {
+  FIREBASE_CONFIG: 'FIREBASE_CONFIG',
+  NETWORK: 'NETWORK',
+  PERMISSION: 'PERMISSION',
+  UNKNOWN: 'UNKNOWN'
+};
+
+const getErrorType = (error) => {
+  if (!error) return ERROR_TYPES.UNKNOWN;
+  
+  const errorMessage = error.message || '';
+  const errorCode = error.code || '';
+  
+  if (errorMessage.includes('project') || errorMessage.includes('configuration')) {
+    return ERROR_TYPES.FIREBASE_CONFIG;
+  }
+  if (errorCode === 'permission-denied') {
+    return ERROR_TYPES.PERMISSION;
+  }
+  if (errorMessage.includes('network') || errorMessage.includes('Failed to fetch')) {
+    return ERROR_TYPES.NETWORK;
+  }
+  
+  return ERROR_TYPES.UNKNOWN;
+};
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -18,7 +46,9 @@ const Dashboard = () => {
     getProfile, 
     getPurchaseHistory, 
     subscribeToProfile, 
-    subscribeToPurchaseHistory
+    subscribeToPurchaseHistory,
+    isLoading: firestoreLoading,
+    error: firestoreError
   } = useFirestore();
 
   const [financialProfile, setFinancialProfile] = useState(null);
@@ -26,18 +56,19 @@ const Dashboard = () => {
   const [profileLoading, setProfileLoading] = useState(true);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [errorType, setErrorType] = useState(null);
   const [hasLocalFallback, setHasLocalFallback] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
-  // Calculate total savings
-  const calculateTotalSavings = () => {
+  // Calculate derived values with memoization
+  const totalSavings = useMemo(() => {
     if (!purchaseHistory || !Array.isArray(purchaseHistory)) return 0;
     return purchaseHistory.reduce((total, purchase) => {
       return total + (purchase.savings || 0);
     }, 0);
-  };
+  }, [purchaseHistory]);
 
-  // Calculate purchase decisions breakdown
-  const calculatePurchaseBreakdown = () => {
+  const purchaseBreakdown = useMemo(() => {
     const breakdown = {
       buyTotal: 0,
       dontBuyTotal: 0,
@@ -58,151 +89,222 @@ const Dashboard = () => {
     });
 
     return breakdown;
-  };
+  }, [purchaseHistory]);
 
-  // Get recent purchases
-  const getRecentPurchases = () => {
+  const recentPurchases = useMemo(() => {
     if (!purchaseHistory || !Array.isArray(purchaseHistory)) return [];
     return purchaseHistory
       .sort((a, b) => b.date - a.date)
       .slice(0, 5);
+  }, [purchaseHistory]);
+
+  // Helper functions
+  const calculateTotalExpenses = (firestoreProfile) => {
+    const expenses = [
+      firestoreProfile.housingCost,
+      firestoreProfile.utilitiesCost,
+      firestoreProfile.foodCost,
+      firestoreProfile.transportationCost,
+      firestoreProfile.insuranceCost,
+      firestoreProfile.subscriptionsCost,
+      firestoreProfile.otherExpenses
+    ];
+
+    return expenses.reduce((sum, expense) => {
+      return sum + (parseFloat(expense) || 0);
+    }, 0).toString();
   };
 
-  // Memoize calculations to prevent unnecessary re-renders - MUST be before any conditional returns
-  const totalSavings = useMemo(() => calculateTotalSavings(), [purchaseHistory]);
-  const purchaseBreakdown = useMemo(() => calculatePurchaseBreakdown(), [purchaseHistory]);
-  const recentPurchases = useMemo(() => getRecentPurchases(), [purchaseHistory]);
+  const calculateTotalDebtPayments = (firestoreProfile) => {
+    const payments = [
+      firestoreProfile.creditCardPayment,
+      firestoreProfile.studentLoanPayment,
+      firestoreProfile.carLoanPayment,
+      firestoreProfile.otherDebtPayment
+    ];
 
-  // Load data with fallback to localStorage
-  useEffect(() => {
+    return payments.reduce((sum, payment) => {
+      return sum + (parseFloat(payment) || 0);
+    }, 0).toString();
+  };
+
+  const loadFromLocalStorage = useCallback(() => {
+    console.log('Attempting to load from localStorage...');
+    
+    // Load profile from localStorage
+    const savedProfile = localStorage.getItem('quickFinancialProfile');
+    if (savedProfile) {
+      try {
+        const parsed = JSON.parse(savedProfile);
+        console.log('Found localStorage profile');
+        setFinancialProfile({
+          ...parsed,
+          userId: user?.uid,
+          lastUpdated: new Date(parsed.lastUpdated || Date.now())
+        });
+        setHasLocalFallback(true);
+      } catch (parseErr) {
+        console.error('Error parsing localStorage profile:', parseErr);
+      }
+    }
+
+    // Load purchase history from localStorage
+    const savedHistory = localStorage.getItem('purchaseHistory');
+    if (savedHistory) {
+      try {
+        const parsed = JSON.parse(savedHistory);
+        const history = parsed.map(item => ({
+          ...item,
+          date: new Date(item.date)
+        }));
+        console.log('Found localStorage purchase history:', history.length, 'items');
+        setPurchaseHistory(history);
+      } catch (parseErr) {
+        console.error('Error parsing localStorage history:', parseErr);
+      }
+    }
+  }, [user?.uid]);
+
+  const loadDashboardData = useCallback(async () => {
     if (!user) {
       navigate('/login');
       return;
     }
 
-    let isMounted = true; // Prevent state updates if component unmounts
-
-    const loadDashboardData = async () => {
-      try {
-        if (!isMounted) return;
-        setError(null);
-        console.log('Loading dashboard data for user:', user.uid);
-        
-        // Load financial profile
-        setProfileLoading(true);
-        try {
-          const profile = await getProfile();
-          if (!isMounted) return;
-          
-          if (profile) {
-            console.log('Financial profile loaded from Firestore');
-            setFinancialProfile(profile);
-            setHasLocalFallback(false);
-          } else {
-            // Try localStorage fallback
-            const savedProfile = localStorage.getItem('quickFinancialProfile');
-            if (savedProfile) {
-              try {
-                const parsed = JSON.parse(savedProfile);
-                console.log('Using localStorage profile fallback');
-                setFinancialProfile({
-                  ...parsed,
-                  userId: user.uid,
-                  lastUpdated: new Date(parsed.lastUpdated || Date.now())
-                });
-                setHasLocalFallback(true);
-              } catch (parseErr) {
-                console.error('Error parsing localStorage profile:', parseErr);
-              }
-            }
-          }
-        } catch (profileErr) {
-          if (!isMounted) return;
-          console.error('Error loading profile:', profileErr);
-          // Try localStorage fallback on error
-          const savedProfile = localStorage.getItem('quickFinancialProfile');
-          if (savedProfile) {
-            try {
-              const parsed = JSON.parse(savedProfile);
-              console.log('Using localStorage profile fallback due to error');
-              setFinancialProfile({
-                ...parsed,
-                userId: user.uid,
-                lastUpdated: new Date(parsed.lastUpdated || Date.now())
-              });
-              setHasLocalFallback(true);
-              setError('Connection issue - using offline profile data');
-            } catch (parseErr) {
-              console.error('Error parsing localStorage profile:', parseErr);
-            }
-          }
-        }
-        if (isMounted) setProfileLoading(false);
-
-        // Load purchase history
-        setHistoryLoading(true);
-        try {
-          const history = await getPurchaseHistory();
-          if (!isMounted) return;
-          console.log('Purchase history loaded:', history.length, 'items');
-          setPurchaseHistory(history);
-        } catch (historyErr) {
-          if (!isMounted) return;
-          console.error('Error loading purchase history:', historyErr);
-          setPurchaseHistory([]);
-          setError(prev => prev || 'Connection issue - purchase history unavailable');
-        }
-        if (isMounted) setHistoryLoading(false);
-
-      } catch (err) {
-        if (!isMounted) return;
-        console.error('Error loading dashboard data:', err);
-        setError(`Failed to load dashboard: ${err.message || 'Unknown error'}`);
-        setProfileLoading(false);
-        setHistoryLoading(false);
-      }
-    };
-
-    loadDashboardData();
-
-    return () => {
-      isMounted = false; // Cleanup flag
-    };
-  }, [user?.uid]); // Only depend on user ID to prevent unnecessary re-renders
-
-  // Subscribe to real-time updates (only when not using fallback data and after initial load)
-  useEffect(() => {
-    if (!user || hasLocalFallback || profileLoading || historyLoading) return;
-
-    console.log('Setting up real-time subscriptions');
+    setError(null);
+    setErrorType(null);
+    console.log('Loading dashboard data for user:', user.uid);
     
-    // Subscribe to profile changes
-    const unsubscribeProfile = subscribeToProfile((profile) => {
+    // Try loading from Firestore
+    try {
+      setProfileLoading(true);
+      const profile = await getProfile();
+      
       if (profile) {
-        console.log('Real-time profile update received');
+        console.log('Firestore profile loaded successfully');
         setFinancialProfile(profile);
+        setHasLocalFallback(false);
+      } else {
+        console.log('No Firestore profile found, using localStorage');
+        loadFromLocalStorage();
       }
-    });
+    } catch (profileErr) {
+      console.error('Error loading profile from Firestore:', profileErr);
+      const errType = getErrorType(profileErr);
+      setErrorType(errType);
+      
+      if (errType === ERROR_TYPES.FIREBASE_CONFIG) {
+        setError('Firebase configuration error detected. Please check your environment setup.');
+      } else {
+        setError('Unable to connect to database. Using offline mode.');
+      }
+      
+      loadFromLocalStorage();
+    } finally {
+      setProfileLoading(false);
+    }
 
-    // Subscribe to purchase history changes
-    const unsubscribePurchases = subscribeToPurchaseHistory((purchases) => {
-      console.log('Real-time purchase history update received:', purchases.length, 'items');
-      setPurchaseHistory(purchases);
-    }, 100);
+    // Try loading purchase history
+    try {
+      setHistoryLoading(true);
+      const history = await getPurchaseHistory();
+      console.log('Purchase history loaded:', history.length, 'items');
+      setPurchaseHistory(history);
+    } catch (historyErr) {
+      console.error('Error loading purchase history:', historyErr);
+      // Try localStorage for history
+      const savedHistory = localStorage.getItem('purchaseHistory');
+      if (savedHistory) {
+        try {
+          const parsed = JSON.parse(savedHistory);
+          setPurchaseHistory(parsed.map(item => ({
+            ...item,
+            date: new Date(item.date)
+          })));
+        } catch (e) {
+          setPurchaseHistory([]);
+        }
+      }
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, [user, getProfile, getPurchaseHistory, navigate, loadFromLocalStorage]);
+
+  // Initial data load
+  useEffect(() => {
+    loadDashboardData();
+  }, [user?.uid]);
+
+  // Subscribe to real-time updates (only if not using fallback and no config errors)
+  useEffect(() => {
+    if (!user || hasLocalFallback || errorType === ERROR_TYPES.FIREBASE_CONFIG) return;
+
+    const subscriptions = [];
+    
+    // Only subscribe if we don't have configuration errors
+    if (!error || errorType !== ERROR_TYPES.FIREBASE_CONFIG) {
+      console.log('Setting up real-time subscriptions');
+      
+      const unsubscribeProfile = subscribeToProfile((profile) => {
+        if (profile) {
+          console.log('Real-time profile update received');
+          setFinancialProfile(profile);
+          setHasLocalFallback(false);
+          setError(null);
+        }
+      });
+      
+      if (unsubscribeProfile) subscriptions.push(unsubscribeProfile);
+
+      const unsubscribePurchases = subscribeToPurchaseHistory((purchases) => {
+        console.log('Real-time purchase history update received:', purchases.length, 'items');
+        setPurchaseHistory(purchases);
+        setError(null);
+      }, 100);
+      
+      if (unsubscribePurchases) subscriptions.push(unsubscribePurchases);
+    }
 
     return () => {
-      console.log('Cleaning up real-time subscriptions');
-      if (unsubscribeProfile) unsubscribeProfile();
-      if (unsubscribePurchases) unsubscribePurchases();
+      subscriptions.forEach(unsub => unsub && unsub());
     };
-  }, [user?.uid, hasLocalFallback, profileLoading, historyLoading]);
+  }, [user?.uid, hasLocalFallback, errorType, error, subscribeToProfile, subscribeToPurchaseHistory]);
 
-  // Loading state - show skeleton if we don't have any data yet
+  const handleRetry = useCallback(() => {
+    setRetryCount(prev => prev + 1);
+    loadDashboardData();
+  }, [loadDashboardData]);
+
+  // Loading state
   if ((profileLoading || historyLoading) && !financialProfile && purchaseHistory.length === 0) {
     return <DashboardSkeleton />;
   }
 
-  // Error state (only show if no fallback data available)
+  // Configuration error state
+  if (errorType === ERROR_TYPES.FIREBASE_CONFIG) {
+    return (
+      <div className="dashboard-container">
+        <div className="dashboard-error config-error">
+          <div className="error-icon">🔧</div>
+          <h2>Configuration Issue Detected</h2>
+          <p>There's an issue with the database configuration that's preventing data from loading.</p>
+          
+          <EnvironmentChecker />
+          
+          <div className="error-actions">
+            <button onClick={handleRetry} className="btn btn-primary">
+              Try Again
+            </button>
+            <button onClick={() => navigate('/')} className="btn btn-secondary">
+              Continue with Local Data
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // General error state (only show if no data available)
   if (error && !financialProfile && (!purchaseHistory || purchaseHistory.length === 0)) {
     return (
       <div className="dashboard-container">
@@ -210,7 +312,7 @@ const Dashboard = () => {
           <h2>Connection Issue</h2>
           <p>{error}</p>
           <div className="error-actions">
-            <button onClick={() => window.location.reload()} className="btn btn-primary">
+            <button onClick={handleRetry} className="btn btn-primary">
               Retry
             </button>
           </div>
@@ -220,25 +322,17 @@ const Dashboard = () => {
   }
 
   // Empty state for new users
-  if (!financialProfile || (purchaseHistory && purchaseHistory.length === 0)) {
+  if (!financialProfile && (!purchaseHistory || purchaseHistory.length === 0)) {
     return (
       <div className="dashboard-container">
         <div className="dashboard-empty">
           <div className="empty-icon">📊</div>
           <h2>Welcome to Your Financial Dashboard!</h2>
           <p>Start using Denarii to see your financial insights here.</p>
-          {hasLocalFallback && (
-            <div className="fallback-notice">
-              <span className="fallback-icon">⚠️</span>
-              Using offline data due to connection issues
-            </div>
-          )}
           <div className="empty-actions">
-            {!financialProfile && (
-              <button onClick={() => navigate('/profile')} className="btn btn-primary">
-                Set Up Financial Profile
-              </button>
-            )}
+            <button onClick={() => navigate('/profile')} className="btn btn-primary">
+              Set Up Financial Profile
+            </button>
             <button onClick={() => navigate('/')} className="btn btn-secondary">
               Analyze Your First Purchase
             </button>
@@ -247,8 +341,6 @@ const Dashboard = () => {
       </div>
     );
   }
-
-
 
   return (
     <div className="dashboard-container">
@@ -264,14 +356,14 @@ const Dashboard = () => {
           <div className="dashboard-status">
             {hasLocalFallback && (
               <span className="status-badge offline">
-                <span className="status-icon">⚠️</span>
-                Using offline data
+                <span className="status-icon">💾</span>
+                Using local data
               </span>
             )}
-            {error && (
-              <span className="status-badge error">
-                <span className="status-icon">🔄</span>
-                Connection issues detected
+            {error && errorType !== ERROR_TYPES.FIREBASE_CONFIG && (
+              <span className="status-badge warning">
+                <span className="status-icon">⚠️</span>
+                Limited connectivity
               </span>
             )}
           </div>

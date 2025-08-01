@@ -1,5 +1,4 @@
 // src/components/Dashboard/HealthScoreWidget.js
-import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 
 const HealthScoreWidget = ({ profile }) => {
