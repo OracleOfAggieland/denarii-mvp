@@ -3481,13 +3481,13 @@ body {
     padding: var(--spacing-sm);
     gap: var(--spacing-xs);
   }
-  
+
   .quick-action-btn {
     flex: 1;
     min-width: 140px;
     padding: var(--spacing-sm);
   }
-  
+
   .quick-action-text {
     font-size: var(--font-size-xs);
   }
@@ -3497,7 +3497,7 @@ body {
   .quick-action-btn {
     width: 100%;
   }
-  
+
   .empty-state-tips {
     padding: 0 var(--spacing-sm);
   }
@@ -3602,7 +3602,7 @@ body {
 }
 
 /* Hide navigation on chat page */
-.chat-page-container ~ .nav-container {
+.chat-page-container~.nav-container {
   display: none;
 }
 
@@ -3610,7 +3610,8 @@ body {
 @media (max-width: 768px) {
   .chat-page-container {
     padding: var(--spacing-sm);
-    padding-bottom: 80px; /* Account for mobile navigation/quick actions */
+    padding-bottom: 80px;
+    /* Account for mobile navigation/quick actions */
   }
 
   .chat-interface-centered {
@@ -3700,13 +3701,13 @@ body {
     position: relative;
     z-index: 10;
   }
-  
+
   .quick-action-btn {
     flex: 1;
     min-width: 140px;
     padding: var(--spacing-sm);
   }
-  
+
   .quick-action-text {
     font-size: var(--font-size-xs);
   }
@@ -3757,7 +3758,7 @@ body {
   .quick-action-btn {
     width: 100%;
   }
-  
+
   .empty-state-tips {
     padding: 0 var(--spacing-sm);
   }
@@ -3787,12 +3788,14 @@ body {
     /* Add padding bottom to account for mobile navigation if present */
     padding-bottom: 80px;
   }
-  
+
   /* But not on chat page since it has its own padding */
   .chat-page-container {
     padding-bottom: 0;
   }
-}/*
+}
+
+/*
  ============================================
    USER PROFILE COMPONENT
    ============================================ */
@@ -3956,12 +3959,12 @@ body {
   .user-name {
     display: none;
   }
-  
+
   .user-profile-button {
     padding: var(--spacing-xs);
     max-width: auto;
   }
-  
+
   .user-dropdown {
     right: 0;
     min-width: 180px;
@@ -3974,6 +3977,7 @@ body {
     min-width: 160px;
   }
 }
+
 /* ============================================
    HAMBURGER MENU & NAVIGATION DRAWER
    ============================================ */
@@ -4036,7 +4040,8 @@ body {
 
 .nav-drawer-content {
   padding: var(--spacing-xl) var(--spacing-lg);
-  padding-top: 80px; /* Account for header height */
+  padding-top: 80px;
+  /* Account for header height */
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
@@ -4101,7 +4106,7 @@ body {
     width: 100%;
     right: -100%;
   }
-  
+
   .nav-drawer-content {
     padding: var(--spacing-lg);
     padding-top: 80px;

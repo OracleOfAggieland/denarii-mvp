@@ -16,19 +16,31 @@ const ChatInterface: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const { sendMessage, isLoading } = useChatApi();
   const firestore = useFirestore();
-  
-  const { 
-    isSessionActive, 
-    isConnecting, 
-    startSession, 
-    stopSession, 
+
+  const {
+    isSessionActive,
+    isConnecting,
+    startSession,
+    stopSession,
     sendClientEvent,
     events
   } = useRealtimeSession();
 
-  // Load chat history on component mount
+  // Cleanup voice session when component unmounts (user navigates away)
+  useEffect(() => {
+    return () => {
+      if (isSessionActive) {
+        console.log('🚪 ChatInterface unmounting, stopping active voice session');
+        stopSession();
+      }
+    };
+  }, [isSessionActive, stopSession]);
+
+  // Load chat history on component mount and auto-start voice for new users
   useEffect(() => {
     const loadChatHistory = async () => {
+      let isNewUser = false;
+
       if (firestore.isAuthenticated) {
         const firestoreChat = await firestore.getChat();
         if (firestoreChat && firestoreChat.messages) {
@@ -36,7 +48,7 @@ const ChatInterface: React.FC = () => {
           return;
         }
       }
-      
+
       // Fallback to localStorage
       const savedMessages = localStorage.getItem('chatHistory');
       if (savedMessages) {
@@ -49,11 +61,56 @@ const ChatInterface: React.FC = () => {
         } catch (error) {
           console.error('Error loading chat history:', error);
         }
+      } else {
+        isNewUser = true;
+      }
+
+      // If no chat history exists, auto-start voice session for verbal welcome
+      if (isNewUser && (!firestore.isAuthenticated || !(await firestore.getChat())?.messages?.length)) {
+        // Show a brief text message while starting voice session
+        const preparingMessage: Message = {
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: "🎤 Starting voice introduction... Please allow microphone access when prompted!",
+          timestamp: new Date(),
+          isVoice: false
+        };
+        setMessages([preparingMessage]);
+
+        // Auto-start voice session - the hook will handle the verbal welcome
+        setTimeout(async () => {
+          try {
+            await startSession();
+          } catch (error) {
+            console.error('Failed to start voice session for welcome:', error);
+            // Fallback to text welcome if voice fails
+            const fallbackMessage: Message = {
+              id: crypto.randomUUID(),
+              role: 'assistant',
+              content: `Hey there! 👋 I'm your Denarii Advisor, and I'm genuinely excited to help you make smarter money decisions.
+
+You know that feeling when you're about to buy something and you're not quite sure if it's the right move? That's exactly where I come in. I'm here to be your financial wingman - whether you're debating a big purchase, trying to figure out your budget, or just want to chat about money stuff.
+
+Here's the cool part - we can talk in two ways:
+
+💬 **Just type away** - Ask me anything! "Should I buy this?" "How much emergency fund do I need?" "Is this a good deal?" I love these conversations.
+
+🎤 **Or let's actually talk** - Hit that voice button and we can have a real conversation. It's like having a financially savvy friend right there with you.
+
+I'm not here to judge your spending (we've all been there with impulse buys 😅). I'm here to help you think through decisions so you feel confident about your choices.
+
+So... what's on your mind? Got a purchase you're considering? Want to talk budgets? Or maybe you just want to see what I'm all about? I'm all ears! 🎧`,
+              timestamp: new Date(),
+              isVoice: false
+            };
+            setMessages([fallbackMessage]);
+          }
+        }, 500);
       }
     };
 
     loadChatHistory();
-  }, [firestore.isAuthenticated]);
+  }, [firestore.isAuthenticated, startSession]);
 
   // Save messages whenever they change
   useEffect(() => {
@@ -74,7 +131,7 @@ const ChatInterface: React.FC = () => {
   useEffect(() => {
     if (events.length > 0) {
       const latestEvent = events[0];
-      
+
       // Handle different types of voice events
       if (latestEvent.type === 'conversation.item.input_audio_transcription.completed') {
         const userMessage: Message = {
@@ -104,7 +161,7 @@ const ChatInterface: React.FC = () => {
           isVoice: true
         };
         setMessages(prev => [...prev, navigationMessage]);
-        
+
         // Add navigation button
         setTimeout(() => {
           const buttonMessage: Message = {
@@ -143,7 +200,7 @@ const ChatInterface: React.FC = () => {
       setMessages(prev => [...prev, userMessage]);
 
       const response = await sendMessage(messageContent, [...messages, userMessage]);
-      
+
       if (response) {
         const assistantMessage: Message = {
           id: crypto.randomUUID(),
@@ -169,7 +226,7 @@ const ChatInterface: React.FC = () => {
   // Enhanced start session with greeting
   const handleStartSession = async () => {
     await startSession();
-    
+
     // Add a welcome message
     const welcomeMessage: Message = {
       id: crypto.randomUUID(),
@@ -180,7 +237,7 @@ const ChatInterface: React.FC = () => {
     };
     setMessages(prev => [...prev, welcomeMessage]);
   };
-  
+
   const VoiceControlButton = () => {
     if (isConnecting) {
       return (
@@ -192,13 +249,21 @@ const ChatInterface: React.FC = () => {
     }
     if (isSessionActive) {
       return (
-        <button onClick={stopSession} className="btn btn-danger btn-sm">
-          🔴 End Voice Session
+        <button
+          onClick={stopSession}
+          className="btn btn-danger btn-sm"
+          title="Click to stop microphone and end voice session"
+        >
+          🔴 Stop Microphone
         </button>
       );
     }
     return (
-      <button onClick={handleStartSession} className="btn btn-primary btn-sm">
+      <button
+        onClick={handleStartSession}
+        className="btn btn-primary btn-sm"
+        title="Click to start voice session with microphone"
+      >
         🎤 Start Voice Session
       </button>
     );
@@ -227,26 +292,26 @@ const ChatInterface: React.FC = () => {
             </div>
           </div>
         </div>
-        
+
         <MessageList messages={messages} />
-        
-        <MessageInput 
-          onSendMessage={handleSendMessage} 
+
+        <MessageInput
+          onSendMessage={handleSendMessage}
           isLoading={isLoading || isSessionActive}
           placeholder={isSessionActive ? "Voice session active - speak to Denarii Advisor!" : "Ask about a purchase or financial advice..."}
         />
 
         {/* Quick Actions */}
         <div className="quick-actions">
-          <button 
-            onClick={() => navigate('/')} 
+          <button
+            onClick={() => navigate('/')}
             className="quick-action-btn"
           >
             <span className="quick-action-icon">🛒</span>
             <span className="quick-action-text">Analyze a Purchase</span>
           </button>
-          <button 
-            onClick={() => navigate('/profile')} 
+          <button
+            onClick={() => navigate('/profile')}
             className="quick-action-btn"
           >
             <span className="quick-action-icon">👤</span>
