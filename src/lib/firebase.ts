@@ -1,226 +1,264 @@
 // src/lib/firebase.ts
-import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { getAuth, Auth } from 'firebase/auth';
+import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
+import { getAuth, Auth, connectAuthEmulator } from 'firebase/auth';
 import { getFirestore, Firestore, connectFirestoreEmulator } from 'firebase/firestore';
-import { getStorage, FirebaseStorage } from 'firebase/storage';
+import { getStorage, FirebaseStorage, connectStorageEmulator } from 'firebase/storage';
 
-// Enhanced sanitization function that handles all types of whitespace
+/**
+ * Firebase configuration status and error tracking
+ */
+interface FirebaseStatus {
+  isConfigured: boolean;
+  isInitialized: boolean;
+  error: string | null;
+  missingVars: string[];
+}
+
+// Global status tracking
+const status: FirebaseStatus = {
+  isConfigured: false,
+  isInitialized: false,
+  error: null,
+  missingVars: []
+};
+
+/**
+ * Validates and sanitizes environment variables
+ */
 const sanitizeEnvVar = (value: string | undefined): string | undefined => {
   if (!value) return undefined;
+  
+  // Remove all whitespace characters and control characters
+  return value
+    .trim()
+    .replace(/[\r\n\t]/g, '')
+    .replace(/\\[nrt]/g, '')
+    .replace(/\s+/g, (match) => {
+      // Keep spaces only in URLs
+      if (value.includes('.firebaseapp.com') || value.includes('.appspot.com')) {
+        return match === ' ' ? match : '';
+      }
+      return '';
+    })
+    .replace(/[\u200B-\u200D\uFEFF]/g, ''); // Remove zero-width spaces
+};
 
-  // Remove all types of whitespace, newlines, and control characters
-  // This regex matches any whitespace character including \n, \r, \t, spaces, etc.
-  let sanitized = value.trim();
+/**
+ * Gets Firebase configuration from environment variables
+ */
+const getFirebaseConfig = () => {
+  // Check if we're in a browser environment
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const config = {
+    apiKey: sanitizeEnvVar(process.env.NEXT_PUBLIC_FIREBASE_API_KEY),
+    authDomain: sanitizeEnvVar(process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN),
+    projectId: sanitizeEnvVar(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID),
+    storageBucket: sanitizeEnvVar(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET),
+    messagingSenderId: sanitizeEnvVar(process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID),
+    appId: sanitizeEnvVar(process.env.NEXT_PUBLIC_FIREBASE_APP_ID),
+  };
+
+  // Validate required fields
+  const requiredFields = [
+    'apiKey',
+    'authDomain', 
+    'projectId',
+    'storageBucket',
+    'messagingSenderId',
+    'appId'
+  ] as const;
+
+  const missingFields: string[] = [];
   
-  // Remove any escaped newlines that might be in the string
-  sanitized = sanitized.replace(/\\n/g, '');
-  sanitized = sanitized.replace(/\\r/g, '');
-  sanitized = sanitized.replace(/\\t/g, '');
-  
-  // Remove actual newlines, carriage returns, tabs
-  sanitized = sanitized.replace(/[\r\n\t]/g, '');
-  
-  // Remove any Unicode whitespace characters
-  sanitized = sanitized.replace(/\s+/g, (match) => {
-    // Keep spaces in authDomain and storageBucket as they might have spaces in URLs
-    // But remove all other whitespace
-    if (match === ' ' && (
-      value.includes('.firebaseapp.com') || 
-      value.includes('.appspot.com')
-    )) {
-      return match;
+  for (const field of requiredFields) {
+    if (!config[field]) {
+      missingFields.push(`NEXT_PUBLIC_FIREBASE_${field.replace(/([A-Z])/g, '_$1').toUpperCase()}`);
     }
-    return '';
-  });
-  
-  // Remove zero-width spaces and other invisible characters
-  sanitized = sanitized.replace(/[\u200B-\u200D\uFEFF]/g, '');
-
-  // Log if we found and fixed issues
-  if (sanitized !== value) {
-    console.warn('Sanitized Firebase config value:', {
-      original: JSON.stringify(value),
-      sanitized: JSON.stringify(sanitized),
-      hadNewlines: /[\r\n]/.test(value),
-      hadTabs: /\t/.test(value),
-      hadEscapedChars: /\\[nrt]/.test(value)
-    });
   }
 
-  return sanitized || undefined;
-};
-
-// Special sanitization for project ID
-const sanitizeProjectId = (projectId: string | undefined): string | undefined => {
-  if (!projectId) return undefined;
-  
-  // Project IDs can only contain lowercase letters, numbers, and hyphens
-  let sanitized = sanitizeEnvVar(projectId);
-  if (!sanitized) return undefined;
-  
-  // Remove any characters that aren't lowercase letters, numbers, or hyphens
-  sanitized = sanitized.toLowerCase().replace(/[^a-z0-9-]/g, '');
-  
-  if (sanitized !== projectId) {
-    console.warn('Project ID sanitized:', {
-      original: JSON.stringify(projectId),
-      sanitized: JSON.stringify(sanitized)
-    });
-  }
-  
-  return sanitized;
-};
-
-// Check if Firebase environment variables are configured
-const isFirebaseConfigured = () => {
-  const requiredVars = [
-    'NEXT_PUBLIC_FIREBASE_API_KEY',
-    'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
-    'NEXT_PUBLIC_FIREBASE_PROJECT_ID',
-    'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET',
-    'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
-    'NEXT_PUBLIC_FIREBASE_APP_ID'
-  ];
-
-  const missingVars = requiredVars.filter(varName => {
-    const value = sanitizeEnvVar(process.env[varName]);
-    return !value;
-  });
-
-  if (missingVars.length > 0) {
-    console.error('Missing Firebase configuration:', missingVars);
-    return false;
+  if (missingFields.length > 0) {
+    status.missingVars = missingFields;
+    status.isConfigured = false;
+    console.error('❌ Missing Firebase configuration variables:', missingFields);
+    console.error('Please check your .env.local file and ensure all variables are set correctly.');
+    return null;
   }
 
-  return true;
-};
-
-// Firebase configuration with enhanced sanitization
-const firebaseConfig = {
-  apiKey: sanitizeEnvVar(process.env.NEXT_PUBLIC_FIREBASE_API_KEY) || 'demo-api-key',
-  authDomain: sanitizeEnvVar(process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN) || 'demo-project.firebaseapp.com',
-  projectId: sanitizeProjectId(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) || 'demo-project',
-  storageBucket: sanitizeEnvVar(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET) || 'demo-project.appspot.com',
-  messagingSenderId: sanitizeEnvVar(process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID) || '123456789',
-  appId: sanitizeEnvVar(process.env.NEXT_PUBLIC_FIREBASE_APP_ID) || '1:123456789:web:abcdef123456',
-};
-
-// Validate the configuration before using it
-const validateConfig = (config: typeof firebaseConfig): boolean => {
-  // Check project ID format
+  // Additional validation for project ID format
   if (config.projectId && !/^[a-z0-9-]+$/.test(config.projectId)) {
-    console.error('Invalid project ID format:', config.projectId);
-    console.error('Project ID can only contain lowercase letters, numbers, and hyphens');
+    console.error('❌ Invalid Firebase project ID format:', config.projectId);
+    console.error('Project ID can only contain lowercase letters, numbers, and hyphens.');
+    status.error = 'Invalid project ID format';
+    return null;
+  }
+
+  status.isConfigured = true;
+  return config;
+};
+
+// Service instances
+let app: FirebaseApp | undefined;
+let auth: Auth | undefined;
+let db: Firestore | undefined;
+let storage: FirebaseStorage | undefined;
+
+// Track emulator connection status
+let emulatorsConnected = false;
+
+/**
+ * Connects to Firebase emulators for local development
+ */
+const connectToEmulators = () => {
+  if (emulatorsConnected || process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR !== 'true') {
+    return;
+  }
+
+  if (auth && db && storage) {
+    try {
+      connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+      connectFirestoreEmulator(db, 'localhost', 8080);
+      connectStorageEmulator(storage, 'localhost', 9199);
+      emulatorsConnected = true;
+      console.log('✅ Connected to Firebase emulators');
+    } catch (error) {
+      // Emulators might already be connected
+      if ((error as any)?.message?.includes('already been called')) {
+        emulatorsConnected = true;
+      } else {
+        console.warn('⚠️ Failed to connect to Firebase emulators:', error);
+      }
+    }
+  }
+};
+
+/**
+ * Initializes Firebase app and services
+ */
+const initializeFirebase = (): boolean => {
+  // Only initialize on client side
+  if (typeof window === 'undefined') {
     return false;
   }
 
-  // Check for any remaining whitespace
-  for (const [key, value] of Object.entries(config)) {
-    if (typeof value === 'string' && /[\r\n\t]/.test(value)) {
-      console.error(`Firebase config ${key} still contains whitespace:`, JSON.stringify(value));
+  // Check if already initialized
+  if (app && auth && db && storage) {
+    return true;
+  }
+
+  try {
+    // Get configuration
+    const config = getFirebaseConfig();
+    if (!config) {
+      status.error = 'Invalid or missing Firebase configuration';
       return false;
     }
-  }
 
-  return true;
-};
-
-// Initialize Firebase only if not already initialized
-let app: FirebaseApp | undefined = undefined;
-let auth: Auth | undefined = undefined;
-let db: Firestore | undefined = undefined;
-let storage: FirebaseStorage | undefined = undefined;
-
-if (typeof window !== 'undefined') {
-  // Only initialize on client side
-  try {
-    if (!getApps().length && isFirebaseConfigured()) {
-      // Validate configuration before initializing
-      if (!validateConfig(firebaseConfig)) {
-        console.error('Firebase configuration validation failed');
-        console.error('Please check your environment variables for hidden characters');
-        throw new Error('Invalid Firebase configuration');
-      }
-
-      console.log('Initializing Firebase with config:', {
-        ...firebaseConfig,
-        apiKey: '[REDACTED]',
-        projectId: firebaseConfig.projectId
-      });
-
-      app = initializeApp(firebaseConfig);
-      auth = getAuth(app);
-      db = getFirestore(app);
-      storage = getStorage(app);
-
-      // Enable offline persistence
-      if (db) {
-        // Check if we're in development and should use emulator
-        if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true') {
-          try {
-            connectFirestoreEmulator(db, 'localhost', 8080);
-            console.log('Connected to Firestore emulator');
-          } catch (error) {
-            // Emulator might already be connected
-            console.log('Firestore emulator connection skipped (may already be connected)');
-          }
-        }
-      }
-
-      console.log('Firebase initialized successfully');
-      console.log('Auth instance:', !!auth);
-      console.log('Firestore instance:', !!db);
-      console.log('Project ID:', firebaseConfig.projectId);
-      
-      // Test Firestore connection
-      if (db) {
-        import('firebase/firestore').then(({ doc, getDoc }) => {
-          const testDoc = doc(db!, '_test_', '_connection_');
-          getDoc(testDoc)
-            .then(() => console.log('Firestore connection test successful'))
-            .catch((error) => {
-              if (error.code === 'permission-denied') {
-                console.log('Firestore connection works but test document access denied (expected)');
-              } else {
-                console.error('Firestore connection test failed:', error);
-              }
-            });
-        });
-      }
-    } else if (getApps().length > 0) {
-      app = getApps()[0];
-      auth = getAuth(app);
-      db = getFirestore(app);
-      storage = getStorage(app);
-      console.log('Using existing Firebase app');
+    // Check for existing app instance (singleton pattern)
+    if (getApps().length > 0) {
+      console.log('ℹ️ Using existing Firebase app instance');
+      app = getApp();
     } else {
-      console.warn('Firebase not configured - authentication will be unavailable');
-      console.log('Configuration status:', {
-        apiKey: !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-        authDomain: !!process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-        projectId: !!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-        storageBucket: !!process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-        messagingSenderId: !!process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-        appId: !!process.env.NEXT_PUBLIC_FIREBASE_APP_ID
+      console.log('🚀 Initializing new Firebase app');
+      app = initializeApp(config);
+    }
+
+    // Initialize services
+    auth = getAuth(app);
+    db = getFirestore(app);
+    storage = getStorage(app);
+
+    // Connect to emulators if in development
+    if (process.env.NODE_ENV === 'development') {
+      connectToEmulators();
+    }
+
+    status.isInitialized = true;
+    status.error = null;
+
+    console.log('✅ Firebase initialized successfully');
+    console.log('📊 Services ready: Auth:', !!auth, '| Firestore:', !!db, '| Storage:', !!storage);
+
+    // Optional: Test Firestore connection
+    if (db && process.env.NODE_ENV === 'development') {
+      import('firebase/firestore').then(({ doc, getDoc }) => {
+        const testRef = doc(db!, '_test_', 'connection');
+        getDoc(testRef)
+          .then(() => console.log('✅ Firestore connection verified'))
+          .catch((error) => {
+            if (error.code === 'permission-denied') {
+              console.log('✅ Firestore reachable (permission test passed)');
+            } else {
+              console.warn('⚠️ Firestore connection test failed:', error.message);
+            }
+          });
       });
     }
+
+    return true;
   } catch (error) {
-    console.error('Firebase initialization error:', error);
-    console.error('Error details:', {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-      config: {
-        ...firebaseConfig,
-        apiKey: '[REDACTED]'
-      }
-    });
-    // Reset to undefined on error
+    status.error = error instanceof Error ? error.message : 'Unknown initialization error';
+    status.isInitialized = false;
+    
+    console.error('❌ Firebase initialization failed:', status.error);
+    console.error('Full error:', error);
+    
+    // Reset services on failure
     app = undefined;
     auth = undefined;
     db = undefined;
     storage = undefined;
+    
+    return false;
   }
+};
+
+/**
+ * Public function to check if Firebase is properly configured
+ */
+export const isFirebaseConfigured = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  
+  if (!status.isConfigured) {
+    getFirebaseConfig(); // This will update status.isConfigured
+  }
+  
+  return status.isConfigured;
+};
+
+/**
+ * Public function to check if Firebase is initialized
+ */
+export const isFirebaseInitialized = (): boolean => {
+  return status.isInitialized && !!app && !!auth && !!db && !!storage;
+};
+
+/**
+ * Public function to get Firebase status
+ */
+export const getFirebaseStatus = (): Readonly<FirebaseStatus> => {
+  return { ...status };
+};
+
+/**
+ * Initialize Firebase immediately when this module is imported (client-side only)
+ */
+if (typeof window !== 'undefined') {
+  initializeFirebase();
 }
 
-export { auth, db, storage, isFirebaseConfigured, sanitizeProjectId };
-export default app;
+// Export services (may be undefined if initialization fails)
+export { app, auth, db, storage };
+
+// Export a function to manually retry initialization
+export const retryFirebaseInit = (): boolean => {
+  if (isFirebaseInitialized()) {
+    console.log('ℹ️ Firebase already initialized');
+    return true;
+  }
+  
+  console.log('🔄 Retrying Firebase initialization...');
+  return initializeFirebase();
+};
