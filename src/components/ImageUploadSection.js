@@ -10,7 +10,6 @@ const ImageUploadSection = ({
   loading
 }) => {
   const [imageCapturing, setImageCapturing] = useState(false);
-  const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -89,32 +88,6 @@ const ImageUploadSection = ({
     }
   };
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragOver(true);
-  };
-
-  const handleDragLeave = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragOver(false);
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragOver(false);
-    const files = e.dataTransfer.files;
-    if (files && files.length > 0) {
-      const file = files[0];
-      if (file.type.startsWith('image/')) {
-        processFile(file);
-      } else {
-        alert("Please drop an image file.");
-      }
-    }
-  };
 
   const triggerFileInput = () => {
     fileInputRef.current.click();
@@ -171,12 +144,7 @@ const ImageUploadSection = ({
               Add Item Photo (Optional)
             </button>
           ) : (
-            <div
-              className={`image-upload-expanded ${dragOver ? 'drag-over' : ''}`}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            >
+            <div className="image-upload-expanded">
               <div className="upload-header">
                 <h4>Add Item Photo</h4>
                 <button
@@ -189,32 +157,24 @@ const ImageUploadSection = ({
               </div>
 
               <div className="upload-options">
-                <div
-                  className={`drag-drop-zone ${dragOver ? 'drag-over' : ''}`}
-                  onClick={triggerFileInput}
-                >
-                  <div className="drag-drop-icon">📁</div>
-                  <p>Drag &amp; drop or click to browse</p>
-                </div>
-
                 <div className="upload-buttons">
                   <button
                     type="button"
                     onClick={startCamera}
-                    className="upload-option-btn"
+                    className="upload-option-btn camera-btn"
                     aria-label="Start camera to capture image"
                   >
                     <span className="btn-icon">📷</span>
-                    Camera
+                    <span className="btn-text">Camera</span>
                   </button>
                   <button
                     type="button"
-                    className="upload-option-btn"
+                    className="upload-option-btn upload-btn"
                     onClick={triggerFileInput}
                     aria-label="Upload image file"
                   >
                     <span className="btn-icon">📤</span>
-                    Upload
+                    <span className="btn-text">Upload File</span>
                   </button>
                 </div>
               </div>
