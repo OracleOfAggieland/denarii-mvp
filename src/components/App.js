@@ -5,7 +5,6 @@ import { VoiceProvider } from "../contexts/VoiceContext";
 import { FirestoreErrorBoundary } from "./FirestoreErrorBoundary";
 import OfflineIndicator from "./OfflineIndicator";
 import FloatingVoiceButton from "./FloatingVoiceButton";
-import VoiceTranscriptOverlay from "./VoiceTranscriptOverlay";
 import { initializeOfflinePersistence } from "../lib/firestore/offline";
 import UserProfile from "./UserProfile";
 import LoginPage from "./LoginPage";
@@ -183,9 +182,7 @@ const App = () => {
               <AppInitializer />
               <OfflineIndicator />
               <Header />
-              
               {/* Add Voice Components */}
-              <VoiceTranscriptOverlay />
               <FloatingVoiceButton />
 
               <main className="main-content">

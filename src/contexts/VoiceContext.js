@@ -21,7 +21,6 @@ export const VoiceProvider = ({ children }) => {
     events
   } = useRealtimeSession();
 
-  const [transcripts, setTranscripts] = useState([]);
   const [financialProfile, setFinancialProfile] = useState(null);
 
   // Load financial profile for context
@@ -53,19 +52,6 @@ export const VoiceProvider = ({ children }) => {
 
     loadProfile();
   }, [firestore.isAuthenticated]);
-
-  // Process voice events for transcripts
-  useEffect(() => {
-    const newTranscripts = [];
-    events.forEach(event => {
-      if (event.type === 'conversation.item.input_audio_transcription.completed') {
-        newTranscripts.push({ role: 'user', text: event.transcript });
-      } else if (event.type === 'response.audio_transcript.done') {
-        newTranscripts.push({ role: 'assistant', text: event.transcript });
-      }
-    });
-    setTranscripts(newTranscripts);
-  }, [events]);
 
   const getPageContext = useCallback(() => {
     const pathname = location.pathname;
@@ -146,6 +132,10 @@ Be enthusiastic and helpful! Guide them through using the app effectively.`
 
   const startVoiceSession = useCallback(async () => {
     await startSession();
+    // Play a subtle start sound (optional)
+    const startSound = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBzla0fPTgjMGHm7A7+OZURE');
+    startSound.volume = 0.3;
+    startSound.play().catch(() => {}); // Ignore errors if audio fails
     
     const pageContext = getPageContext();
     
@@ -213,8 +203,11 @@ Be enthusiastic and helpful! Guide them through using the app effectively.`
   }, [events, navigate]);
 
   const stopVoiceSession = useCallback(() => {
+    // Play a subtle stop sound (optional)
+    const stopSound = new Audio('data:audio/wav;base64,UklGRl4GAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YToGAAB0XV1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBzla0fPTgjMGHm7A7+OZURE');
+    stopSound.volume = 0.3;
+    stopSound.play().catch(() => {});
     stopSession();
-    setTranscripts([]);
   }, [stopSession]);
 
   return (
@@ -225,7 +218,6 @@ Be enthusiastic and helpful! Guide them through using the app effectively.`
       stopVoiceSession,
       sendMessage: sendClientEvent,
       events,
-      transcripts,
       currentPage: location.pathname
     }}>
       {children}

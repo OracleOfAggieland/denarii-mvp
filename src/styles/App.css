@@ -4852,3 +4852,35 @@ body {
 .floating-voice-container.hidden {
   display: none;
 }
+
+/* Add to App.css - Enhanced Voice Button States */
+.floating-voice-btn.active {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  animation: gentlePulse 2s ease-in-out infinite;
+}
+
+@keyframes gentlePulse {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 8px 32px rgba(239, 68, 68, 0.4);
+  }
+  50% { 
+    transform: scale(1.05);
+    box-shadow: 0 8px 40px rgba(239, 68, 68, 0.6);
+  }
+}
+
+/* Voice status badge - make it more subtle */
+.voice-status-badge {
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  pointer-events: none;
+}
