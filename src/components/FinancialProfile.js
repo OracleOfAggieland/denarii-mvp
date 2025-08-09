@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useFirestore } from "../hooks/useFirestore";
+import { safeToFixed, safeNumber } from '../utils/formatters';
 import "../styles/FinancialProfile.css";
 
 const FinancialProfile = () => {
@@ -149,77 +150,76 @@ const FinancialProfile = () => {
     }));
   };
 
-  // Calculate summary metrics
+  // Calculate summary metrics (safe version)
   const calculateSummary = () => {
-    // Convert strings to numbers
-    const income = parseFloat(formData.monthlyIncome) || 0;
+    // Convert strings to numbers safely
+    const income = safeNumber(formData.monthlyIncome, 0);
     const adjustedIncome = formData.incomeFrequency === "annual" ? income / 12 : income;
-    const otherIncome = parseFloat(formData.otherIncomeSources) || 0;
+    const otherIncome = safeNumber(formData.otherIncomeSources, 0);
     const totalMonthlyIncome = adjustedIncome + otherIncome;
 
-    // Calculate total monthly expenses
+    // Calculate total monthly expenses with safe parsing
     const expenses = [
-      parseFloat(formData.housingCost) || 0,
-      parseFloat(formData.utilitiesCost) || 0,
-      parseFloat(formData.foodCost) || 0,
-      parseFloat(formData.transportationCost) || 0,
-      parseFloat(formData.insuranceCost) || 0,
-      parseFloat(formData.subscriptionsCost) || 0,
-      parseFloat(formData.otherExpenses) || 0
+      safeNumber(formData.housingCost, 0),
+      safeNumber(formData.utilitiesCost, 0),
+      safeNumber(formData.foodCost, 0),
+      safeNumber(formData.transportationCost, 0),
+      safeNumber(formData.insuranceCost, 0),
+      safeNumber(formData.subscriptionsCost, 0),
+      safeNumber(formData.otherExpenses, 0)
     ].reduce((sum, value) => sum + value, 0);
 
-    // Calculate monthly debt payments
+    // Calculate monthly debt payments with safe parsing
     const debtPayments = [
-      parseFloat(formData.creditCardPayment) || 0,
-      parseFloat(formData.studentLoanPayment) || 0,
-      parseFloat(formData.carLoanPayment) || 0,
-      parseFloat(formData.mortgagePayment) || 0,
-      parseFloat(formData.otherDebtPayment) || 0
+      safeNumber(formData.creditCardPayment, 0),
+      safeNumber(formData.studentLoanPayment, 0),
+      safeNumber(formData.carLoanPayment, 0),
+      safeNumber(formData.mortgagePayment, 0),
+      safeNumber(formData.otherDebtPayment, 0)
     ].reduce((sum, value) => sum + value, 0);
 
-    // Calculate total debt
+    // Calculate total debt with safe parsing
     const totalDebt = [
-      parseFloat(formData.creditCardDebt) || 0,
-      parseFloat(formData.studentLoanDebt) || 0,
-      parseFloat(formData.carLoanDebt) || 0,
-      parseFloat(formData.mortgageDebt) || 0,
-      parseFloat(formData.otherDebt) || 0
+      safeNumber(formData.creditCardDebt, 0),
+      safeNumber(formData.studentLoanDebt, 0),
+      safeNumber(formData.carLoanDebt, 0),
+      safeNumber(formData.mortgageDebt, 0),
+      safeNumber(formData.otherDebt, 0)
     ].reduce((sum, value) => sum + value, 0);
 
-    // Calculate debt-to-income ratio
+    // Safe calculations for ratios
     const debtToIncomeRatio = totalMonthlyIncome > 0 ? (debtPayments / totalMonthlyIncome) * 100 : 0;
-
-    // Calculate credit utilization
-    const creditLimit = parseFloat(formData.creditLimit) || 0;
-    const creditBalance = parseFloat(formData.currentCreditBalance) || 0;
+    
+    const creditLimit = safeNumber(formData.creditLimit, 0);
+    const creditBalance = safeNumber(formData.currentCreditBalance, 0);
     const creditUtilization = creditLimit > 0 ? (creditBalance / creditLimit) * 100 : 0;
 
-    // Calculate net worth
+    // Calculate net worth with safe parsing
     const assets = [
-      parseFloat(formData.checkingSavingsBalance) || 0,
-      parseFloat(formData.emergencyFund) || 0,
-      parseFloat(formData.retirementAccounts) || 0,
-      parseFloat(formData.stocksAndBonds) || 0,
-      parseFloat(formData.realEstateValue) || 0,
-      parseFloat(formData.otherInvestments) || 0
+      safeNumber(formData.checkingSavingsBalance, 0),
+      safeNumber(formData.emergencyFund, 0),
+      safeNumber(formData.retirementAccounts, 0),
+      safeNumber(formData.stocksAndBonds, 0),
+      safeNumber(formData.realEstateValue, 0),
+      safeNumber(formData.otherInvestments, 0)
     ].reduce((sum, value) => sum + value, 0);
 
     const netWorth = assets - totalDebt;
 
-    // Calculate emergency fund coverage (in months)
+    // Safe emergency fund calculation
     const monthlyExpensesWithDebt = expenses + debtPayments;
-    const emergencyFund = parseFloat(formData.emergencyFund) || 0;
+    const emergencyFund = safeNumber(formData.emergencyFund, 0);
     const emergencyFundMonths = monthlyExpensesWithDebt > 0 ? emergencyFund / monthlyExpensesWithDebt : 0;
 
-    // Calculate monthly net income
     const monthlyNetIncome = totalMonthlyIncome - expenses - debtPayments;
 
+    // Ensure all values are numbers before setting state
     setSummary({
-      monthlyNetIncome,
-      debtToIncomeRatio,
-      creditUtilization,
-      netWorth,
-      emergencyFundMonths,
+      monthlyNetIncome: safeNumber(monthlyNetIncome, 0),
+      debtToIncomeRatio: safeNumber(debtToIncomeRatio, 0),
+      creditUtilization: safeNumber(creditUtilization, 0),
+      netWorth: safeNumber(netWorth, 0),
+      emergencyFundMonths: safeNumber(emergencyFundMonths, 0),
       hasSummary: true
     });
   };
@@ -378,7 +378,7 @@ const FinancialProfile = () => {
               <div className="summary-item">
                 <h3>Monthly Net Income</h3>
                 <p className={`summary-value ${summary.monthlyNetIncome >= 0 ? 'positive' : 'negative'}`}>
-                  ${summary.monthlyNetIncome.toFixed(2)}
+                  ${safeToFixed(summary.monthlyNetIncome, 2)}
                 </p>
                 <p className="summary-description">
                   {summary.monthlyNetIncome > 0
@@ -390,7 +390,7 @@ const FinancialProfile = () => {
               <div className="summary-item">
                 <h3>Debt-to-Income Ratio</h3>
                 <p className={`summary-value ${summary.debtToIncomeRatio < 36 ? 'positive' : summary.debtToIncomeRatio < 43 ? 'warning' : 'negative'}`}>
-                  {summary.debtToIncomeRatio.toFixed(1)}%
+                  {safeToFixed(summary.debtToIncomeRatio, 1)}%
                 </p>
                 <p className="summary-description">
                   {summary.debtToIncomeRatio < 36
@@ -404,7 +404,7 @@ const FinancialProfile = () => {
               <div className="summary-item">
                 <h3>Credit Utilization</h3>
                 <p className={`summary-value ${summary.creditUtilization < 30 ? 'positive' : summary.creditUtilization < 50 ? 'warning' : 'negative'}`}>
-                  {summary.creditUtilization.toFixed(1)}%
+                  {safeToFixed(summary.creditUtilization, 1)}%
                 </p>
                 <p className="summary-description">
                   {summary.creditUtilization < 30
@@ -418,7 +418,7 @@ const FinancialProfile = () => {
               <div className="summary-item">
                 <h3>Net Worth</h3>
                 <p className={`summary-value ${summary.netWorth >= 0 ? 'positive' : 'negative'}`}>
-                  ${summary.netWorth.toFixed(2)}
+                  ${safeToFixed(summary.netWorth, 2)}
                 </p>
                 <p className="summary-description">
                   {summary.netWorth > 0
@@ -430,7 +430,7 @@ const FinancialProfile = () => {
               <div className="summary-item">
                 <h3>Emergency Fund</h3>
                 <p className={`summary-value ${summary.emergencyFundMonths >= 3 ? 'positive' : summary.emergencyFundMonths >= 1 ? 'warning' : 'negative'}`}>
-                  {summary.emergencyFundMonths.toFixed(1)} months
+                  {safeToFixed(summary.emergencyFundMonths, 1)} months
                 </p>
                 <p className="summary-description">
                   {summary.emergencyFundMonths >= 6

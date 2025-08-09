@@ -1,17 +1,19 @@
 // src/components/Dashboard/HealthScoreWidget.js
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { safeToFixed, safeNumber } from '../../utils/formatters';
 
 const HealthScoreWidget = ({ profile }) => {
-  const healthScore = profile?.summary?.healthScore || 50;
-  const monthlyNetIncome = profile?.summary?.monthlyNetIncome || 0;
-  const emergencyFundMonths = profile?.summary?.emergencyFundMonths || 0;
-  const debtToIncomeRatio = profile?.summary?.debtToIncomeRatio || 0;
+  // Safely extract values with proper defaults
+  const healthScore = safeNumber(profile?.summary?.healthScore, 50);
+  const monthlyNetIncome = safeNumber(profile?.summary?.monthlyNetIncome, 0);
+  const emergencyFundMonths = safeNumber(profile?.summary?.emergencyFundMonths, 0);
+  const debtToIncomeRatio = safeNumber(profile?.summary?.debtToIncomeRatio, 0);
 
-  // Calculate current savings from profile
-  const currentSavings = parseFloat(profile?.checkingSavingsBalance || '0') +
-    parseFloat(profile?.emergencyFund || '0') +
-    parseFloat(profile?.retirementAccounts || '0') +
-    parseFloat(profile?.stocksAndBonds || '0');
+  // Calculate current savings safely
+  const currentSavings = safeNumber(profile?.checkingSavingsBalance, 0) +
+    safeNumber(profile?.emergencyFund, 0) +
+    safeNumber(profile?.retirementAccounts, 0) +
+    safeNumber(profile?.stocksAndBonds, 0);
 
   // Determine health score color
   const getScoreColor = (score) => {
@@ -106,7 +108,7 @@ const HealthScoreWidget = ({ profile }) => {
           <div className="metric-card">
             <div className="metric-label">Emergency Fund</div>
             <div className={`metric-value ${emergencyFundMonths >= 3 ? 'positive' : emergencyFundMonths >= 1 ? 'warning' : 'negative'}`}>
-              {emergencyFundMonths.toFixed(1)} mo
+              {safeToFixed(emergencyFundMonths, 1)} mo
             </div>
             <div className="metric-sublabel">
               {emergencyFundMonths >= 6 ? 'Excellent coverage' : 
@@ -118,7 +120,7 @@ const HealthScoreWidget = ({ profile }) => {
           <div className="metric-card">
             <div className="metric-label">Debt Ratio</div>
             <div className={`metric-value ${debtToIncomeRatio <= 20 ? 'positive' : debtToIncomeRatio <= 40 ? 'warning' : 'negative'}`}>
-              {debtToIncomeRatio.toFixed(0)}%
+              {safeToFixed(debtToIncomeRatio, 0)}%
             </div>
             <div className="metric-sublabel">
               {debtToIncomeRatio <= 20 ? 'Healthy' : 
