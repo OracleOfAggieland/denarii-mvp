@@ -2427,6 +2427,108 @@ body {
   transform: translateY(0);
 }
 
+/* Voice Tooltip Styles */
+.voice-tooltip {
+  position: fixed;
+  bottom: 180px;
+  right: 20px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 2px solid rgba(139, 92, 246, 0.2);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 20px 40px rgba(139, 92, 246, 0.15),
+              0 0 60px rgba(139, 92, 246, 0.1);
+  padding: 0;
+  max-width: 320px;
+  min-width: 280px;
+  z-index: 999;
+  animation: slideInBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+
+@keyframes slideInBounce {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.8);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-5px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.tooltip-content {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  position: relative;
+}
+
+.tooltip-icon {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  margin-top: 2px;
+}
+
+.tooltip-title {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--primary-color);
+  margin: 0 0 var(--spacing-xs) 0;
+  line-height: 1.2;
+}
+
+.tooltip-text {
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.tooltip-arrow {
+  position: absolute;
+  bottom: -8px;
+  right: 45px;
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-right: 2px solid rgba(139, 92, 246, 0.2);
+  border-bottom: 2px solid rgba(139, 92, 246, 0.2);
+  transform: rotate(45deg);
+}
+
+.tooltip-close {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  background: rgba(139, 92, 246, 0.1);
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-color);
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: var(--transition-all);
+  z-index: 1;
+}
+
+.tooltip-close:hover {
+  background: rgba(139, 92, 246, 0.2);
+  color: var(--primary-dark);
+  transform: scale(1.1);
+}
+
 /* ============================================
    13. UTILITY CLASSES
    ============================================ */
@@ -2773,6 +2875,37 @@ body {
     font-size: 28px;
   }
 
+  /* Voice Tooltip Mobile */
+  .voice-tooltip {
+    bottom: 150px;
+    right: 12px;
+    left: 12px;
+    max-width: none;
+    min-width: auto;
+    width: auto;
+  }
+
+  .tooltip-content {
+    padding: var(--spacing-md);
+    gap: var(--spacing-sm);
+  }
+
+  .tooltip-icon {
+    font-size: 2rem;
+  }
+
+  .tooltip-title {
+    font-size: var(--font-size-base);
+  }
+
+  .tooltip-text {
+    font-size: var(--font-size-sm);
+  }
+
+  .tooltip-arrow {
+    right: 30px;
+  }
+
   /* Main Content */
   .main-content {
     padding-bottom: 80px;
@@ -2993,6 +3126,45 @@ body {
   
   .voice-btn-icon {
     font-size: 24px;
+  }
+
+  /* Voice Tooltip Small Mobile */
+  .voice-tooltip {
+    bottom: 130px;
+    right: 8px;
+    left: 8px;
+  }
+
+  .tooltip-content {
+    padding: var(--spacing-sm);
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--spacing-xs);
+  }
+
+  .tooltip-icon {
+    font-size: 1.8rem;
+    margin-top: 0;
+  }
+
+  .tooltip-title {
+    font-size: var(--font-size-sm);
+    margin-bottom: 2px;
+  }
+
+  .tooltip-text {
+    font-size: var(--font-size-xs);
+  }
+
+  .tooltip-arrow {
+    right: 25px;
+  }
+
+  .tooltip-close {
+    width: 24px;
+    height: 24px;
+    font-size: 1rem;
   }
 
   /* User Profile */
