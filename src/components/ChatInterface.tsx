@@ -7,34 +7,69 @@ import { useNavigate } from 'react-router-dom';
 import { Message } from '@/types/chat';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
+
+import VoiceWelcomeScreen from './VoiceWelcomeScreen';
 import { useChatApi } from '../hooks/useChatApi';
-import { useRealtimeSession } from '../hooks/useRealtimeSession';
+import { useVoice } from '../contexts/VoiceContext';
 import { useFirestore } from '../hooks/useFirestore';
+import { useAuth } from '../contexts/AuthContext';
 
 const ChatInterface: React.FC = () => {
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const { sendMessage, isLoading } = useChatApi();
   const firestore = useFirestore();
+  const { user } = useAuth();
+
+  // Add state for financial profile and voice welcome
+  const [financialProfile, setFinancialProfile] = useState<any>(null);
+  const [hasSeenVoiceWelcome, setHasSeenVoiceWelcome] = useState(() => {
+    return localStorage.getItem('hasSeenVoiceWelcome') === 'true';
+  });
 
   const {
     isSessionActive,
     isConnecting,
-    startSession,
-    stopSession,
-    sendClientEvent,
+    startVoiceSession,
+    stopVoiceSession,
     events
-  } = useRealtimeSession();
+  } = useVoice();
+
+  // Add useEffect to load financial profile
+  useEffect(() => {
+    const loadFinancialProfile = async () => {
+      try {
+        // First try to get the full profile
+        if (firestore.isAuthenticated) {
+          const profile = await firestore.getProfile();
+          if (profile) {
+            setFinancialProfile(profile);
+            return;
+          }
+        }
+
+        // Fallback to progressive profile
+        const progressiveProfile = localStorage.getItem('quickFinancialProfile');
+        if (progressiveProfile) {
+          setFinancialProfile(JSON.parse(progressiveProfile));
+        }
+      } catch (error) {
+        console.error('Error loading financial profile:', error);
+      }
+    };
+
+    loadFinancialProfile();
+  }, [firestore.isAuthenticated]);
 
   // Cleanup voice session when component unmounts (user navigates away)
   useEffect(() => {
     return () => {
       if (isSessionActive) {
         console.log('🚪 ChatInterface unmounting, stopping active voice session');
-        stopSession();
+        stopVoiceSession();
       }
     };
-  }, [isSessionActive, stopSession]);
+  }, [isSessionActive, stopVoiceSession]);
 
   // Load chat history on component mount and auto-start voice for new users
   useEffect(() => {
@@ -80,7 +115,7 @@ const ChatInterface: React.FC = () => {
         // Auto-start voice session - the hook will handle the verbal welcome
         setTimeout(async () => {
           try {
-            await startSession();
+            await startVoiceSession();
           } catch (error) {
             console.error('Failed to start voice session for welcome:', error);
             // Fallback to text welcome if voice fails
@@ -110,7 +145,7 @@ So... what's on your mind? Got a purchase you're considering? Want to talk budge
     };
 
     loadChatHistory();
-  }, [firestore.isAuthenticated, startSession]);
+  }, [firestore.isAuthenticated, startVoiceSession]);
 
   // Save messages whenever they change
   useEffect(() => {
@@ -187,8 +222,7 @@ So... what's on your mind? Got a purchase you're considering? Want to talk budge
           content: [{ type: "input_text", text: messageContent }],
         },
       };
-      sendClientEvent(event);
-      sendClientEvent({ type: "response.create" });
+      // Voice events now handled by global voice context
     } else {
       const userMessage: Message = {
         id: crypto.randomUUID(),
@@ -223,19 +257,40 @@ So... what's on your mind? Got a purchase you're considering? Want to talk budge
     }
   };
 
-  // Enhanced start session with greeting
-  const handleStartSession = async () => {
-    await startSession();
+  // Update the handleStartSession function to include financial context
+  const handleStartSessionWithContext = async () => {
+    await startVoiceSession();
 
-    // Add a welcome message
+    // Send financial context to the voice session
+    if (isSessionActive && financialProfile) {
+      const contextMessage = {
+        type: "conversation.item.create",
+        item: {
+          type: "message",
+          role: "system",
+          content: [{
+            type: "input_text",
+            text: `User's Financial Context: Monthly income: $${financialProfile.monthlyIncome || 'not provided'}. Monthly expenses: $${financialProfile.monthlyExpenses || 'not provided'}. Savings: $${financialProfile.currentSavings || 'not provided'}. Emergency fund: ${financialProfile.hasEmergencyFund ? 'Yes' : 'No'}. Primary goal: ${financialProfile.financialGoal || 'not specified'}. Use this context to provide personalized financial advice.`
+          }]
+        }
+      };
+      // Context now handled by global voice provider
+    }
+
+    // Add welcome message with personalized greeting
     const welcomeMessage: Message = {
       id: crypto.randomUUID(),
       role: 'assistant',
-      content: "🎤 Voice session started! I'm listening... Feel free to ask me about any purchase you're considering!",
+      content: `🎤 Voice session started! ${financialProfile ? `I have your financial profile loaded and ready to give you personalized advice.` : 'I\'m listening...'} Feel free to ask me about any purchase you're considering!`,
       timestamp: new Date(),
       isVoice: true
     };
     setMessages(prev => [...prev, welcomeMessage]);
+  };
+
+  // Enhanced start session with greeting (keep for backward compatibility)
+  const handleStartSession = async () => {
+    await startVoiceSession();
   };
 
   const VoiceControlButton = () => {
@@ -250,7 +305,7 @@ So... what's on your mind? Got a purchase you're considering? Want to talk budge
     if (isSessionActive) {
       return (
         <button
-          onClick={stopSession}
+          onClick={stopVoiceSession}
           className="btn btn-danger btn-sm"
           title="Click to stop microphone and end voice session"
         >
@@ -271,7 +326,23 @@ So... what's on your mind? Got a purchase you're considering? Want to talk budge
 
   return (
     <div className="chat-page-container">
-      <div className="chat-interface-centered">
+      <div className={`chat-interface-centered ${isSessionActive ? 'voice-active' : ''}`}>
+        {/* Show welcome screen for new users */}
+        {messages.length === 0 && !hasSeenVoiceWelcome && (
+          <VoiceWelcomeScreen
+            onDismiss={() => {
+              setHasSeenVoiceWelcome(true);
+              localStorage.setItem('hasSeenVoiceWelcome', 'true');
+            }}
+            onStartVoice={() => {
+              setHasSeenVoiceWelcome(true);
+              localStorage.setItem('hasSeenVoiceWelcome', 'true');
+              startVoiceSession();
+            }}
+          />
+        )}
+
+        {/* Existing chat header - simplified */}
         <div className="chat-header">
           <div className="chat-header-content">
             <h2 className="chat-title">
@@ -282,11 +353,10 @@ So... what's on your mind? Got a purchase you're considering? Want to talk budge
               </span>
             </h2>
             <div className="chat-controls">
-              <VoiceControlButton />
               {messages.length > 0 && (
                 <button onClick={clearChatHistory} className="btn btn-secondary btn-sm clear-history-btn">
                   <span className="btn-icon-only">🗑️</span>
-                  <span className="btn-text-desktop">Clear History</span>
+                  <span className="btn-text-desktop">Clear</span>
                 </button>
               )}
             </div>
@@ -303,22 +373,18 @@ So... what's on your mind? Got a purchase you're considering? Want to talk budge
 
         {/* Quick Actions */}
         <div className="quick-actions">
-          <button
-            onClick={() => navigate('/')}
-            className="quick-action-btn"
-          >
+          <button onClick={() => navigate('/')} className="quick-action-btn">
             <span className="quick-action-icon">🛒</span>
-            <span className="quick-action-text">Analyze a Purchase</span>
+            <span className="quick-action-text">Analyze Purchase</span>
           </button>
-          <button
-            onClick={() => navigate('/profile')}
-            className="quick-action-btn"
-          >
+          <button onClick={() => navigate('/profile')} className="quick-action-btn">
             <span className="quick-action-icon">👤</span>
-            <span className="quick-action-text">Financial Profile</span>
+            <span className="quick-action-text">Profile</span>
           </button>
         </div>
       </div>
+
+
     </div>
   );
 }

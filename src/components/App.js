@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "../contexts/AuthContext";
+import { VoiceProvider } from "../contexts/VoiceContext";
 import { FirestoreErrorBoundary } from "./FirestoreErrorBoundary";
 import OfflineIndicator from "./OfflineIndicator";
+import FloatingVoiceButton from "./FloatingVoiceButton";
+import VoiceTranscriptOverlay from "./VoiceTranscriptOverlay";
 import { initializeOfflinePersistence } from "../lib/firestore/offline";
 import UserProfile from "./UserProfile";
 import LoginPage from "./LoginPage";
@@ -175,30 +178,36 @@ const App = () => {
     <AuthProvider>
       <FirestoreErrorBoundary>
         <Router>
-          <div className="app-layout">
-            <AppInitializer />
-            <OfflineIndicator />
-            <Header />
+          <VoiceProvider>
+            <div className="app-layout">
+              <AppInitializer />
+              <OfflineIndicator />
+              <Header />
+              
+              {/* Add Voice Components */}
+              <VoiceTranscriptOverlay />
+              <FloatingVoiceButton />
 
-            <main className="main-content">
-              <Routes>
-                <Route path="/" element={<PurchaseAdvisor />} />
-                <Route path="/profile" element={<FinancialProfile />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/pro-mode" element={<ProMode />} />
-                <Route path="/user-guide" element={<UserGuide />} />
-                <Route path="/finance-feed" element={<FinanceFeed />} />
-                <Route path="/chat" element={<ChatInterface />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/terms" element={<TermsPage />} />
-                <Route path="/privacy" element={<PrivacyPage />} />
-              </Routes>
-            </main>
+              <main className="main-content">
+                <Routes>
+                  <Route path="/" element={<PurchaseAdvisor />} />
+                  <Route path="/profile" element={<FinancialProfile />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/pro-mode" element={<ProMode />} />
+                  <Route path="/user-guide" element={<UserGuide />} />
+                  <Route path="/finance-feed" element={<FinanceFeed />} />
+                  <Route path="/chat" element={<ChatInterface />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/terms" element={<TermsPage />} />
+                  <Route path="/privacy" element={<PrivacyPage />} />
+                </Routes>
+              </main>
 
-            <Footer />
-            <Navigation />
-          </div>
+              <Footer />
+              <Navigation />
+            </div>
+          </VoiceProvider>
         </Router>
       </FirestoreErrorBoundary>
     </AuthProvider>
