@@ -26,6 +26,7 @@ const ChatInterface: React.FC = () => {
   const [hasSeenVoiceWelcome, setHasSeenVoiceWelcome] = useState(() => {
     return localStorage.getItem('hasSeenVoiceWelcome') === 'true';
   });
+  const [isManualClear, setIsManualClear] = useState(false);
 
   const {
     isSessionActive,
@@ -74,6 +75,9 @@ const ChatInterface: React.FC = () => {
   // Load chat history on component mount and auto-start voice for new users
   useEffect(() => {
     const loadChatHistory = async () => {
+      // Don't run if this is a manual clear
+      if (isManualClear) return;
+      
       let isNewUser = false;
 
       if (firestore.isAuthenticated) {
@@ -145,7 +149,7 @@ So... what's on your mind? Got a purchase you're considering? Want to talk budge
     };
 
     loadChatHistory();
-  }, [firestore.isAuthenticated, startVoiceSession]);
+  }, [firestore.isAuthenticated, startVoiceSession, isManualClear]);
 
   // Save messages whenever they change
   useEffect(() => {
@@ -165,6 +169,7 @@ So... what's on your mind? Got a purchase you're considering? Want to talk budge
   // Process voice session events and add them to chat history
   useEffect(() => {
     if (events.length > 0) {
+      setIsManualClear(false);
       const latestEvent = events[0];
 
       // Handle different types of voice events
@@ -213,6 +218,7 @@ So... what's on your mind? Got a purchase you're considering? Want to talk budge
   }, [events, navigate]);
 
   const handleSendMessage = async (messageContent: string) => {
+    setIsManualClear(false);
     if (isSessionActive) {
       const event = {
         type: "conversation.item.create",
@@ -249,6 +255,7 @@ So... what's on your mind? Got a purchase you're considering? Want to talk budge
   };
 
   const clearChatHistory = async () => {
+    setIsManualClear(true);
     setMessages([]);
     if (firestore.isAuthenticated) {
       await firestore.saveChat([]);
@@ -328,7 +335,7 @@ So... what's on your mind? Got a purchase you're considering? Want to talk budge
     <div className="chat-page-container">
       <div className={`chat-interface-centered ${isSessionActive ? 'voice-active' : ''}`}>
         {/* Show welcome screen for new users */}
-        {messages.length === 0 && !hasSeenVoiceWelcome && (
+        {messages.length === 0 && !hasSeenVoiceWelcome && !isManualClear && (
           <VoiceWelcomeScreen
             onDismiss={() => {
               setHasSeenVoiceWelcome(true);

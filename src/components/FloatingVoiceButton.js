@@ -50,7 +50,7 @@ const FloatingVoiceButton = () => {
             <div>
               <p className="tooltip-title">Your AI Financial Advisor</p>
               <p className="tooltip-text">
-                Click here to talk to me! Ask about purchases, get financial advice, or learn how to use Denarii.
+                Click the microphone to talk to me! Ask about purchases, get financial advice, or learn how to use Denarii.
               </p>
             </div>
           </div>

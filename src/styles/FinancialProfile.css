@@ -8,6 +8,7 @@
   margin: -40px auto 30px;
   position: relative;
   z-index: 5;
+  box-sizing: border-box;
 }
 
 /* FINANCIAL FORM */
@@ -197,6 +198,9 @@
   z-index: 5;
   animation: slideDown 0.6s ease-out forwards;
   border: 1px solid rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .summary-title {
@@ -218,9 +222,10 @@
 
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 24px;
   margin-bottom: 32px;
+  width: 100%;
 }
 
 .summary-item {
@@ -229,6 +234,9 @@
   border-radius: var(--radius-md);
   animation: fadeIn 0.5s ease-out;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
+  word-wrap: break-word;
+  min-width: 0;
 }
 
 .summary-item:hover {
@@ -247,6 +255,9 @@
   font-size: 1.5rem;
   font-weight: 700;
   margin-bottom: 10px;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 .summary-value.positive {
@@ -369,6 +380,15 @@
   
   .summary-value {
     font-size: 1.3rem;
+  }
+  
+  .summary-item {
+    padding: 16px;
+  }
+  
+  .summary-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
   }
   
   .debt-entry h3 {

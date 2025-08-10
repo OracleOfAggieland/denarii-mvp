@@ -378,7 +378,7 @@ const FinancialProfile = () => {
               <div className="summary-item">
                 <h3>Monthly Net Income</h3>
                 <p className={`summary-value ${summary.monthlyNetIncome >= 0 ? 'positive' : 'negative'}`}>
-                  ${safeToFixed(summary.monthlyNetIncome, 2)}
+                  ${Number(safeToFixed(summary.monthlyNetIncome, 2)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
                 <p className="summary-description">
                   {summary.monthlyNetIncome > 0
@@ -418,7 +418,7 @@ const FinancialProfile = () => {
               <div className="summary-item">
                 <h3>Net Worth</h3>
                 <p className={`summary-value ${summary.netWorth >= 0 ? 'positive' : 'negative'}`}>
-                  ${safeToFixed(summary.netWorth, 2)}
+                  {summary.netWorth < 0 ? '-' : ''}${Number(safeToFixed(Math.abs(summary.netWorth), 2)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
                 <p className="summary-description">
                   {summary.netWorth > 0
