@@ -1728,6 +1728,59 @@ body {
   margin: 32px 0;
 }
 
+/* Mobile Responsive Styles for Login Page */
+@media (max-width: 768px) {
+  .login-page .login-container {
+    padding: 32px 24px;
+    margin: 20px;
+    max-width: calc(100vw - 40px);
+  }
+  
+  .login-page .logo-icon {
+    font-size: 3rem;
+  }
+  
+  .login-page .logo-section h1 {
+    font-size: 1.75rem;
+  }
+  
+  .login-page .login-subtitle {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-page {
+    padding: 16px;
+  }
+  
+  .login-page .login-container {
+    padding: 24px 20px;
+    margin: 0;
+    border-radius: 16px;
+  }
+  
+  .login-page .logo-icon {
+    font-size: 2.5rem;
+  }
+  
+  .login-page .logo-section h1 {
+    font-size: 1.5rem;
+  }
+  
+  .login-page .login-subtitle {
+    font-size: 0.9rem;
+  }
+  
+  .login-page .auth-section h2 {
+    font-size: 1.1rem;
+  }
+  
+  .login-page .login-footer {
+    font-size: 0.8rem;
+  }
+}
+
 /* User Profile Component */
 .user-profile {
   position: relative;
