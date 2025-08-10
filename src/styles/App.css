@@ -1436,6 +1436,85 @@ body {
   transform: translateX(3px);
 }
 
+/* Munger Quote Styles */
+.munger-quote {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 2px solid #f59e0b;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  margin: var(--spacing-lg) 0;
+  position: relative;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.2);
+  overflow: hidden;
+}
+
+.munger-quote::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.quote-icon {
+  font-size: 2rem;
+  color: #92400e;
+  margin-bottom: var(--spacing-sm);
+  display: block;
+  text-align: center;
+}
+
+.quote-text {
+  font-size: var(--font-size-lg);
+  font-style: italic;
+  color: #78350f;
+  line-height: 1.7;
+  text-align: center;
+  margin: var(--spacing-md) 0;
+  position: relative;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.quote-attribution {
+  text-align: center;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: #92400e;
+  margin-top: var(--spacing-md);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Quote hover effect */
+.munger-quote:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
+  transition: all 0.3s ease;
+}
+
+/* Mobile responsive for quote */
+@media (max-width: 768px) {
+  .munger-quote {
+    padding: var(--spacing-md);
+    margin: var(--spacing-md) 0;
+  }
+  
+  .quote-icon {
+    font-size: 1.5rem;
+  }
+  
+  .quote-text {
+    font-size: var(--font-size-base);
+  }
+  
+  .quote-attribution {
+    font-size: 0.75rem;
+  }
+}
+
 /* Result Bubble */
 .result-bubble-overlay {
   position: fixed;

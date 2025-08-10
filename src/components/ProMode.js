@@ -86,6 +86,28 @@ const ProMode = () => {
     }));
   };
 
+  const copyToClipboard = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      // Optional: Show a brief success message
+      // This could be enhanced with a toast notification in the future
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+      } catch (fallbackErr) {
+        console.error('Fallback copy failed: ', fallbackErr);
+      }
+      document.body.removeChild(textArea);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -190,13 +212,23 @@ const ProMode = () => {
                       <div className="hint-content">
                         <span className="hint-label">Hint:</span>
                         <p className="hint-text">{question.placeholder}</p>
-                        <button
-                          type="button"
-                          className="use-hint-button"
-                          onClick={() => handleAnswerChange(question.id, question.placeholder)}
-                        >
-                          Use Hint
-                        </button>
+                        <div className="hint-actions">
+                          <button
+                            type="button"
+                            className="use-hint-button"
+                            onClick={() => handleAnswerChange(question.id, question.placeholder)}
+                          >
+                            Use Hint
+                          </button>
+                          <button
+                            type="button"
+                            className="copy-hint-button"
+                            onClick={() => copyToClipboard(question.placeholder)}
+                            title="Copy hint to clipboard"
+                          >
+                            📋 Copy
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )}

@@ -158,14 +158,18 @@ export const getPurchaseRecommendation = async (itemName, cost, purpose, frequen
     - Potential savings: $${(cost - alternative.price).toFixed(2)}`;
     }
 
+    // Add a timestamp to encourage unique responses
+    const timestamp = Date.now();
+    
     prompt += `\n\nProvide your response in the following JSON format (ensure it's valid JSON):
     {
       "decision": "Buy" or "Don't Buy",
       "reasoning": "Your detailed reasoning in Charlie Munger's voice, explaining the decision with practical wisdom and mental models. Keep it conversational and include specific advice.",
-      "quote": "A relevant Charlie Munger quote that relates to this purchase decision or financial wisdom in general"
+      "quote": "A relevant Charlie Munger quote that relates to this purchase decision or financial wisdom in general. IMPORTANT: Provide a DIFFERENT quote each time - vary your selection from his extensive wisdom library."
     }
     
     IMPORTANT: Return ONLY the JSON object, no additional text before or after.
+    CRITICAL: Generate a UNIQUE quote for each analysis - timestamp: ${timestamp}
 
     Remember to think like Charlie Munger - focus on:
     - Value vs. cost
@@ -173,7 +177,12 @@ export const getPurchaseRecommendation = async (itemName, cost, purpose, frequen
     - Long-term thinking
     - Avoiding unnecessary purchases
     - The importance of living below your means
-    - Whether this purchase aligns with rational decision-making`;
+    - Whether this purchase aligns with rational decision-making
+    
+    Quote Selection Guidance:
+    - Choose from Charlie Munger's vast collection of quotes about investing, spending, psychology, and decision-making
+    - Vary between quotes about: rational thinking, patience, avoiding mistakes, understanding value, compound interest, psychology of money, etc.
+    - Make sure each quote genuinely relates to the specific purchase being analyzed`;
 
     const response = await fetch('/api/chat', {
       method: 'POST',
@@ -210,10 +219,23 @@ export const getPurchaseRecommendation = async (itemName, cost, purpose, frequen
       let cleanedReasoning = parsedResponse.reasoning || "";
       cleanedReasoning = cleanedReasoning.replace(/^\s*\{\s*"decision":[^,]*,\s*"reasoning":\s*"|"\s*\}\s*$/g, '');
 
+      // Array of different fallback quotes to ensure variety
+      const fallbackQuotes = [
+        "The big money is not in the buying and selling, but in the waiting.",
+        "It is remarkable how much long-term advantage people like us have gotten by trying to be consistently not stupid, instead of trying to be very intelligent.",
+        "The desire to get rich fast is pretty dangerous.",
+        "A great business at a fair price is superior to a fair business at a great price.",
+        "I think I've been in the top 5% of my age cohort all my life in understanding the power of incentives, and all my life I've underestimated it.",
+        "Spend each day trying to be a little wiser than you were when you woke up.",
+        "The first rule of compounding: Never interrupt it unnecessarily."
+      ];
+      
+      const randomQuote = fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)];
+
       const result = {
         decision: parsedResponse.decision || "Don't Buy",
         reasoning: cleanedReasoning || "I couldn't provide a proper analysis at this time.",
-        quote: parsedResponse.quote || "The big money is not in the buying and selling, but in the waiting."
+        quote: parsedResponse.quote || randomQuote
       };
 
       // Include alternative if it was provided
@@ -227,7 +249,18 @@ export const getPurchaseRecommendation = async (itemName, cost, purpose, frequen
       const responseText = data.response;
       let decision = "Don't Buy";
       let reasoning = "I couldn't provide a proper analysis at this time.";
-      let quote = "The big money is not in the buying and selling, but in the waiting.";
+      
+      // Use the same fallback quotes array for consistency
+      const fallbackQuotes = [
+        "The big money is not in the buying and selling, but in the waiting.",
+        "It is remarkable how much long-term advantage people like us have gotten by trying to be consistently not stupid, instead of trying to be very intelligent.",
+        "The desire to get rich fast is pretty dangerous.",
+        "A great business at a fair price is superior to a fair business at a great price.",
+        "I think I've been in the top 5% of my age cohort all my life in understanding the power of incentives, and all my life I've underestimated it.",
+        "Spend each day trying to be a little wiser than you were when you woke up.",
+        "The first rule of compounding: Never interrupt it unnecessarily."
+      ];
+      let quote = fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)];
 
       // Try to find JSON block in the response
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
@@ -274,10 +307,22 @@ export const getPurchaseRecommendation = async (itemName, cost, purpose, frequen
     }
   } catch (error) {
     console.error('Error getting purchase recommendation:', error);
+    
+    // Use random fallback quote even in error cases
+    const fallbackQuotes = [
+      "The big money is not in the buying and selling, but in the waiting.",
+      "It is remarkable how much long-term advantage people like us have gotten by trying to be consistently not stupid, instead of trying to be very intelligent.",
+      "The desire to get rich fast is pretty dangerous.",
+      "A great business at a fair price is superior to a fair business at a great price.",
+      "I think I've been in the top 5% of my age cohort all my life in understanding the power of incentives, and all my life I've underestimated it.",
+      "Spend each day trying to be a little wiser than you were when you woke up.",
+      "The first rule of compounding: Never interrupt it unnecessarily."
+    ];
+    
     return {
       decision: "Error",
       reasoning: "I couldn't analyze this purchase due to a technical error: " + error.message,
-      quote: "The big money is not in the buying and selling, but in the waiting.",
+      quote: fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)],
       alternative: alternative
     };
   }

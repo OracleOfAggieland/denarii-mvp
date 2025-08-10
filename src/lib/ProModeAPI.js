@@ -4,6 +4,37 @@
  */
 
 /**
+ * Clean placeholder text to remove prefixes and make it ready for direct use
+ */
+const cleanPlaceholderText = (text) => {
+  if (!text) return '';
+  
+  // Remove common prefixes that users don't want to copy
+  let cleaned = text
+    .replace(/^e\.g\.,?\s*/i, '')           // Remove "e.g., " or "e.g. "
+    .replace(/^for example,?\s*/i, '')      // Remove "for example, " 
+    .replace(/^such as,?\s*/i, '')          // Remove "such as, "
+    .replace(/^like,?\s*/i, '')             // Remove "like, "
+    .replace(/^example:?\s*/i, '')          // Remove "example: "
+    .replace(/^sample:?\s*/i, '')           // Remove "sample: "
+    .replace(/^\w+\s*example:?\s*/i, '')    // Remove "Good example: ", "Sample example: ", etc.
+    .replace(/^try:?\s*/i, '')              // Remove "try: "
+    .replace(/^consider:?\s*/i, '')         // Remove "consider: "
+    .replace(/^you might say:?\s*/i, '')    // Remove "you might say: "
+    .replace(/^answer:?\s*/i, '')           // Remove "answer: "
+    .replace(/^response:?\s*/i, '')         // Remove "response: "
+    .replace(/^hint:?\s*/i, '')             // Remove "hint: "
+    .trim();
+  
+  // Ensure the cleaned text starts with a capital letter
+  if (cleaned.length > 0) {
+    cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  }
+  
+  return cleaned;
+};
+
+/**
  * Generate tailored questions based on purchase context
  */
 export const generateProModeQuestions = async (purchaseData) => {
@@ -34,7 +65,7 @@ export const generateProModeQuestions = async (purchaseData) => {
       Each question object must have these fields:
       - "id": A string like "q1", "q2", "q3"
       - "text": The question text
-      - "placeholder": An example answer hint
+      - "placeholder": A clean, direct example answer that users can copy-paste without editing. DO NOT include prefixes like "e.g.", "for example", "such as", or similar. Write the placeholder as if the user is answering directly.
       
       Format your response as:
       {
@@ -63,7 +94,10 @@ export const generateProModeQuestions = async (purchaseData) => {
 
     // For Pro Mode questions, the server now returns the array directly
     if (Array.isArray(data)) {
-      return data;
+      return data.map(question => ({
+        ...question,
+        placeholder: cleanPlaceholderText(question.placeholder)
+      }));
     }
 
     // Fallback: try to parse from response string if needed
@@ -75,28 +109,37 @@ export const generateProModeQuestions = async (purchaseData) => {
     
     // If it's an object with questions array, extract it
     if (parsed.questions && Array.isArray(parsed.questions)) {
-      return parsed.questions;
+      // Clean all placeholders in the parsed questions
+      return parsed.questions.map(question => ({
+        ...question,
+        placeholder: cleanPlaceholderText(question.placeholder)
+      }));
     }
     
-    return parsed;
+    // Clean placeholders if it's a direct array
+    const questionsArray = Array.isArray(parsed) ? parsed : [parsed];
+    return questionsArray.map(question => ({
+      ...question,
+      placeholder: cleanPlaceholderText(question.placeholder)
+    }));
   } catch (error) {
     console.error('Error generating questions:', error);
-    // Fallback questions
+    // Fallback questions with clean placeholders
     return [
       {
         id: 'q1',
         text: 'What specific features or capabilities are most important to you in this purchase?',
-        placeholder: 'e.g., I need it for professional work, specific features like...'
+        placeholder: cleanPlaceholderText('e.g., I need it for professional work, specific features like high-resolution display and fast processing')
       },
       {
         id: 'q2',
         text: 'Have you researched alternatives? What made you choose this particular option?',
-        placeholder: 'e.g., I looked at X and Y, but this one has...'
+        placeholder: cleanPlaceholderText('e.g., I looked at Brand X and Brand Y, but this one has better reviews and warranty coverage')
       },
       {
         id: 'q3',
         text: 'How soon do you need this item, and are there any upcoming sales or releases you\'re aware of?',
-        placeholder: 'e.g., I need it by next month, Black Friday is coming...'
+        placeholder: cleanPlaceholderText('e.g., I need it by next month for a project, Black Friday is coming up in two weeks')
       }
     ];
   }

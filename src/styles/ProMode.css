@@ -291,6 +291,45 @@
     transform: translateY(0);
   }
   
+  /* Hint Actions Container */
+  .hint-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  
+  /* Copy Hint Button */
+  .copy-hint-button {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .copy-hint-button:hover {
+    background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
+  }
+  
+  .copy-hint-button:focus {
+    outline: 2px solid #6366f1;
+    outline-offset: 2px;
+  }
+  
+  .copy-hint-button:active {
+    transform: translateY(0);
+  }
+  
   /* Form Actions */
   .form-actions {
     display: flex;
