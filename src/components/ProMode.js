@@ -60,7 +60,19 @@ const ProMode = () => {
         console.log('Generating questions for:', data);
         const generatedQuestions = await generateProModeQuestions(data);
         console.log('Generated questions:', generatedQuestions);
-        setQuestions(generatedQuestions);
+        
+        // Ensure backward compatibility - questions work with or without new fields
+        const processedQuestions = generatedQuestions.map((q, index) => ({
+          id: q.id || `q${index + 1}`,
+          text: q.text || 'Please provide additional information',
+          placeholder: q.placeholder || 'Enter your answer here',
+          // New optional fields - keep them if present
+          dimension: q.dimension,
+          answer_type: q.answer_type,
+          search_hint: q.search_hint
+        }));
+        
+        setQuestions(processedQuestions);
         setLoading(false);
       } catch (error) {
         console.error('Error loading Pro Mode:', error);
@@ -90,7 +102,6 @@ const ProMode = () => {
     try {
       await navigator.clipboard.writeText(text);
       // Optional: Show a brief success message
-      // This could be enhanced with a toast notification in the future
     } catch (err) {
       console.error('Failed to copy text: ', err);
       // Fallback for older browsers
@@ -126,7 +137,7 @@ const ProMode = () => {
       );
       setAnalysis(proAnalysis);
       
-      // Save to Firestore if authenticated
+      // Save to Firestore if authenticated - include enhanced question data
       if (firestore.isAuthenticated) {
         await firestore.saveProAnalysis({
           itemName: purchaseData.itemName,
@@ -147,6 +158,16 @@ const ProMode = () => {
   const handleBack = () => {
     navigate('/');
   };
+
+  // Helper to get dimension label if available
+  const getDimensionLabel = (dimension) => {
+  const labels = {
+    specs: '📋 Specifications',
+    constraints: '💰 Constraints',
+    timing: '🕐 Timing'  // Changed from ⏰ to 🕐 for better display
+  };
+  return labels[dimension] || '';
+};
 
   if (loading) {
     return (
@@ -212,6 +233,11 @@ const ProMode = () => {
                       <div className="hint-content">
                         <span className="hint-label">Hint:</span>
                         <p className="hint-text">{question.placeholder}</p>
+                        {question.search_hint && (
+                          <p className="search-hint">
+                            <em>Search context: {question.search_hint}</em>
+                          </p>
+                        )}
                         <div className="hint-actions">
                           <button
                             type="button"

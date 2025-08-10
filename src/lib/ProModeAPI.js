@@ -4,26 +4,39 @@
  */
 
 /**
+ * Type definition for backward-compatible Pro Mode questions
+ * @typedef {Object} ProQuestion
+ * @property {'q1' | 'q2' | 'q3'} id
+ * @property {string} text
+ * @property {string} placeholder
+ * @property {'specs' | 'constraints' | 'timing'} [dimension] - Optional for backward compatibility
+ * @property {'short_text' | 'number' | 'choice'} [answer_type] - Optional
+ * @property {string} [search_hint] - Optional
+ */
+
+/**
  * Clean placeholder text to remove prefixes and make it ready for direct use
+ * Enhanced to ensure search-ready format with concrete entities
  */
 const cleanPlaceholderText = (text) => {
   if (!text) return '';
   
   // Remove common prefixes that users don't want to copy
   let cleaned = text
-    .replace(/^e\.g\.,?\s*/i, '')           // Remove "e.g., " or "e.g. "
-    .replace(/^for example,?\s*/i, '')      // Remove "for example, " 
-    .replace(/^such as,?\s*/i, '')          // Remove "such as, "
-    .replace(/^like,?\s*/i, '')             // Remove "like, "
-    .replace(/^example:?\s*/i, '')          // Remove "example: "
-    .replace(/^sample:?\s*/i, '')           // Remove "sample: "
-    .replace(/^\w+\s*example:?\s*/i, '')    // Remove "Good example: ", "Sample example: ", etc.
-    .replace(/^try:?\s*/i, '')              // Remove "try: "
-    .replace(/^consider:?\s*/i, '')         // Remove "consider: "
-    .replace(/^you might say:?\s*/i, '')    // Remove "you might say: "
-    .replace(/^answer:?\s*/i, '')           // Remove "answer: "
-    .replace(/^response:?\s*/i, '')         // Remove "response: "
-    .replace(/^hint:?\s*/i, '')             // Remove "hint: "
+    .replace(/^e\.g\.,?\s*/i, '')           
+    .replace(/^for example,?\s*/i, '')      
+    .replace(/^such as,?\s*/i, '')          
+    .replace(/^like,?\s*/i, '')             
+    .replace(/^example:?\s*/i, '')          
+    .replace(/^sample:?\s*/i, '')           
+    .replace(/^\w+\s*example:?\s*/i, '')    
+    .replace(/^try:?\s*/i, '')              
+    .replace(/^consider:?\s*/i, '')         
+    .replace(/^you might say:?\s*/i, '')    
+    .replace(/^answer:?\s*/i, '')           
+    .replace(/^response:?\s*/i, '')         
+    .replace(/^hint:?\s*/i, '')
+    .replace(/^"([^"]*)"$/g, '$1')          // Remove surrounding quotes
     .trim();
   
   // Ensure the cleaned text starts with a capital letter
@@ -31,7 +44,59 @@ const cleanPlaceholderText = (text) => {
     cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
   }
   
+  // Truncate to 120 chars if needed
+  if (cleaned.length > 120) {
+    cleaned = cleaned.substring(0, 117) + '...';
+  }
+  
   return cleaned;
+};
+
+/**
+ * Validate and enforce diversity constraints on questions
+ */
+const validateQuestions = (questions) => {
+  if (!Array.isArray(questions) || questions.length !== 3) {
+    return null;
+  }
+
+  // Check for required ids
+  const ids = questions.map(q => q.id);
+  if (!ids.includes('q1') || !ids.includes('q2') || !ids.includes('q3')) {
+    return null;
+  }
+
+  // Check for dimension diversity if dimensions are present
+  const dimensions = questions.map(q => q.dimension).filter(Boolean);
+  if (dimensions.length === 3) {
+    const hasSpecs = dimensions.includes('specs');
+    const hasConstraints = dimensions.includes('constraints');
+    const hasTiming = dimensions.includes('timing');
+    
+    if (!hasSpecs || !hasConstraints || !hasTiming) {
+      // Fix dimension assignment if not diverse
+      const fixedQuestions = [...questions];
+      fixedQuestions[0].dimension = 'specs';
+      fixedQuestions[1].dimension = 'constraints';
+      fixedQuestions[2].dimension = 'timing';
+      return fixedQuestions;
+    }
+  }
+
+  return questions;
+};
+
+/**
+ * Generate fallback placeholder based on dimension
+ */
+const getFallbackPlaceholder = (dimension, itemName, itemCost) => {
+  const placeholders = {
+    specs: `I need ${itemName || 'it'} for gaming, 16GB RAM minimum`,
+    constraints: `Budget under $${Math.round(itemCost * 1.2)}, must have warranty`,
+    timing: `Need by Dec 15; can wait 30 days for sales`
+  };
+  
+  return placeholders[dimension] || 'Please provide specific details';
 };
 
 /**
@@ -39,42 +104,35 @@ const cleanPlaceholderText = (text) => {
  */
 export const generateProModeQuestions = async (purchaseData) => {
   try {
-    // Destructure for easier access
-    const {
-      itemName,
-      itemCost,
-      analysisDetails
-    } = purchaseData;
+    const { itemName, itemCost, analysisDetails } = purchaseData;
     const topNegativeFactors = analysisDetails?.topFactors?.negative || [];
+    const concerns = topNegativeFactors.length > 0 
+      ? topNegativeFactors.join(', ')
+      : '';
 
-    // Build a context string from the most important negative factors
-    const contextString = topNegativeFactors.length > 0 ?
-      `The initial analysis raised concerns about: ${topNegativeFactors.join(', ')}.` :
-      '';
+    const prompt = `You are a financial advisor generating exactly 3 probing questions to improve web search and market analysis for a potential purchase.
 
-    const prompt = `You are a financial advisor specializing in high-value purchases. 
-      The user is considering: ${itemName} for $${itemCost}.
-      ${contextString}
-      
-      Generate exactly 3 probing questions that will help provide deeper analysis, focusing on the identified areas of concern. Questions should:
-      1. Be specific to this item and price point
-      2. Uncover personal use cases, alternatives considered, and timing factors
-      3. Help assess long-term value and opportunity cost
-      
-      Return a JSON object with a "questions" key containing an array of exactly 3 question objects.
-      Each question object must have these fields:
-      - "id": A string like "q1", "q2", "q3"
-      - "text": The question text
-      - "placeholder": A clean, direct example answer that users can copy-paste without editing. DO NOT include prefixes like "e.g.", "for example", "such as", or similar. Write the placeholder as if the user is answering directly.
-      
-      Format your response as:
-      {
-        "questions": [
-          {"id": "q1", "text": "Question text", "placeholder": "Example answer hint"},
-          {"id": "q2", "text": "Question text", "placeholder": "Example answer hint"},
-          {"id": "q3", "text": "Question text", "placeholder": "Example answer hint"}
-        ]
-      }`;
+Item: "${itemName}"
+Price: $${itemCost}
+Initial concerns (if any): ${concerns}
+
+**Output format (JSON only):**
+{
+  "questions": [
+    {"id":"q1","dimension":"specs","answer_type":"short_text","text":"...","placeholder":"...","search_hint":"..."},
+    {"id":"q2","dimension":"constraints","answer_type":"short_text","text":"...","placeholder":"...","search_hint":"..."},
+    {"id":"q3","dimension":"timing","answer_type":"short_text","text":"...","placeholder":"...","search_hint":"..."}
+  ]
+}
+
+**Hard requirements:**
+- Produce **exactly 3** questions, one per **dimension**: (1) \`specs\` (use-case or must-have features), (2) \`constraints\` (budget/TCO/warranty/retailer/region), (3) \`timing\` (need-by date, willingness to wait for sales/upcoming releases).
+- Each object must include: \`id\` (\`q1|q2|q3\`), \`dimension\`, \`answer_type\`, \`text\`, \`placeholder\`, \`search_hint\`.
+- \`placeholder\` must be **first-person**, **≤120 chars**, and include **1–2 concrete, searchable entities** (e.g., brand/model, spec numbers, warranty months, retailer/ZIP, or a date window). Do **not** use quotes or prefixes like "e.g." or "Example:".
+- Make each \`text\` non-overlapping in scope (no near-duplicates).
+- Keep \`answer_type\` = \`short_text\` unless a number or multiple-choice is clearly better.
+- \`search_hint\` = one short line that explains how the answer will translate into search terms later.
+- Return **valid JSON only** (no markdown fences, no prose outside the JSON).`;
 
     const response = await fetch('/api/chat', {
       method: 'POST',
@@ -92,54 +150,86 @@ export const generateProModeQuestions = async (purchaseData) => {
       throw new Error(`API Error: ${data.error}`);
     }
 
-    // For Pro Mode questions, the server now returns the array directly
+    let questions;
+    
+    // Handle direct array response from server
     if (Array.isArray(data)) {
-      return data.map(question => ({
-        ...question,
-        placeholder: cleanPlaceholderText(question.placeholder)
-      }));
+      questions = data;
+    } else if (data.response) {
+      // Parse from response string
+      const cleanedResponse = data.response
+        .replace(/^```json\s*/, '')
+        .replace(/\s*```$/, '')
+        .trim();
+      
+      try {
+        const parsed = JSON.parse(cleanedResponse);
+        questions = parsed.questions || parsed;
+      } catch (parseError) {
+        console.error('Failed to parse questions JSON:', parseError);
+        throw parseError;
+      }
     }
 
-    // Fallback: try to parse from response string if needed
-    const cleanedResponse = data.response
-      .replace(/^```json\s*/, '')
-      .replace(/\s*```$/, '')
-      .trim();
-    const parsed = JSON.parse(cleanedResponse);
+    // Validate and fix questions
+    questions = validateQuestions(questions);
     
-    // If it's an object with questions array, extract it
-    if (parsed.questions && Array.isArray(parsed.questions)) {
-      // Clean all placeholders in the parsed questions
-      return parsed.questions.map(question => ({
-        ...question,
-        placeholder: cleanPlaceholderText(question.placeholder)
-      }));
+    if (!questions) {
+      throw new Error('Invalid question structure received');
     }
-    
-    // Clean placeholders if it's a direct array
-    const questionsArray = Array.isArray(parsed) ? parsed : [parsed];
-    return questionsArray.map(question => ({
-      ...question,
-      placeholder: cleanPlaceholderText(question.placeholder)
-    }));
+
+    // Clean and enhance placeholders
+    return questions.map((question, index) => {
+      const cleaned = cleanPlaceholderText(question.placeholder);
+      
+      // Ensure placeholder has searchable content if too generic
+      let finalPlaceholder = cleaned;
+      if (!cleaned || cleaned.length < 10 || !cleaned.match(/[0-9a-zA-Z]{3,}/)) {
+        finalPlaceholder = getFallbackPlaceholder(
+          question.dimension || ['specs', 'constraints', 'timing'][index],
+          itemName,
+          itemCost
+        );
+      }
+
+      return {
+        ...question,
+        placeholder: finalPlaceholder,
+        // Ensure backward compatibility - keep all fields but they're optional
+        dimension: question.dimension || ['specs', 'constraints', 'timing'][index],
+        answer_type: question.answer_type || 'short_text',
+        search_hint: question.search_hint || 'Will be used to refine search terms'
+      };
+    });
+
   } catch (error) {
     console.error('Error generating questions:', error);
-    // Fallback questions with clean placeholders
+    
+    // Enhanced fallback questions with all new fields
     return [
       {
         id: 'q1',
         text: 'What specific features or capabilities are most important to you in this purchase?',
-        placeholder: cleanPlaceholderText('e.g., I need it for professional work, specific features like high-resolution display and fast processing')
+        placeholder: `I need ${purchaseData?.itemName || 'it'} for work, 16GB RAM, fast SSD`,
+        dimension: 'specs',
+        answer_type: 'short_text',
+        search_hint: 'Will search for models with these specific features'
       },
       {
         id: 'q2',
-        text: 'Have you researched alternatives? What made you choose this particular option?',
-        placeholder: cleanPlaceholderText('e.g., I looked at Brand X and Brand Y, but this one has better reviews and warranty coverage')
+        text: 'What are your budget constraints and requirements (warranty, retailer preference)?',
+        placeholder: `Max $${Math.round((purchaseData?.itemCost || 1000) * 1.2)}, 2-year warranty, Amazon preferred`,
+        dimension: 'constraints',
+        answer_type: 'short_text',
+        search_hint: 'Will filter results by price and vendor requirements'
       },
       {
         id: 'q3',
-        text: 'How soon do you need this item, and are there any upcoming sales or releases you\'re aware of?',
-        placeholder: cleanPlaceholderText('e.g., I need it by next month for a project, Black Friday is coming up in two weeks')
+        text: 'When do you need this item, and can you wait for sales or new releases?',
+        placeholder: 'Need by January 15, can wait for Black Friday deals',
+        dimension: 'timing',
+        answer_type: 'short_text',
+        search_hint: 'Will check for upcoming sales and release dates'
       }
     ];
   }
@@ -150,10 +240,11 @@ export const generateProModeQuestions = async (purchaseData) => {
  */
 export const getProModeAnalysis = async (purchaseData, questions, answers) => {
   try {
-    // Build context from Q&A
-    const qaContext = questions.map((q) =>
-      `Q: ${q.text}\nA: ${answers[q.id]}`
-    ).join('\n\n');
+    // Build context from Q&A, including dimension info if available
+    const qaContext = questions.map((q) => {
+      const dimension = q.dimension ? ` [${q.dimension}]` : '';
+      return `Q${dimension}: ${q.text}\nA: ${answers[q.id]}`;
+    }).join('\n\n');
 
     const prompt = `You are a premium financial advisor with access to web search. Provide a comprehensive analysis for this high-value purchase.
   
@@ -192,7 +283,7 @@ export const getProModeAnalysis = async (purchaseData, questions, answers) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: prompt,
-        useWebSearch: true  // Enable web search for this request
+        useWebSearch: true
       }),
     });
 
@@ -202,7 +293,6 @@ export const getProModeAnalysis = async (purchaseData, questions, answers) => {
 
     const data = await response.json();
     
-    // Find and extract the JSON object from the response string
     const jsonMatch = data.response.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error("No valid JSON object found in the API response.");

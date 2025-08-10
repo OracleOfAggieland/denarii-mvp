@@ -100,6 +100,33 @@ function attemptToFixTruncatedJSON(jsonString: string): string | null {
   }
 }
 
+// Enhanced validation for Pro Mode questions
+function validateProModeQuestions(questions: any[]): any[] {
+  // Ensure we have exactly 3 questions
+  if (!Array.isArray(questions) || questions.length < 3) {
+    throw new Error('Not enough questions generated');
+  }
+  
+  // Validate each question has required fields
+  const validQuestions = questions.filter((q: any) => 
+    q.id && typeof q.id === 'string' &&
+    q.text && typeof q.text === 'string' &&
+    q.placeholder && typeof q.placeholder === 'string'
+  );
+  
+  if (validQuestions.length < 3) {
+    throw new Error('Invalid question format');
+  }
+  
+  // Pass through all fields including optional ones
+  return validQuestions.slice(0, 3).map((q, index) => ({
+    ...q, // Keep all fields including dimension, answer_type, search_hint
+    id: q.id || `q${index + 1}`,
+    text: q.text,
+    placeholder: q.placeholder
+  }));
+}
+
 export async function POST(request: NextRequest): Promise<NextResponse<ChatResponse | any[]>> {
   try {
     // Log environment info for debugging
@@ -179,7 +206,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<ChatRespo
     const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
     
     // Add system message for financial advisor context
-    const isProModeQuestions = body.message.includes('Generate exactly 3 probing questions');
+    const isProModeQuestions = body.message.includes('exactly 3 probing questions') || 
+                              body.message.includes('Generate exactly 3 probing questions');
     
     if (!isProModeQuestions) {
       messages.push({
@@ -324,29 +352,9 @@ Remember: Every dollar saved and invested wisely brings users closer to financia
         
         // Check if this has the expected "questions" structure
         if (parsedResponse.questions && Array.isArray(parsedResponse.questions)) {
-          // Validate that we have exactly 3 questions with proper structure
-          const questions = parsedResponse.questions;
-          
-          // If we have less than 3 questions due to truncation, use fallback
-          if (questions.length < 3) {
-            console.error('Not enough questions generated, got:', questions.length);
-            throw new Error('Incomplete questions generated');
-          }
-          
-          // Filter out any incomplete questions
-          const validQuestions = questions.filter((q: {id?: string; text?: string; placeholder?: string}) => 
-            q.id && typeof q.id === 'string' &&
-            q.text && typeof q.text === 'string' &&
-            q.placeholder && typeof q.placeholder === 'string'
-          );
-          
-          if (validQuestions.length < 3) {
-            console.error('Not enough valid questions after filtering:', validQuestions.length);
-            throw new Error('Invalid question format');
-          }
-          
-          // Return the first 3 valid questions
-          return NextResponse.json(validQuestions.slice(0, 3));
+          // Validate and pass through all fields
+          const validatedQuestions = validateProModeQuestions(parsedResponse.questions);
+          return NextResponse.json(validatedQuestions);
         }
         
         // If it doesn't have the expected structure, throw an error
@@ -356,22 +364,31 @@ Remember: Every dollar saved and invested wisely brings users closer to financia
         console.error('Error parsing Pro Mode questions:', parseError);
         console.error('Raw response:', assistantMessage);
         
-        // Return fallback questions
+        // Return enhanced fallback questions with all fields
         return NextResponse.json([
           {
             id: 'q1',
             text: 'What specific features or capabilities are most important to you in this purchase?',
-            placeholder: 'e.g., I need it for professional work, specific features like...'
+            placeholder: 'I need it for professional work, specific features like...',
+            dimension: 'specs',
+            answer_type: 'short_text',
+            search_hint: 'Will search for models with these specific features'
           },
           {
             id: 'q2',
             text: 'Have you researched alternatives? What made you choose this particular option?',
-            placeholder: 'e.g., I looked at X and Y, but this one has...'
+            placeholder: 'I looked at X and Y, but this one has...',
+            dimension: 'constraints',
+            answer_type: 'short_text',
+            search_hint: 'Will compare with alternative options mentioned'
           },
           {
             id: 'q3',
             text: 'How soon do you need this item, and are there any upcoming sales or releases you\'re aware of?',
-            placeholder: 'e.g., I need it by next month, Black Friday is coming...'
+            placeholder: 'I need it by next month, Black Friday is coming...',
+            dimension: 'timing',
+            answer_type: 'short_text',
+            search_hint: 'Will check for sales and release timing'
           }
         ]);
       }
