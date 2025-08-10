@@ -30,7 +30,7 @@ export interface ChatState {
  * Configuration options for OpenAI API integration
  */
 export interface OpenAIConfig {
-  model: string; // default: 'gpt-3.5-turbo'
+  model: string; // default: 'gpt-4.1'
   temperature: number; // default: 0.7
   maxTokens: number; // default: 150
 }

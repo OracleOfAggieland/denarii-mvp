@@ -10,17 +10,17 @@ export type Environment = 'development' | 'production' | 'test';
  */
 export const DEFAULT_OPENAI_CONFIG: Record<Environment, OpenAIConfig> = {
   development: {
-    model: 'gpt-3.5-turbo',
+    model: 'gpt-4.1',
     temperature: 0.7,
     maxTokens: 150,
   },
   production: {
-    model: 'gpt-3.5-turbo',
+    model: 'gpt-4.1',
     temperature: 0.5,
     maxTokens: 200,
   },
   test: {
-    model: 'gpt-3.5-turbo',
+    model: 'gpt-4.1',
     temperature: 0.1,
     maxTokens: 50,
   },

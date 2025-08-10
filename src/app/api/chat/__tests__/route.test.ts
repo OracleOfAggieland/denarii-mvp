@@ -24,7 +24,7 @@ jest.mock('openai', () => {
 jest.mock('@/lib/openai-config', () => ({
   validateEnvironment: jest.fn(() => ({ isValid: true })),
   getOpenAIConfig: jest.fn(() => ({
-    model: 'gpt-3.5-turbo',
+    model: 'gpt-4.1',
     temperature: 0.7,
     maxTokens: 150,
   })),
@@ -90,7 +90,7 @@ describe('Chat API Route Logic', () => {
 
       expect(completion.choices[0]?.message?.content).toBe('Hello! How can I help you today?');
       expect(mockCreate).toHaveBeenCalledWith({
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4.1',
         messages: [
           {
             role: 'user',
@@ -134,7 +134,7 @@ describe('Chat API Route Logic', () => {
       });
 
       expect(mockCreate).toHaveBeenCalledWith({
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4.1',
         messages,
         temperature: 0.7,
         max_tokens: 150,
@@ -348,7 +348,7 @@ describe('Chat API Route Logic', () => {
 
     it('should get OpenAI configuration', () => {
       const config = getOpenAIConfig();
-      expect(config.model).toBe('gpt-3.5-turbo');
+      expect(config.model).toBe('gpt-4.1');
       expect(config.temperature).toBe(0.7);
       expect(config.maxTokens).toBe(150);
     });
