@@ -12,11 +12,17 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
     monthlyIncome: "",
     monthlyExpenses: "",
     currentSavings: "",
-    hasEmergencyFund: null,
+    riskTolerance: null,
     debtPayments: "",
     financialGoal: "",
-    riskTolerance: "moderate"
   });
+  const [includedDebtInExpenses, setIncludedDebtInExpenses] = useState(false);
+
+  // Helper function for safe number conversion
+  function toNumber(x) {
+    const n = parseFloat(x);
+    return Number.isFinite(n) ? n : 0;
+  }
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -32,11 +38,9 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
               monthlyIncome: firestoreProfile.monthlyIncome || "",
               monthlyExpenses: calculateTotalExpenses(firestoreProfile),
               currentSavings: firestoreProfile.checkingSavingsBalance || "",
-              hasEmergencyFund: firestoreProfile.emergencyFund ?
-                (parseFloat(firestoreProfile.emergencyFund) > 0 ? "yes" : "no") : null,
+              riskTolerance: firestoreProfile.riskTolerance || null,
               debtPayments: calculateTotalDebtPayments(firestoreProfile),
               financialGoal: firestoreProfile.financialPriorities || "",
-              riskTolerance: firestoreProfile.riskTolerance || "moderate"
             };
             setProfile(quickProfile);
             if (quickProfile.monthlyIncome && quickProfile.monthlyExpenses) setStep(4);
@@ -61,7 +65,14 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
       const savedProfile = localStorage.getItem('quickFinancialProfile');
       if (savedProfile) {
         const parsed = JSON.parse(savedProfile);
-        setProfile(parsed);
+        setProfile({
+          monthlyIncome: parsed.monthlyIncome || "",
+          monthlyExpenses: parsed.monthlyExpenses || "",
+          currentSavings: parsed.currentSavings || "",
+          riskTolerance: parsed.riskTolerance || null,
+          debtPayments: parsed.debtPayments || "",
+          financialGoal: parsed.financialGoal || "",
+        });
         if (parsed.monthlyIncome && parsed.monthlyExpenses) setStep(4);
       }
     };
@@ -112,12 +123,13 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
       help: "This helps us understand your purchasing power"
     },
     {
-      title: "What are your monthly expenses?",
+      title: "Essential monthly expenses (exclude loan/credit-card payments)",
       field: "monthlyExpenses",
       type: "number",
       placeholder: "e.g., 3500",
       prefix: "$",
-      help: "Include rent, bills, food, subscriptions, etc."
+      help: "Housing (rent or mortgage), utilities, groceries, insurance, subscriptions. Do not include credit-card or loan minimums—we ask next.",
+      hasCheckbox: true
     },
     {
       title: "How much do you have in savings?",
@@ -128,23 +140,23 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
       help: "Your total in checking + savings accounts"
     },
     {
-      title: "Do you have an emergency fund?",
-      field: "hasEmergencyFund",
+      title: "What's your risk tolerance?",
+      field: "riskTolerance",
       type: "choice",
       choices: [
-        { value: "yes", label: "Yes, 3+ months", emoji: "✅" },
-        { value: "some", label: "Some savings", emoji: "🟡" },
-        { value: "no", label: "Not yet", emoji: "❌" }
+        { value: "low", label: "Low", emoji: "🛡️" },
+        { value: "moderate", label: "Moderate", emoji: "⚖️" },
+        { value: "high", label: "High", emoji: "🚀" }
       ],
-      help: "An emergency fund covers 3-6 months of expenses"
+      help: "How comfortable are you with financial risk?"
     },
     {
-      title: "Any monthly debt payments?",
+      title: "Total monthly minimum debt payments",
       field: "debtPayments",
       type: "number",
       placeholder: "e.g., 500",
       prefix: "$",
-      help: "Credit cards, loans, etc. (excluding mortgage)",
+      help: "Credit cards, auto/student/personal loans (exclude mortgage). Minimums only.",
       optional: true
     },
     {
@@ -195,26 +207,39 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
       return;
     }
 
-    // Calculate final metrics when completing
-    const income = parseFloat(profile.monthlyIncome) || 0;
-    const debt = parseFloat(profile.debtPayments) || 0;
-    const monthlyNet = income -
-      (parseFloat(profile.monthlyExpenses) || 0) -
-      debt;
+    // Calculate final metrics when completing using the new formulas
+    const income = toNumber(profile.monthlyIncome);
+    const expensesInput = toNumber(profile.monthlyExpenses); // should EXCLUDE non-mortgage debt
+    const debt = toNumber(profile.debtPayments); // mortgage excluded by copy
+    const savings = toNumber(profile.currentSavings);
 
-    const debtToIncomeRatio = income > 0 ? (debt / income) * 100 : 0;
+    // Adjust expenses if user accidentally included debt
+    const expenses = (includedDebtInExpenses ? Math.max(0, expensesInput - debt) : expensesInput);
 
-    const savingsRatio = profile.currentSavings ?
-      parseFloat(profile.currentSavings) / (parseFloat(profile.monthlyExpenses) || 1) : 0;
+    const monthlyNetIncome = income - expenses - debt;
 
-    const healthScore = calculateHealthScore(profile);
+    const debtToIncomeRatio = (income > 0 && debt > 0)
+      ? (debt / income) * 100
+      : 0;
+
+    const runwayDenom = Math.max(0, expenses + debt); // total monthly burn (must-pay)
+    const emergencyFundMonths = runwayDenom > 0 ? (savings / runwayDenom) : 0;
+
+    // Keep back-compat alias
+    const savingsMonths = emergencyFundMonths;
+    
+    // Derive hasEmergencyFund for internal use (not persisted)
+    const hasEmergencyFund = emergencyFundMonths >= 3;
+
+    const healthScore = calculateHealthScore(profile, emergencyFundMonths);
 
     const summary = {
-      monthlyNetIncome: monthlyNet,
-      emergencyFundMonths: savingsRatio,
-      debtToIncomeRatio: debtToIncomeRatio,
+      monthlyNetIncome,
+      debtToIncomeRatio,
+      emergencyFundMonths,
+      savingsMonths, // backward compatibility
       healthScore,
-      hasEmergencyFund: profile.hasEmergencyFund === 'yes',
+      hasEmergencyFund: hasEmergencyFund,
       primaryGoal: profile.financialGoal
     };
 
@@ -256,7 +281,7 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
           creditLimit: "",
           currentCreditBalance: "",
           checkingSavingsBalance: profile.currentSavings,
-          emergencyFund: profile.hasEmergencyFund === 'yes' ? profile.currentSavings : "0",
+          emergencyFund: hasEmergencyFund ? profile.currentSavings : "0",
           retirementAccounts: "",
           stocksAndBonds: "",
           realEstateValue: "",
@@ -305,19 +330,20 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
     handleInputChange(value);
   };
 
-  function calculateHealthScore(profile) {
+  function calculateHealthScore(profile, emergencyFundMonths) {
     let score = 50;
-    const income = parseFloat(profile.monthlyIncome) || 0;
-    const expenses = parseFloat(profile.monthlyExpenses) || 0;
-    const savings = parseFloat(profile.currentSavings) || 0;
-    const debt = parseFloat(profile.debtPayments) || 0;
+    const income = toNumber(profile.monthlyIncome);
+    const expenses = toNumber(profile.monthlyExpenses);
+    const savings = toNumber(profile.currentSavings);
+    const debt = toNumber(profile.debtPayments);
 
     if (income > expenses * 1.3) score += 20;
     else if (income > expenses * 1.1) score += 10;
     else if (income < expenses) score -= 20;
 
-    if (profile.hasEmergencyFund === 'yes') score += 20;
-    else if (profile.hasEmergencyFund === 'some') score += 10;
+    // Use calculated emergencyFundMonths instead of hasEmergencyFund field
+    if (emergencyFundMonths >= 3) score += 20;
+    else if (emergencyFundMonths >= 1) score += 10;
     else score -= 10;
 
     if (income > 0) {
@@ -380,6 +406,25 @@ const ProgressiveFinancialProfile = ({ onProfileUpdate, onClose }) => {
                     }}
                   />
                 </div>
+                {currentQuestion.hasCheckbox && (
+                  <label style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '8px', 
+                    marginTop: '12px',
+                    fontSize: '0.875rem',
+                    color: '#f59e0b',
+                    cursor: 'pointer'
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={includedDebtInExpenses}
+                      onChange={(e) => setIncludedDebtInExpenses(e.target.checked)}
+                      style={{ cursor: 'pointer' }}
+                    />
+                    I accidentally included loan/credit-card payments above
+                  </label>
+                )}
               </div>
             )}
 
