@@ -5,6 +5,7 @@ import { VoiceProvider } from "../contexts/VoiceContext";
 import { FirestoreErrorBoundary } from "./FirestoreErrorBoundary";
 import OfflineIndicator from "./OfflineIndicator";
 import FloatingVoiceButton from "./FloatingVoiceButton";
+import ScrollToTop from "./ScrollToTop";
 import { initializeOfflinePersistence } from "../lib/firestore/offline";
 import UserProfile from "./UserProfile";
 import LoginPage from "./LoginPage";
@@ -177,6 +178,7 @@ const App = () => {
     <AuthProvider>
       <FirestoreErrorBoundary>
         <Router>
+          <ScrollToTop />
           <VoiceProvider>
             <div className="app-layout">
               <AppInitializer />

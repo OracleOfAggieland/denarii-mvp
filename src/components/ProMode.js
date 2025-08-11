@@ -45,6 +45,12 @@ const ProMode = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Scroll to top when component mounts
+    // Use setTimeout to ensure DOM is rendered first
+    setTimeout(() => {
+      window.scrollTo(0, 0);
+    }, 0);
+    
     const loadPurchaseData = async () => {
       try {
         const storedData = sessionStorage.getItem('proModePurchase');
@@ -136,6 +142,11 @@ const ProMode = () => {
         answers
       );
       setAnalysis(proAnalysis);
+      
+      // Scroll to top to show results
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+      }, 0);
       
       // Save to Firestore if authenticated - include enhanced question data
       if (firestore.isAuthenticated) {
