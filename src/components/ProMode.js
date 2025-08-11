@@ -244,11 +244,6 @@ const ProMode = () => {
                       <div className="hint-content">
                         <span className="hint-label">Hint:</span>
                         <p className="hint-text">{question.placeholder}</p>
-                        {question.search_hint && (
-                          <p className="search-hint">
-                            <em>Search context: {question.search_hint}</em>
-                          </p>
-                        )}
                         <div className="hint-actions">
                           <button
                             type="button"
@@ -337,7 +332,7 @@ const ProMode = () => {
                   </h3>
                   <ul className="recommendations-list">
                     {analysis.recommendations.map((rec, index) => (
-                      <li key={index}>{rec}</li>
+                      <li key={index}>{parseAndRenderLinks(rec)}</li>
                     ))}
                   </ul>
                 </div>

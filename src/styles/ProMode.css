@@ -58,6 +58,8 @@
     max-width: 1000px;
     margin: 0 auto;
     animation: fadeIn 0.5s ease-out;
+    box-sizing: border-box;
+    overflow-x: hidden;
   }
   
   .pro-mode-header {
@@ -415,12 +417,18 @@
     display: flex;
     flex-direction: column;
     gap: 30px;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
   }
   
   .analysis-text {
     font-size: 1.1rem;
     line-height: 2; /* Adjusted for better spacing with links */
     color: #374151;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
   }
 
   /* Market Insights */
@@ -429,6 +437,8 @@
     padding: 24px;
     border-radius: 12px;
     border-left: 4px solid #3b82f6;
+    overflow: hidden;
+    word-wrap: break-word;
   }
   
   .market-insights h3 {
@@ -449,6 +459,9 @@
     color: #1e3a8a;
     line-height: 2; /* Adjusted for better spacing with links */
     margin: 0;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
   }
   
   /* Recommendations */
@@ -457,6 +470,8 @@
     padding: 24px;
     border-radius: 12px;
     border-left: 4px solid #10b981;
+    overflow: hidden;
+    word-wrap: break-word;
   }
   
   .recommendations-section h3 {
@@ -485,6 +500,9 @@
     font-size: 1rem;
     color: #047857;
     line-height: 1.6;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
   }
   
   .recommendations-list li::before {
@@ -501,6 +519,7 @@
     padding: 24px;
     border-radius: 12px;
     text-align: center;
+    overflow: hidden;
   }
   
   .confidence-meter h3 {
@@ -574,6 +593,12 @@
   
   /* Responsive Design */
   @media (max-width: 768px) {
+    /* Fix container overflow on mobile */
+    .pro-mode-container {
+      padding: 16px;
+      max-width: 100%;
+      overflow-x: hidden;
+    }
     /* Pro Mode Section Mobile Fixes */
     .pro-mode-section {
       margin: 16px 0;
@@ -652,18 +677,47 @@
   
     .analysis-card h2 {
       font-size: 1.5rem;
+      flex-wrap: wrap;
     }
   
     .analysis-text {
       font-size: 1rem;
     }
+    
+    /* Fix overflow issues for result sections */
+    .market-insights,
+    .recommendations-section,
+    .confidence-meter {
+      padding: 16px;
+      margin-left: 0;
+      margin-right: 0;
+    }
+    
+    .market-insights h3,
+    .recommendations-section h3 {
+      font-size: 1.1rem;
+      flex-wrap: wrap;
+    }
   
     .recommendations-list {
       padding-left: 16px;
     }
+    
+    .recommendations-list li {
+      padding-left: 20px;
+      font-size: 0.95rem;
+    }
+    
+    /* Ensure links don't overflow */
+    .analysis-link {
+      font-size: 0.75rem;
+      padding: 2px 6px;
+      display: inline;
+    }
   }
   
   @media (max-width: 480px) {
+    /* Extra small mobile specific fixes */
     /* Pro Mode Section Extra Small Mobile */
     .pro-mode-section {
       margin: 12px 0;
@@ -685,7 +739,71 @@
     }
     
     .pro-mode-container {
+      padding: 12px;
+      min-height: calc(100vh - 150px);
+    }
+    
+    .pro-mode-results {
+      width: 100%;
+      overflow-x: hidden;
+    }
+    
+    .analysis-card {
       padding: 16px;
+      border-radius: 12px;
+    }
+    
+    .analysis-card h2 {
+      font-size: 1.3rem;
+      gap: 8px;
+    }
+    
+    .analysis-content {
+      gap: 20px;
+    }
+    
+    .analysis-text {
+      font-size: 0.95rem;
+      line-height: 1.8;
+    }
+    
+    /* Ensure sections fit on small screens */
+    .market-insights,
+    .recommendations-section,
+    .confidence-meter {
+      padding: 12px;
+      border-radius: 8px;
+    }
+    
+    .market-insights h3,
+    .recommendations-section h3 {
+      font-size: 1rem;
+      margin-bottom: 12px;
+    }
+    
+    .market-insights p,
+    .recommendations-list li {
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+    
+    .confidence-meter h3 {
+      font-size: 1rem;
+    }
+    
+    .confidence-bar {
+      height: 20px;
+    }
+    
+    .confidence-label {
+      font-size: 0.95rem;
+    }
+    
+    /* Fix icons on small screens */
+    .analysis-icon,
+    .insights-icon,
+    .recommendations-icon {
+      font-size: 1.2rem;
     }
   
     .pro-mode-header h1 {
@@ -735,6 +853,8 @@
     text-decoration: none;
     margin: 0 4px;
     transition: all 0.2s ease;
+    word-break: break-all;
+    max-width: 100%;
   }
 
   .analysis-link:hover {
