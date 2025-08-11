@@ -3,6 +3,8 @@
  * Includes web search capabilities for market analysis
  */
 
+import { LocationService } from './locationService';
+
 /**
  * Type definition for backward-compatible Pro Mode questions
  * @typedef {Object} ProQuestion
@@ -240,13 +242,35 @@ Initial concerns (if any): ${concerns}
  */
 export const getProModeAnalysis = async (purchaseData, questions, answers) => {
   try {
+    // Get user location
+    const location = await LocationService.getUserLocation();
+    
+    const locationContext = location ? `
+    User Location: ${LocationService.formatLocation(location)}
+    Location Accuracy: ${location.accuracy}
+    ` : '';
+
     // Build context from Q&A, including dimension info if available
     const qaContext = questions.map((q) => {
       const dimension = q.dimension ? ` [${q.dimension}]` : '';
       return `Q${dimension}: ${q.text}\nA: ${answers[q.id]}`;
     }).join('\n\n');
 
-    const prompt = `You are a premium financial advisor with access to web search. Provide a comprehensive analysis for this high-value purchase.
+    const prompt = `You are a premium financial advisor with access to web search. 
+    ${locationContext}
+    
+    IMPORTANT: Use web search to find:
+    1. Local market prices and availability in ${location?.city || 'the user\'s area'}
+    2. Regional pricing trends and local deals
+    3. Shipping costs and delivery times to ${location?.postalCode || 'this location'}
+    4. Local alternatives and nearby store inventory
+    5. Regional sales tax implications (${location?.state || 'state'} tax rates)
+    6. Current market prices and trends for "${purchaseData.itemName}"
+    7. Recent reviews and expert opinions
+    8. Upcoming models or alternatives
+    9. Historical pricing data and best times to buy
+    
+    Provide a comprehensive analysis for this high-value purchase.
   
   Purchase Details:
   - Item: ${purchaseData.itemName}
@@ -257,26 +281,21 @@ export const getProModeAnalysis = async (purchaseData, questions, answers) => {
   User Context from Q&A:
   ${qaContext}
   
-  IMPORTANT: Use web search to find:
-  1. Current market prices and trends for "${purchaseData.itemName}"
-  2. Recent reviews and expert opinions
-  3. Upcoming models or alternatives
-  4. Historical pricing data and best times to buy
   
-  Based on your web search findings and the user's specific context, provide:
-  1. A detailed paragraph analyzing whether this is the right purchase at the right time
-  2. Current market conditions and pricing trends you found
-  3. 3-5 specific, actionable recommendations
+  Based on your web search findings, location context, and the user's specific needs, provide:
+  1. A detailed paragraph analyzing whether this is the right purchase at the right time, including local market factors
+  2. Current market conditions and pricing trends you found (both global and regional)
+  3. 3-5 specific, actionable recommendations that consider local availability and pricing
   
   Format your response as JSON:
   {
-    "fullAnalysis": "Detailed paragraph with web search findings integrated...",
-    "marketInsights": "What you found about current market conditions...",
-    "recommendations": ["Specific recommendation 1", "Specific recommendation 2", ...],
-    "decisionConfidence": 85 (0-100 score based on all factors)
+    "fullAnalysis": "Detailed paragraph with web search findings and location considerations integrated...",
+    "marketInsights": "What you found about current market conditions, local pricing, and regional factors...",
+    "recommendations": ["Specific location-aware recommendation 1", "Specific recommendation 2", ...],
+    "decisionConfidence": 85 (0-100 score based on all factors including local market conditions)
   }
   
-  Remember to cite specific findings from your web search when relevant.`;
+  Remember to cite specific findings from your web search and mention local factors when relevant.`;
 
     const response = await fetch('/api/chat', {
       method: 'POST',

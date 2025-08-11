@@ -332,24 +332,43 @@ export const getPurchaseRecommendation = async (itemName, cost, purpose, frequen
  * Find cheaper alternatives using OpenAI
  * @param {string} itemName - Name of the item to find alternatives for
  * @param {number} currentPrice - Current price of the item
- * @returns {Promise<{name: string, price: number, retailer: string} | null>}
+ * @param {Object} location - User location object (optional)
+ * @returns {Promise<{name: string, price: number, retailer: string, locallyAvailable: boolean, estimatedTotalCost: number} | null>}
  */
-export const findCheaperAlternative = async (itemName, currentPrice) => {
+export const findCheaperAlternative = async (itemName, currentPrice, location = null) => {
   try {
-    const prompt = `Find a cheaper alternative to "${itemName}" which currently costs $${currentPrice}.
+    // Build location context
+    let locationContext = '';
+    if (location) {
+      locationContext = `
+      User Location: ${location.city ? `${location.city}, ` : ''}${location.state || location.country || 'United States'}
+      
+      Consider:
+      - Local store availability and prices
+      - Shipping costs to this location
+      - Regional retailers and deals
+      - Sales tax implications`;
+    }
 
-    Please suggest a similar product that offers good value for money. Respond in JSON format:
+    const prompt = `Find a cheaper alternative to "${itemName}" which currently costs $${currentPrice}.
+    ${locationContext}
+
+    Suggest alternatives available locally or online with reasonable shipping. Respond in JSON format:
     {
       "name": "Alternative product name",
-      "price": estimated_price_in_dollars,
-      "retailer": "Where it can typically be found (e.g., Amazon, Walmart, Target, etc.)"
+      "price": estimated_total_cost_including_tax_and_shipping,
+      "retailer": "Store name and whether it's local or online",
+      "locallyAvailable": true/false,
+      "estimatedTotalCost": price_with_tax_and_shipping
     }
 
     If no good alternative exists or you cannot find one, respond with:
     {
       "name": null,
       "price": null,
-      "retailer": null
+      "retailer": null,
+      "locallyAvailable": false,
+      "estimatedTotalCost": null
     }
 
     Focus on legitimate alternatives that provide similar functionality at a lower price point.`;
@@ -376,14 +395,26 @@ export const findCheaperAlternative = async (itemName, currentPrice) => {
 
     // Try to parse the JSON response from OpenAI
     try {
-      const parsedResponse = JSON.parse(data.response);
+      // Clean up the response to handle potential formatting issues
+      const cleanedResponse = data.response
+        .replace(/^```json\s*/, '')
+        .replace(/\s*```$/, '')
+        .trim();
+      
+      // Try to find JSON in the response
+      const jsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
+      const jsonStr = jsonMatch ? jsonMatch[0] : cleanedResponse;
+      
+      const parsedResponse = JSON.parse(jsonStr);
 
       // Check if a valid alternative was found
       if (parsedResponse.name && parsedResponse.price && parsedResponse.retailer) {
         return {
           name: parsedResponse.name,
-          price: parseFloat(parsedResponse.price),
-          retailer: parsedResponse.retailer
+          price: parseFloat(parsedResponse.estimatedTotalCost || parsedResponse.price),
+          retailer: parsedResponse.retailer,
+          locallyAvailable: parsedResponse.locallyAvailable || false,
+          estimatedTotalCost: parseFloat(parsedResponse.estimatedTotalCost || parsedResponse.price)
         };
       }
 

@@ -313,7 +313,7 @@ const SCORING_FUNCTIONS = {
 /**
  * Calculate weighted scores for all criteria
  */
-export const calculateDecisionScores = (itemName, cost, purpose, frequency, financialProfile, alternative) => {
+export const calculateDecisionScores = (itemName, cost, purpose, frequency, financialProfile, alternative, location = null) => {
   // Get risk tolerance from profile (default to moderate)
   const riskTolerance = financialProfile?.riskTolerance || 'moderate';
   

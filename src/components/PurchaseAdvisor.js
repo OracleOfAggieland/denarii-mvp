@@ -8,6 +8,8 @@ import SavingsTracker from "./SavingsTracker";
 import ImageUploadSection from "./ImageUploadSection";
 import ResultBubble from "./ResultBubble";
 import { useFirestore } from "../hooks/useFirestore";
+import { useLocation } from '../hooks/useLocation';
+import { LocationService } from '../lib/locationService';
 import "../styles/App.css";
 
 // Constants
@@ -219,6 +221,9 @@ const PurchaseAdvisor = () => {
 
   // Firestore hook
   const firestore = useFirestore();
+  
+  // Location hook
+  const { location, isLoading: locationLoading, requestPermission } = useLocation();
 
   // Load financial profile on mount
   useEffect(() => {
@@ -341,11 +346,18 @@ const PurchaseAdvisor = () => {
       const costValue = parseFloat(formState.itemCost);
       let alternative = null;
 
+      // Get current location if not already loaded
+      const currentLocation = location || await LocationService.getUserLocation();
+      
       // Find alternatives if requested
       if (formState.searchForAlternative) {
         console.log('Finding alternatives...');
         dispatchUI({ type: 'SET_FINDING_ALTERNATIVES', value: true });
-        alternative = await findCheaperAlternative(recognizedItemName, costValue);
+        alternative = await findCheaperAlternative(
+          recognizedItemName, 
+          costValue,
+          currentLocation // Pass location
+        );
         dispatchUI({ type: 'SET_FINDING_ALTERNATIVES', value: false });
         console.log('Alternatives found:', alternative);
       }
@@ -358,7 +370,8 @@ const PurchaseAdvisor = () => {
         formState.purpose,
         formState.frequency,
         financialProfile,
-        alternative
+        alternative,
+        currentLocation // Pass location
       );
       console.log('Recommendation received:', recommendation);
 
@@ -405,7 +418,7 @@ const PurchaseAdvisor = () => {
     } finally {
       dispatchUI({ type: 'SET_LOADING', value: false });
     }
-  }, [formState, imageFile, financialProfile, hasSeenProfilePrompt, clearImage, firestore]);
+  }, [formState, imageFile, financialProfile, hasSeenProfilePrompt, clearImage, firestore, location]);
 
   // Render helpers
   const getHealthScoreColor = (score) => {

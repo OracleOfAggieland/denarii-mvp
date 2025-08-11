@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useFirestore } from "../hooks/useFirestore";
+import { LocationService } from '../lib/locationService';
 import { safeToFixed, safeNumber } from '../utils/formatters';
 import "../styles/FinancialProfile.css";
 
@@ -63,6 +64,9 @@ const FinancialProfile = () => {
     financialPriorities: ""
   });
 
+  // Add to state
+  const [userLocation, setUserLocation] = useState(null);
+
   // State for tracking which sections are expanded/collapsed
   const [expandedSections, setExpandedSections] = useState({
     income: true,
@@ -73,7 +77,8 @@ const FinancialProfile = () => {
     investments: false,
     goals: false,
     timing: false,
-    risk: false
+    risk: false,
+    location: false
   });
 
   // State for summary metrics
@@ -105,6 +110,10 @@ const FinancialProfile = () => {
             hasSummary: true
           });
         }
+        // Set location if available in profile
+        if (firestoreProfile.location) {
+          setUserLocation(firestoreProfile.location);
+        }
       } else {
         // Fallback to localStorage if no Firestore data
         const savedProfile = localStorage.getItem('financialProfile');
@@ -120,6 +129,10 @@ const FinancialProfile = () => {
               ...parsed.summary,
               hasSummary: true
             });
+          }
+          // Set location if available in localStorage profile
+          if (parsed.location) {
+            setUserLocation(parsed.location);
           }
         }
       }
@@ -347,11 +360,15 @@ const FinancialProfile = () => {
           purchaseTimeframe: "now",
           riskTolerance: "moderate",
           financialPriorities: "",
-          summary: null
+          summary: null,
+          location: null
         });
       } else {
         localStorage.removeItem('financialProfile');
       }
+      
+      // Reset location
+      setUserLocation(null);
     }
   };
 
@@ -1116,6 +1133,52 @@ const FinancialProfile = () => {
                     <option value="wait">Wait for sales and discounts</option>
                     <option value="plan">Plan purchases well in advance</option>
                   </select>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Location Section */}
+          <div className="form-section">
+            <div
+              className="section-header"
+              onClick={() => toggleSection('location')}
+            >
+              <h2>
+                <span className="section-icon">📍</span>
+                Location
+              </h2>
+              <span className="toggle-icon">
+                {expandedSections.location ? '▼' : '▶'}
+              </span>
+            </div>
+
+            {expandedSections.location && (
+              <div className="section-content">
+                <div className="section-description">
+                  <p>Your location helps provide personalized advice based on local market conditions and pricing.</p>
+                </div>
+                
+                <div className="location-display">
+                  <p><strong>Current Location:</strong> {userLocation ? LocationService.formatLocation(userLocation) : 'Not set'}</p>
+                  {userLocation && (
+                    <p className="location-accuracy">Accuracy: {userLocation.accuracy}</p>
+                  )}
+                  <button 
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        const loc = await LocationService.getUserLocation();
+                        setUserLocation(loc);
+                      } catch (error) {
+                        console.error('Failed to get location:', error);
+                        alert('Unable to get location. Please check your browser settings.');
+                      }
+                    }}
+                    className="update-location-btn"
+                  >
+                    Update Location
+                  </button>
                 </div>
               </div>
             )}

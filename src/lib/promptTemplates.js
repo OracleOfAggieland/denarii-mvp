@@ -8,12 +8,23 @@
  * @param {string} category - Purchase category: 'ESSENTIAL_DAILY', 'DISCRETIONARY_SMALL', 'DISCRETIONARY_MEDIUM', or 'HIGH_VALUE'
  * @param {string} initialSummary - Initial summary from structured decision model
  * @param {string} finalDecision - Final decision (Buy/Don't Buy)
+ * @param {Object} locationContext - User location context (optional)
  * @returns {string} Formatted prompt for AI API
  */
-export const getPromptForCategory = (category, initialSummary, finalDecision) => {
+export const getPromptForCategory = (category, initialSummary, finalDecision, locationContext = null) => {
+  // Build location context string
+  let locationInfo = '';
+  if (locationContext) {
+    const location = locationContext.city ? 
+      `${locationContext.city}, ${locationContext.state || locationContext.country}` : 
+      locationContext.country || 'Unknown location';
+    locationInfo = `\n\nUser Location: ${location} (${locationContext.accuracy} accuracy)
+Consider local market conditions, availability, and regional pricing in your advice.`;
+  }
+
   const baseContext = `The final decision is: **${finalDecision}**.
     
-The initial summary is: "${initialSummary}".`;
+The initial summary is: "${initialSummary}".${locationInfo}`;
 
   switch (category) {
     case 'ESSENTIAL_DAILY':
@@ -54,6 +65,6 @@ Provide your response as a JSON object with a single key: "refinedSummary".`;
 
     default:
       // Fallback to DISCRETIONARY_SMALL template for unknown categories
-      return getPromptForCategory('DISCRETIONARY_SMALL', initialSummary, finalDecision);
+      return getPromptForCategory('DISCRETIONARY_SMALL', initialSummary, finalDecision, locationContext);
   }
 };

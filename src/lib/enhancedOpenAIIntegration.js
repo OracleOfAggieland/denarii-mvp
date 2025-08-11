@@ -10,7 +10,15 @@ import { getPromptForCategory } from './promptTemplates';
 /**
  * Get enhanced purchase recommendation combining structured model with AI insights
  */
-export const getEnhancedPurchaseRecommendation = async (itemName, cost, purpose, frequency, financialProfile, alternative) => {
+export const getEnhancedPurchaseRecommendation = async (
+  itemName, 
+  cost, 
+  purpose, 
+  frequency, 
+  financialProfile, 
+  alternative,
+  location = null // Add location parameter
+) => {
   try {
     // First, classify the purchase to determine appropriate prompt strategy
     const classificationResult = await classifyPurchase(itemName, cost);
@@ -23,7 +31,8 @@ export const getEnhancedPurchaseRecommendation = async (itemName, cost, purpose,
       purpose,
       frequency,
       financialProfile,
-      alternative
+      alternative,
+      location // Pass location to scoring
     );
 
     const structuredRec = generateStructuredRecommendation(
@@ -37,8 +46,21 @@ export const getEnhancedPurchaseRecommendation = async (itemName, cost, purpose,
     const initialSummary = structuredRec.summary;
     const finalDecision = structuredRec.decision;
 
+    // Include location in AI prompt context
+    const locationContext = location ? {
+      city: location.city,
+      state: location.state,
+      country: location.country,
+      accuracy: location.accuracy
+    } : null;
+
     // Get category-specific AI prompt instead of generic one
-    const aiPrompt = getPromptForCategory(purchaseCategory, initialSummary, finalDecision);
+    const aiPrompt = getPromptForCategory(
+      purchaseCategory, 
+      initialSummary, 
+      finalDecision,
+      locationContext // Pass location context
+    );
 
     const response = await fetch('/api/chat', {
         method: 'POST',
@@ -91,7 +113,8 @@ export const getEnhancedPurchaseRecommendation = async (itemName, cost, purpose,
       purpose,
       frequency,
       financialProfile,
-      alternative
+      alternative,
+      location // Pass location to fallback scoring too
     );
 
     const structuredRec = generateStructuredRecommendation(
