@@ -384,7 +384,10 @@ const PurchaseAdvisor = () => {
           reasoning: recommendation.reasoning,
           quote: recommendation.quote,
           analysisDetails: { ...recommendation.analysisDetails, itemName: recognizedItemName },
-          decisionMatrix: recommendation.decisionMatrix
+          decisionMatrix: recommendation.decisionMatrix,
+          reasons: recommendation.reasons,               // thread through reasons
+          flipSuggestion: recommendation.flipSuggestion, // single flip suggestion for backward compatibility
+          flipSuggestions: recommendation.flipSuggestions // NEW: thread through dual-path flip suggestions
         },
         alternative: alternative
       };

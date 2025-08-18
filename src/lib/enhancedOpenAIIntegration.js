@@ -39,7 +39,10 @@ export const getEnhancedPurchaseRecommendation = async (
       decisionAnalysis,
       itemName,
       cost,
-      alternative
+      alternative,
+      financialProfile,
+      purpose,
+      frequency
     );
 
     // Use the generated summary for the AI prompt
@@ -100,7 +103,10 @@ export const getEnhancedPurchaseRecommendation = async (
         itemCost: cost
       },
       alternative,
-      decisionMatrix: formatDecisionMatrix(decisionAnalysis.scores)
+      decisionMatrix: formatDecisionMatrix(decisionAnalysis.scores),
+      reasons: structuredRec.reasons,            // pass through reasons
+      flipSuggestion: structuredRec.flipSuggestion, // single flip suggestion for backward compatibility
+      flipSuggestions: structuredRec.flipSuggestions // NEW: dual-path flip suggestions
     };
 
   } catch (error) {
@@ -121,7 +127,10 @@ export const getEnhancedPurchaseRecommendation = async (
       decisionAnalysis,
       itemName,
       cost,
-      alternative
+      alternative,
+      financialProfile,
+      purpose,
+      frequency
     );
 
     return {
@@ -136,7 +145,10 @@ export const getEnhancedPurchaseRecommendation = async (
         itemCost: cost
       },
       alternative,
-      decisionMatrix: formatDecisionMatrix(decisionAnalysis.scores)
+      decisionMatrix: formatDecisionMatrix(decisionAnalysis.scores),
+      reasons: structuredRec.reasons,            // pass through reasons
+      flipSuggestion: structuredRec.flipSuggestion, // single flip suggestion for backward compatibility
+      flipSuggestions: structuredRec.flipSuggestions // NEW: dual-path flip suggestions
     };
   }
 };

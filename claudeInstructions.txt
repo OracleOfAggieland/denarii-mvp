@@ -1,0 +1,143 @@
+Goal: Fix boundary solvers so they (a) always recompute derived summary values during trials, and (b) clamp monthly deltas to realistic bounds.
+
+Files:
+
+src/lib/structuredDecisionModel.js (only)
+
+Tasks:
+
+1) Add a summary normalizer used by every trial
+function normalizeSummary(fp) {
+  const monthlyIncome   = Number(fp.monthlyIncome)   || 0;
+  const monthlyExpenses = Number(fp.monthlyExpenses) || 0;
+  const debtPayments    = Number(fp.debtPayments)    || 0;
+  const savings         = Number(fp.currentSavings)  || 0;
+
+  const monthlyNetIncome = monthlyIncome - monthlyExpenses - debtPayments; // surplus
+  const dti = monthlyIncome > 0 ? (debtPayments / monthlyIncome) * 100 : 0;
+  const emergencyFundMonths = monthlyExpenses > 0 ? (savings / monthlyExpenses) : 0;
+
+  fp.summary = {
+    ...(fp.summary || {}),
+    monthlyNetIncome,
+    debtToIncomeRatio: dti,
+    emergencyFundMonths
+  };
+  return fp;
+}
+
+2) Ensure every scoring call recomputes summary
+
+Wrap the scorer so trial changes actually affect the score:
+
+const BUY_THRESHOLD = 60;
+
+function scoreWith(baseInputs, patch = {}) {
+  const trial = JSON.parse(JSON.stringify(baseInputs));
+
+  // Apply patch at the canonical locations (root financialProfile fields)
+  if (patch.debtPayments != null) {
+    trial.financialProfile.debtPayments = Math.max(0, Number(patch.debtPayments));
+  }
+  if (patch.monthlyIncome != null) {
+    trial.financialProfile.monthlyIncome = Math.max(0, Number(patch.monthlyIncome));
+  }
+  if (patch.monthlyExpenses != null) {
+    trial.financialProfile.monthlyExpenses = Math.max(0, Number(patch.monthlyExpenses));
+  }
+  if (patch.currentSavings != null) {
+    trial.financialProfile.currentSavings = Math.max(0, Number(patch.currentSavings));
+  }
+  if (patch.cost != null) {
+    trial.cost = Math.max(0, Number(patch.cost));
+  }
+
+  // CRITICAL: recompute derived summary before scoring
+  normalizeSummary(trial.financialProfile);
+
+  const a = calculateDecisionScores(
+    trial.itemName,
+    trial.cost ?? baseInputs.cost,
+    trial.purpose,
+    trial.frequency,
+    trial.financialProfile,
+    trial.alternative,
+    trial.location
+  );
+  return a.finalScore;
+}
+
+
+If your current code stores “monthlyNetIncome” as surplus, this normalization keeps the semantics consistent with your scorer.
+
+3) Fix the debt reduction per month boundary solver
+
+Clamp the search upper bound to current monthly debt payments (cannot reduce more than 100%).
+
+Bail out early if even reducing to $0/mo debt doesn’t reach 60 (then debt isn’t the lever).
+
+Recompute summary inside each iteration (via scoreWith above).
+
+Round to the nearest $10.
+
+function findDebtReductionPerMonthToBuy(baseInputs) {
+  const fp = baseInputs.financialProfile || {};
+  const currentDebt = Number(fp.debtPayments) || 0;
+
+  // If no debt, this lever is irrelevant
+  if (currentDebt <= 0) return null;
+
+  // If even $0/mo debt doesn't reach 60, debt isn't the gating lever
+  if (scoreWith(baseInputs, { debtPayments: 0 }) < BUY_THRESHOLD) return null;
+
+  let lo = 0, hi = currentDebt, ans = null;
+  for (let i = 0; i < 18; i++) {
+    const mid = (lo + hi) / 2;                 // target reduction
+    const newDebt = Math.max(0, currentDebt - mid);
+    const score = scoreWith(baseInputs, { debtPayments: newDebt });
+
+    if (score >= BUY_THRESHOLD) {
+      ans = mid;                               // feasible; try smaller
+      hi = mid;
+    } else {
+      lo = mid;
+    }
+  }
+
+  if (ans == null) return null;
+  const rounded = Math.round(ans / 10) * 10;
+
+  // Extra sanity guard: never suggest more than current debt
+  return Math.min(rounded, currentDebt);
+}
+
+4) Apply the same pattern to income/expense/savings/price solvers
+
+For each solver you already have, make sure you:
+
+Modify the correct root field (monthlyIncome, monthlyExpenses, currentSavings, or cost).
+
+Call normalizeSummary(...) inside scoreWith(...) before scoring.
+
+Bound the search:
+
+income increase: hi can be max(cost, 2 * currentDebt) but clamp the message if it exceeds, say, 0.8 * monthlyIncome (don’t suggest >80% of take-home as a monthly change; return null and let other levers win).
+
+expense cut: hi = current monthlyExpenses.
+
+savings boost: choose a reasonable hi (e.g., max(cost, 6 * monthlyExpenses)).
+
+price cut: hi = current cost, and verify $0 reaches 60 before searching.
+
+5) Pick the suggestion
+
+When assembling candidates:
+
+Do not compare one-time $ deltas with monthly $ deltas directly. Prefer: one-time > monthly → present Path A (keep price) with the smallest within-category delta, then Path B (price) if available.
+
+Never render a monthly suggestion that exceeds:
+
+currentDebtPayments (for debt reduction), or
+
+0.8 * monthlyIncome (for income increase / expense cut).
+If it would, set that lever to null and let others win.
