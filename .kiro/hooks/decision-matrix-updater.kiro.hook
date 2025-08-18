@@ -1,0 +1,17 @@
+{
+  "enabled": true,
+  "name": "Decision Matrix Test & Doc Updater",
+  "description": "Automatically updates unit tests and documentation when the decision matrix or scoring logic changes",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "src/lib/structuredDecisionModel.js",
+      "src/components/DecisionMatrix.js"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "One of the decision‑model files has been modified (either `structuredDecisionModel.js` or `DecisionMatrix.js`). Please help keep our project aligned by doing the following:\n\n1. Inspect the changes and identify any new or modified functions, weights, scoring logic or categories in the decision matrix implementation.\n2. Open or create the Jest test file at `src/lib/__tests__/structuredDecisionModel.test.js` (or `tests/structuredDecisionModel.test.js` if that folder exists) and update it to fully cover the new or modified logic. Write descriptive test names and include edge cases such as high‑value purchases, varying risk tolerances, and missing data.\n3. Update the section in `README.md` titled 'Weighted Decision Matrix & MCDA' to explain the current decision criteria, weight adjustments, and how risk tolerance influences scoring. Include examples and describe each criteria category (financial, utility, psychological, risk) so non‑technical readers understand the model.\n4. Check any other documentation or components that reference the decision matrix (e.g. `DecisionMatrix.js`) to ensure terminology and logic remain consistent with the updated implementation.\n5. Commit these changes locally (do not push) and ensure existing tests still pass."
+  }
+}

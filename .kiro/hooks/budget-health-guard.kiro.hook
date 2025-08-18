@@ -1,0 +1,17 @@
+{
+  "enabled": true,
+  "name": "Budget Health Guard",
+  "description": "Ensures decision model weights and thresholds remain valid and documented",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "src/lib/structuredDecisionModel.js",
+      "src/lib/ProModeAPI.js"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Inspect recent edits. Verify that all decision model weights sum to 1 and thresholds are non-overlapping. If not, fix them. Update `structuredDecisionModel.test.js` with corresponding tests. Summarize changes in README.md under 'Decision Model Assumptions'."
+  }
+}
