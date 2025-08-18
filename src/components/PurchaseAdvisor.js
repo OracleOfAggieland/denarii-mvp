@@ -68,16 +68,23 @@ const createGoogleSearchLink = (itemName) => {
 };
 
 const saveToHistory = async (analysisResult, itemName, itemCost, firestore) => {
-  const savings = analysisResult.alternative
-    ? parseFloat(itemCost) - analysisResult.alternative.price
-    : 0;
+  const decision = analysisResult.formatted.decision;
+  let savings = 0;
+  
+  // Set savings based on decision
+  if (decision === "Don't Buy") {
+    savings = parseFloat(itemCost);
+  } else if (decision === "Buy" && analysisResult.alternative) {
+    const alternativeSavings = parseFloat(itemCost) - analysisResult.alternative.price;
+    savings = alternativeSavings > 0 ? alternativeSavings : 0;
+  }
 
   const historyEntry = {
     date: new Date(),
     itemName: analysisResult.formatted.analysisDetails.itemName || itemName,
     itemCost: parseFloat(itemCost),
-    decision: analysisResult.formatted.decision,
-    savings: savings > 0 ? savings : 0,
+    decision: decision,
+    savings: savings,
     alternative: analysisResult.alternative,
     analysisDetails: analysisResult.formatted.analysisDetails
   };

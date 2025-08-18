@@ -1,6 +1,7 @@
 // src/hooks/useFirestore.ts
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { clearAllUserData, clearLocalStorageData } from '@/lib/firestore/clearDataService';
 import {
   doc,
   collection,
@@ -57,6 +58,8 @@ interface UseFirestoreReturn {
   subscribeToProfile: (callback: (profile: FinancialProfileData | null) => void) => Unsubscribe | null;
   subscribeToPurchaseHistory: (callback: (purchases: PurchaseHistoryItem[]) => void, limitCount?: number) => Unsubscribe | null;
   subscribeToChatHistory: (callback: (chat: ChatHistoryData | null) => void) => Unsubscribe | null;
+  // Data management
+  clearAllData: () => Promise<{ success: boolean; clearedItems: any }>;
 }
 
 export const useFirestore = (): UseFirestoreReturn => {
@@ -302,7 +305,7 @@ export const useFirestore = (): UseFirestoreReturn => {
     if (!canUseFirestore()) return null;
 
     const profileRef = doc(db!, COLLECTIONS.FINANCIAL_PROFILES, user!.uid);
-    return onSnapshot(profileRef, 
+    return onSnapshot(profileRef,
       (doc) => {
         if (doc.exists()) {
           const data = doc.data();
@@ -398,6 +401,14 @@ export const useFirestore = (): UseFirestoreReturn => {
     getProAnalyses,
     subscribeToProfile,
     subscribeToPurchaseHistory,
-    subscribeToChatHistory
+    subscribeToChatHistory,
+    clearAllData: async () => {
+      if (!user) {
+        // Just clear localStorage for non-authenticated users
+        clearLocalStorageData();
+        return { success: true, clearedItems: { localStorage: true } };
+      }
+      return await clearAllUserData(user.uid);
+    }
   };
 };

@@ -11,6 +11,7 @@ import RecentActivityWidget from './RecentActivityWidget';
 import DashboardSkeleton from './DashboardSkeleton';
 import '../../styles/Dashboard.css';
 import EnvironmentChecker from '../EnvironmentChecker';
+import ClearDataButton from '../ClearDataButton';
 
 // Error types for better error handling
 const ERROR_TYPES = {
@@ -64,7 +65,15 @@ const Dashboard = () => {
   const totalSavings = useMemo(() => {
     if (!purchaseHistory || !Array.isArray(purchaseHistory)) return 0;
     return purchaseHistory.reduce((total, purchase) => {
-      return total + (purchase.savings || 0);
+      // Count avoided purchases as savings
+      if (purchase.decision === "Don't Buy") {
+        return total + (purchase.itemCost || 0);
+      }
+      // For "Buy" decisions, only count explicit savings (e.g., from alternatives)
+      else if (purchase.decision === "Buy" && purchase.savings) {
+        return total + (purchase.savings || 0);
+      }
+      return total;
     }, 0);
   }, [purchaseHistory]);
 
@@ -425,6 +434,11 @@ const Dashboard = () => {
           <span className="action-icon">👤</span>
           Update Profile
         </button>
+      </div>
+
+      {/* Danger Zone */}
+      <div className="dashboard-danger-zone">
+        <ClearDataButton />
       </div>
     </div>
   );

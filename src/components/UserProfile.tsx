@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useProfileImage } from '../hooks/useProfileImage';
+import ClearDataButton from './ClearDataButton';
 
 const UserProfile: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -71,6 +72,10 @@ const UserProfile: React.FC = () => {
               {user.displayName || 'User'}
             </p>
             <p className="user-email">{user.email}</p>
+          </div>
+          <hr className="dropdown-divider" />
+          <div className="danger-zone">
+            <ClearDataButton />
           </div>
           <hr className="dropdown-divider" />
           <button
