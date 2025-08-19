@@ -222,7 +222,7 @@
 
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 24px;
   margin-bottom: 32px;
   width: 100%;
@@ -235,7 +235,6 @@
   animation: fadeIn 0.5s ease-out;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   overflow: hidden;
-  word-wrap: break-word;
   min-width: 0;
 }
 
@@ -255,9 +254,9 @@
   font-size: 1.5rem;
   font-weight: 700;
   margin-bottom: 10px;
-  word-break: break-word;
-  overflow-wrap: break-word;
-  hyphens: auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .summary-value.positive {
@@ -346,7 +345,7 @@
   }
   
   .summary-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   }
   
   .form-actions {
@@ -379,7 +378,9 @@
   }
   
   .summary-value {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
+    white-space: normal;
+    word-break: keep-all;
   }
   
   .summary-item {
