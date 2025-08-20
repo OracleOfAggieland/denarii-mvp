@@ -67,69 +67,6 @@ const ResultBubble = ({ messages = [], onClose, createGoogleSearchLink }) => {
                     {msg.formatted.summary}
                   </p>
 
-                  {/* Reasons list for Don't Buy decisions */}
-                  {msg.formatted.decision === "Don't Buy" && msg.formatted.reasons?.length > 0 && (
-                    <div className="reasons-section">
-                      <h4 className="reasons-title">Key Factors:</h4>
-                      <ul className="reasons-list">
-                        {msg.formatted.reasons.slice(0, 3).map((reason, i) => (
-                          <li key={i} className="reason-item">
-                            <strong>{reason.label}:</strong> {reason.message}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Dual-Path Flip Suggestions for Don't Buy decisions */}
-                  {msg.formatted.decision === "Don't Buy" && msg.formatted.flipSuggestions && (
-                    <div className="flip-suggestions">
-                      {/* Path A - Keep Current Price */}
-                      {msg.formatted.flipSuggestions.keepPrice && (
-                        <div className="path-suggestion path-a">
-                          <div className="path-header">
-                            <span className="path-icon">💰</span>
-                            <strong>Path A — Keep Current Price</strong>
-                          </div>
-                          <p className="path-message">
-                            {msg.formatted.flipSuggestions.keepPrice.message}
-                          </p>
-                          {msg.formatted.flipSuggestions.keepPrice.timelineMonths !== null && msg.formatted.flipSuggestions.monthlySurplus > 0 && (
-                            <p className="timeline-info">
-                              At your current surplus of ${msg.formatted.flipSuggestions.monthlySurplus.toFixed(0)}/mo, that's ≈ {msg.formatted.flipSuggestions.keepPrice.timelineMonths} months.
-                            </p>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Path B - Negotiate Price */}
-                      {msg.formatted.flipSuggestions.priceCut && (
-                        <div className="path-suggestion path-b">
-                          <div className="path-header">
-                            <span className="path-icon">🤝</span>
-                            <strong>Path B — Negotiate Price</strong>
-                          </div>
-                          <p className="path-message">
-                            {msg.formatted.flipSuggestions.priceCut.message}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Fallback to old single suggestion if no new paths available */}
-                      {!msg.formatted.flipSuggestions.keepPrice && !msg.formatted.flipSuggestions.priceCut && msg.formatted.flipSuggestion && (
-                        <div className="suggestion-box">
-                          <div className="suggestion-header">
-                            <span className="suggestion-icon">💡</span>
-                            <strong>To Make This a Buy:</strong>
-                          </div>
-                          <p className="suggestion-message">
-                            {msg.formatted.flipSuggestion.message}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
                   {/* Pro‑Mode prompt */}
                   {isHighValue && (
                     <div className="pro-mode-section">

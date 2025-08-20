@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useFirestore } from "../hooks/useFirestore";
 import { LocationService } from '../lib/locationService';
-import { safeToFixed, safeNumber } from '../utils/formatters';
 import "../styles/FinancialProfile.css";
 
 const FinancialProfile = () => {
@@ -81,15 +80,6 @@ const FinancialProfile = () => {
     location: false
   });
 
-  // State for summary metrics
-  const [summary, setSummary] = useState({
-    monthlyNetIncome: 0,
-    debtToIncomeRatio: 0,
-    creditUtilization: 0,
-    netWorth: 0,
-    emergencyFundMonths: 0,
-    hasSummary: false
-  });
 
   // Load profile on mount and set up real-time listener
   useEffect(() => {
@@ -104,12 +94,6 @@ const FinancialProfile = () => {
           ...firestoreProfile,
           summary: undefined // Remove summary from form data
         });
-        if (firestoreProfile.summary) {
-          setSummary({
-            ...firestoreProfile.summary,
-            hasSummary: true
-          });
-        }
         // Set location if available in profile
         if (firestoreProfile.location) {
           setUserLocation(firestoreProfile.location);
@@ -124,12 +108,6 @@ const FinancialProfile = () => {
             ...parsed,
             summary: undefined
           });
-          if (parsed.summary) {
-            setSummary({
-              ...parsed.summary,
-              hasSummary: true
-            });
-          }
           // Set location if available in localStorage profile
           if (parsed.location) {
             setUserLocation(parsed.location);
@@ -163,88 +141,13 @@ const FinancialProfile = () => {
     }));
   };
 
-  // Calculate summary metrics (safe version)
-  const calculateSummary = () => {
-    // Convert strings to numbers safely
-    const income = safeNumber(formData.monthlyIncome, 0);
-    const adjustedIncome = formData.incomeFrequency === "annual" ? income / 12 : income;
-    const otherIncome = safeNumber(formData.otherIncomeSources, 0);
-    const totalMonthlyIncome = adjustedIncome + otherIncome;
-
-    // Calculate total monthly expenses with safe parsing
-    const expenses = [
-      safeNumber(formData.housingCost, 0),
-      safeNumber(formData.utilitiesCost, 0),
-      safeNumber(formData.foodCost, 0),
-      safeNumber(formData.transportationCost, 0),
-      safeNumber(formData.insuranceCost, 0),
-      safeNumber(formData.subscriptionsCost, 0),
-      safeNumber(formData.otherExpenses, 0)
-    ].reduce((sum, value) => sum + value, 0);
-
-    // Calculate monthly debt payments with safe parsing
-    const debtPayments = [
-      safeNumber(formData.creditCardPayment, 0),
-      safeNumber(formData.studentLoanPayment, 0),
-      safeNumber(formData.carLoanPayment, 0),
-      safeNumber(formData.mortgagePayment, 0),
-      safeNumber(formData.otherDebtPayment, 0)
-    ].reduce((sum, value) => sum + value, 0);
-
-    // Calculate total debt with safe parsing
-    const totalDebt = [
-      safeNumber(formData.creditCardDebt, 0),
-      safeNumber(formData.studentLoanDebt, 0),
-      safeNumber(formData.carLoanDebt, 0),
-      safeNumber(formData.mortgageDebt, 0),
-      safeNumber(formData.otherDebt, 0)
-    ].reduce((sum, value) => sum + value, 0);
-
-    // Safe calculations for ratios
-    const debtToIncomeRatio = totalMonthlyIncome > 0 ? (debtPayments / totalMonthlyIncome) * 100 : 0;
-    
-    const creditLimit = safeNumber(formData.creditLimit, 0);
-    const creditBalance = safeNumber(formData.currentCreditBalance, 0);
-    const creditUtilization = creditLimit > 0 ? (creditBalance / creditLimit) * 100 : 0;
-
-    // Calculate net worth with safe parsing
-    const assets = [
-      safeNumber(formData.checkingSavingsBalance, 0),
-      safeNumber(formData.emergencyFund, 0),
-      safeNumber(formData.retirementAccounts, 0),
-      safeNumber(formData.stocksAndBonds, 0),
-      safeNumber(formData.realEstateValue, 0),
-      safeNumber(formData.otherInvestments, 0)
-    ].reduce((sum, value) => sum + value, 0);
-
-    const netWorth = assets - totalDebt;
-
-    // Safe emergency fund calculation
-    const monthlyExpensesWithDebt = expenses + debtPayments;
-    const emergencyFund = safeNumber(formData.emergencyFund, 0);
-    const emergencyFundMonths = monthlyExpensesWithDebt > 0 ? emergencyFund / monthlyExpensesWithDebt : 0;
-
-    const monthlyNetIncome = totalMonthlyIncome - expenses - debtPayments;
-
-    // Ensure all values are numbers before setting state
-    setSummary({
-      monthlyNetIncome: safeNumber(monthlyNetIncome, 0),
-      debtToIncomeRatio: safeNumber(debtToIncomeRatio, 0),
-      creditUtilization: safeNumber(creditUtilization, 0),
-      netWorth: safeNumber(netWorth, 0),
-      emergencyFundMonths: safeNumber(emergencyFundMonths, 0),
-      hasSummary: true
-    });
-  };
 
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    calculateSummary();
 
     const profileData = {
-      ...formData,
-      summary
+      ...formData
     };
 
     // Save to Firestore if authenticated
@@ -254,6 +157,9 @@ const FinancialProfile = () => {
       // Fallback to localStorage
       localStorage.setItem('financialProfile', JSON.stringify(profileData));
     }
+
+    // Show success message or redirect
+    alert('Financial profile saved successfully!');
   };
 
   // Reset form data
@@ -313,14 +219,6 @@ const FinancialProfile = () => {
         riskTolerance: "moderate",
         financialPriorities: ""
       });
-      setSummary({
-        monthlyNetIncome: 0,
-        debtToIncomeRatio: 0,
-        creditUtilization: 0,
-        netWorth: 0,
-        emergencyFundMonths: 0,
-        hasSummary: false
-      });
 
       if (firestore.isAuthenticated) {
         // Clear from Firestore
@@ -360,7 +258,6 @@ const FinancialProfile = () => {
           purchaseTimeframe: "now",
           riskTolerance: "moderate",
           financialPriorities: "",
-          summary: null,
           location: null
         });
       } else {
@@ -383,99 +280,6 @@ const FinancialProfile = () => {
       </div>
 
       <div className="profile-container">
-        {/* Financial Summary Card (shows after form is submitted) */}
-        {summary.hasSummary && (
-          <div className="summary-card">
-            <h2 className="summary-title">
-              <span className="summary-icon">📊</span>
-              Financial Summary
-            </h2>
-
-            <div className="summary-grid">
-              <div className="summary-item">
-                <h3>Monthly Net Income</h3>
-                <p className={`summary-value ${summary.monthlyNetIncome >= 0 ? 'positive' : 'negative'}`}>
-                  ${Number(safeToFixed(summary.monthlyNetIncome, 2)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </p>
-                <p className="summary-description">
-                  {summary.monthlyNetIncome > 0
-                    ? "You have positive cash flow each month"
-                    : "Your expenses exceed your income"}
-                </p>
-              </div>
-
-              <div className="summary-item">
-                <h3>Debt-to-Income Ratio</h3>
-                <p className={`summary-value ${summary.debtToIncomeRatio < 36 ? 'positive' : summary.debtToIncomeRatio < 43 ? 'warning' : 'negative'}`}>
-                  {safeToFixed(summary.debtToIncomeRatio, 1)}%
-                </p>
-                <p className="summary-description">
-                  {summary.debtToIncomeRatio < 36
-                    ? "Healthy (below 36%)"
-                    : summary.debtToIncomeRatio < 43
-                      ? "Caution (36-43%)"
-                      : "High risk (above 43%)"}
-                </p>
-              </div>
-
-              <div className="summary-item">
-                <h3>Credit Utilization</h3>
-                <p className={`summary-value ${summary.creditUtilization < 30 ? 'positive' : summary.creditUtilization < 50 ? 'warning' : 'negative'}`}>
-                  {safeToFixed(summary.creditUtilization, 1)}%
-                </p>
-                <p className="summary-description">
-                  {summary.creditUtilization < 30
-                    ? "Good (below 30%)"
-                    : summary.creditUtilization < 50
-                      ? "Moderate (30-50%)"
-                      : "High (above 50%)"}
-                </p>
-              </div>
-
-              <div className="summary-item">
-                <h3>Net Worth</h3>
-                <p className={`summary-value ${summary.netWorth >= 0 ? 'positive' : 'negative'}`}>
-                  {summary.netWorth < 0 ? '-' : ''}${Number(safeToFixed(Math.abs(summary.netWorth), 2)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </p>
-                <p className="summary-description">
-                  {summary.netWorth > 0
-                    ? "Your assets exceed your debts"
-                    : "Your debts exceed your assets"}
-                </p>
-              </div>
-
-              <div className="summary-item">
-                <h3>Emergency Fund</h3>
-                <p className={`summary-value ${summary.emergencyFundMonths >= 3 ? 'positive' : summary.emergencyFundMonths >= 1 ? 'warning' : 'negative'}`}>
-                  {safeToFixed(summary.emergencyFundMonths, 1)} months
-                </p>
-                <p className="summary-description">
-                  {summary.emergencyFundMonths >= 6
-                    ? "Excellent (6+ months)"
-                    : summary.emergencyFundMonths >= 3
-                      ? "Good (3-6 months)"
-                      : summary.emergencyFundMonths >= 1
-                        ? "Minimal (1-3 months)"
-                        : "Insufficient (< 1 month)"}
-                </p>
-              </div>
-            </div>
-
-            <div className="summary-actions">
-              <Link to="/" className="action-button primary">
-                Get Purchase Advice
-              </Link>
-              <button
-                type="button"
-                onClick={handleReset}
-                className="action-button secondary"
-              >
-                Reset Information
-              </button>
-            </div>
-          </div>
-        )}
-
         <form className="financial-form" onSubmit={handleSubmit}>
           {/* Income Section */}
           <div className="form-section">
@@ -1237,7 +1041,7 @@ const FinancialProfile = () => {
 
           <div className="form-actions">
             <button type="submit" className="submit-button">
-              Calculate Financial Summary
+              Save Financial Profile
             </button>
             <button type="button" onClick={handleReset} className="reset-button">
               Reset All Information
