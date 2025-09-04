@@ -4,7 +4,6 @@ import { Inter } from 'next/font/google';
 import React from 'react';
 import './globals.css';
 import '../styles/App.css';
-import { MEDIA_URLS } from '../lib/storage';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -18,13 +17,7 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: MEDIA_URLS.FAVICON,
-        type: 'image/png',
-        sizes: '96x96',
-      },
-      // Multiple fallback options
-      {
-        url: 'https://firebasestorage.googleapis.com/v0/b/denarii-mvp-f5aea.appspot.com/o/icons8-money-96.png?alt=media',
+        url: '/icons8-money-96.png',
         type: 'image/png',
         sizes: '96x96',
       },
@@ -33,8 +26,8 @@ export const metadata: Metadata = {
         type: 'image/x-icon',
       }
     ],
-    shortcut: MEDIA_URLS.FAVICON,
-    apple: MEDIA_URLS.FAVICON,
+    shortcut: '/icons8-money-96.png',
+    apple: '/icons8-money-96.png',
   },
   openGraph: {
     title: 'Denarii',
